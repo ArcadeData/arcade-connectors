@@ -1,0 +1,188 @@
+<!--
+  #%L
+  Arcade Data
+  %%
+  Copyright (C) 2018 - 2019 ArcadeAnalytics
+  %%
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  
+       http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  #L%
+  -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <properties>
+        <gremlin-driver.version>3.3.4</gremlin-driver.version>
+        <orientdb-gremlin.version>3.0.13</orientdb-gremlin.version>
+        <commons-lang3.version>3.8.1</commons-lang3.version>
+        <janusgraph.version>0.3.1</janusgraph.version>
+    </properties>
+
+    <parent>
+        <groupId>com.arcadeanalytics</groupId>
+        <artifactId>arcade-connectors-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../</relativePath>
+    </parent>
+
+    <artifactId>arcade-connectors-gremlin</artifactId>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <!--<executions>-->
+                <!--<execution>-->
+                <!--<phase>package</phase>-->
+                <!--<goals>-->
+                <!--<goal>shade</goal>-->
+                <!--</goals>-->
+                <!--<configuration>-->
+
+                <!--<relocations>-->
+                <!--<relocation>-->
+                <!--<pattern>org.apache</pattern>-->
+                <!--<shadedPattern>com.arcadeanalytics.connectors.gremlin.org.apache</shadedPattern>-->
+                <!--</relocation>-->
+                <!--<relocation>-->
+                <!--<pattern>org.yaml</pattern>-->
+                <!--<shadedPattern>com.arcadeanalytics.connectors.gremlin.org.yaml</shadedPattern>-->
+                <!--</relocation>-->
+                <!--<relocation>-->
+                <!--<pattern>org.javatuples</pattern>-->
+                <!--<shadedPattern>com.arcadeanalytics.connectors.gremlin.org.javatuples</shadedPattern>-->
+                <!--</relocation>-->
+                <!--<relocation>-->
+                <!--<pattern>com.carrotsearch</pattern>-->
+                <!--<shadedPattern>com.arcadeanalytics.connectors.gremlin.com.carrotsearch-->
+                <!--</shadedPattern>-->
+                <!--</relocation>-->
+                <!--<relocation>-->
+                <!--<pattern>com.jcabi</pattern>-->
+                <!--<shadedPattern>com.arcadeanalytics.connectors.gremlin.com.jcabi</shadedPattern>-->
+                <!--</relocation>-->
+                <!--<relocation>-->
+                <!--<pattern>com.squareup</pattern>-->
+                <!--<shadedPattern>com.arcadeanalytics.connectors.gremlin.com.squareup</shadedPattern>-->
+                <!--</relocation>-->
+                <!--<relocation>-->
+                <!--<pattern>net.objecthunter</pattern>-->
+                <!--<shadedPattern>com.arcadeanalytics.connectors.gremlin.net.objecthunter-->
+                <!--</shadedPattern>-->
+                <!--</relocation>-->
+                <!--<relocation>-->
+                <!--<pattern>io.netty</pattern>-->
+                <!--<shadedPattern>com.arcadeanalytics.connectors.gremlin.io.netty</shadedPattern>-->
+                <!--</relocation>-->
+                <!--<relocation>-->
+                <!--<pattern>com.codahale</pattern>-->
+                <!--<shadedPattern>com.arcadeanalytics.connectors.gremlin.com.codahale</shadedPattern>-->
+                <!--</relocation>-->
+                <!--<relocation>-->
+                <!--<pattern>com.sun</pattern>-->
+                <!--<shadedPattern>com.arcadeanalytics.connectors.gremlin.com.sun</shadedPattern>-->
+                <!--</relocation>-->
+                <!--<relocation>-->
+                <!--<pattern>org.reflections</pattern>-->
+                <!--<shadedPattern>com.arcadeanalytics.connectors.gremlin.org.reflections-->
+                <!--</shadedPattern>-->
+                <!--</relocation>-->
+                <!--<relocation>-->
+                <!--<pattern>org.javassist</pattern>-->
+                <!--<shadedPattern>com.arcadeanalytics.connectors.gremlin.org.javassist</shadedPattern>-->
+                <!--</relocation>-->
+                <!--<relocation>-->
+                <!--<pattern>javassist</pattern>-->
+                <!--<shadedPattern>com.arcadeanalytics.connectors.gremlin.javassist</shadedPattern>-->
+                <!--</relocation>-->
+                <!--<relocation>-->
+                <!--<pattern>com.github.benmanes</pattern>-->
+                <!--<shadedPattern>com.arcadeanalytics.connectors.gremlin.com.github.benmanes-->
+                <!--</shadedPattern>-->
+                <!--</relocation>-->
+                <!--<relocation>-->
+                <!--<pattern>groovy</pattern>-->
+                <!--<shadedPattern>com.arcadeanalytics.connectors.gremlin.groovy</shadedPattern>-->
+                <!--</relocation>-->
+                <!--<relocation>-->
+                <!--<pattern>org.codehaus.groovy</pattern>-->
+                <!--<shadedPattern>com.arcadeanalytics.connectors.gremlin.org.codehaus.groovy-->
+                <!--</shadedPattern>-->
+                <!--</relocation>-->
+                <!--<relocation>-->
+                <!--<pattern>org.glassfish</pattern>-->
+                <!--<shadedPattern>com.arcadeanalytics.connectors.gremlin.org.glassfish</shadedPattern>-->
+                <!--</relocation>-->
+                <!--</relocations>-->
+                <!--</configuration>-->
+                <!--</execution>-->
+                <!--</executions>-->
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.arcadeanalytics</groupId>
+            <artifactId>arcade-connectors-base</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tinkerpop</groupId>
+            <artifactId>gremlin-driver</artifactId>
+            <version>${gremlin-driver.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.orientechnologies</groupId>
+            <artifactId>orientdb-gremlin</artifactId>
+            <version>${orientdb-gremlin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.janusgraph</groupId>
+            <artifactId>janusgraph-core</artifactId>
+            <version>${janusgraph.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.codahale.metrics</groupId>
+                    <artifactId>metrics-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.codahale.metrics</groupId>
+                    <artifactId>metrics-ganglia</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.codahale.metrics</groupId>
+                    <artifactId>metrics-graphite</artifactId>
+                </exclusion>
+
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons-lang3.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.arcadeanalytics</groupId>
+            <artifactId>arcade-connectors-base</artifactId>
+            <version>${project.parent.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+</project>
