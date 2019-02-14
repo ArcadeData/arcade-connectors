@@ -148,7 +148,7 @@
         <dependency>
             <groupId>com.arcadeanalytics</groupId>
             <artifactId>arcade-connectors-base</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0.0-SNAPSHOT</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
