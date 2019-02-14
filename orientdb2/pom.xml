@@ -60,7 +60,7 @@
                 <artifactId>dokka-maven-plugin</artifactId>
                 <configuration>
                     <sourceDirectories>
-                        <dir>src/main/kotlin</dir>
+                        <dir>${project.basedir}/src/main/kotlin</dir>
                     </sourceDirectories>
                 </configuration>
             </plugin>
