@@ -261,7 +261,7 @@
                     <releaseProfiles>release</releaseProfiles>
                     <goals>deploy</goals>
                     <tagNameFormat>v@{project.version}</tagNameFormat>
-                    <arguments>-DskipTests=true</arguments>
+                    <arguments>-Dmaven.javadoc.skip=true -DskipTests=true</arguments>
                 </configuration>
             </plugin>
         </plugins>
