@@ -22,7 +22,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <properties>
-        <neo4j-java-driver.version>1.7.0</neo4j-java-driver.version>
+        <neo4j-java-driver.version>1.7.2</neo4j-java-driver.version>
         <commons-text.version>1.6</commons-text.version>
     </properties>
 
@@ -40,26 +40,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <!--<executions>-->
-                <!--<execution>-->
-                <!--<phase>package</phase>-->
-                <!--<goals>-->
-                <!--<goal>shade</goal>-->
-                <!--</goals>-->
-                <!--<configuration>-->
-                <!--<relocations>-->
-                <!--<relocation>-->
-                <!--<pattern>org.neo4j</pattern>-->
-                <!--<shadedPattern>com.arcadeanalytics.connectors.neo4j3.org.neo4j</shadedPattern>-->
-                <!--</relocation>-->
-                <!--<relocation>-->
-                <!--<pattern>org.apache</pattern>-->
-                <!--<shadedPattern>com.arcadeanalytics.connectors.neo4j3.org.apache</shadedPattern>-->
-                <!--</relocation>-->
-                <!--</relocations>-->
-                <!--</configuration>-->
-                <!--</execution>-->
-                <!--</executions>-->
             </plugin>
         </plugins>
     </build>

@@ -87,12 +87,6 @@
             <version>${free-port-finder.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-core</artifactId>
-            <version>4.3.6.RELEASE</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>com.arcadeanalytics</groupId>
             <artifactId>arcade-data</artifactId>
             <version>1.0.0</version>

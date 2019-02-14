@@ -25,18 +25,11 @@
         <commons-lang3.version>3.8.1</commons-lang3.version>
         <orientdb-core.version>2.2.36</orientdb-core.version>
         <orientdb-graphdb.version>2.2.36</orientdb-graphdb.version>
-        <mysql-connector-java.version>8.0.13</mysql-connector-java.version>
+        <mysql-connector-java.version>8.0.15</mysql-connector-java.version>
         <postgresql.version>42.2.5</postgresql.version>
         <hsqldb.version>2.4.1</hsqldb.version>
         <dw-jdbc.version>0.4.4</dw-jdbc.version>
-        <jackson-databind.version>2.8.1</jackson-databind.version>
-
-        <plugin.id>rdbms-plugin</plugin.id>
-        <plugin.class>com.arcadeanalytics.provider.rdbms.dataprovider.RdbmsPlugin</plugin.class>
-        <plugin.version>0.0.1</plugin.version>
-        <plugin.provider>Arcade</plugin.provider>
-        <plugin.dependencies/>
-
+        <jackson-databind.version>2.9.8</jackson-databind.version>
     </properties>
 
     <parent>
@@ -53,105 +46,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <!--<executions>-->
-                <!--<execution>-->
-                <!--<phase>package</phase>-->
-                <!--<goals>-->
-                <!--<goal>shade</goal>-->
-                <!--</goals>-->
-                <!--<configuration>-->
-                <!--<transformers>-->
-                <!--<transformer-->
-                <!--implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>-->
-                <!--</transformers>-->
-                <!--<filters>-->
-                <!--<filter>-->
-                <!--<artifact>*:*</artifact>-->
-                <!--<excludes>-->
-                <!--<exclude>META-INF/*.SF</exclude>-->
-                <!--<exclude>META-INF/*.DSA</exclude>-->
-                <!--<exclude>META-INF/*.RSA</exclude>-->
-                <!--</excludes>-->
-                <!--</filter>-->
-                <!--</filters>-->
-                <!--<minimizeJar>false</minimizeJar>-->
-                <!--<relocations>-->
-                <!--<relocation>-->
-                <!--<pattern>org.hsqldb</pattern>-->
-                <!--<shadedPattern>com.arcadeanalytics.connectors.rdbms.org.hsqldb</shadedPattern>-->
-                <!--</relocation>-->
-                <!--<relocation>-->
-                <!--<pattern>org.postgresql</pattern>-->
-                <!--<shadedPattern>com.arcadeanalytics.connectors.rdbms.org.postgresql</shadedPattern>-->
-                <!--</relocation>-->
-                <!--<relocation>-->
-                <!--<pattern>com.mysql</pattern>-->
-                <!--<shadedPattern>com.arcadeanalytics.connectors.rdbms.com.mysql</shadedPattern>-->
-                <!--</relocation>-->
-                <!--&lt;!&ndash;<relocation>&ndash;&gt;-->
-                <!--&lt;!&ndash;<pattern>com.google</pattern>&ndash;&gt;-->
-                <!--&lt;!&ndash;<shadedPattern>com.arcadeanalytics.connectors.rdbms.com.google</shadedPattern>&ndash;&gt;-->
-                <!--&lt;!&ndash;</relocation>&ndash;&gt;-->
-                <!--<relocation>-->
-                <!--<pattern>org.apache</pattern>-->
-                <!--<shadedPattern>com.arcadeanalytics.connectors.rdbms.org.apache</shadedPattern>-->
-                <!--</relocation>-->
-
-                <!--&lt;!&ndash;ORIENTDB ?!?!?!&ndash;&gt;-->
-                <!--<relocation>-->
-                <!--<pattern>com.fasterxml</pattern>-->
-                <!--<shadedPattern>com.arcadeanalytics.connectors.rdbms.com.fasterxml-->
-                <!--</shadedPattern>-->
-                <!--</relocation>-->
-                <!--<relocation>-->
-                <!--<pattern>com.orientechnologies</pattern>-->
-                <!--<shadedPattern>com.arcadeanalytics.connectors.rdbms.com.orientechnologies-->
-                <!--</shadedPattern>-->
-                <!--</relocation>-->
-                <!--<relocation>-->
-                <!--<pattern>com.tinkerpop</pattern>-->
-                <!--<shadedPattern>com.arcadeanalytics.connectors.rdbms.com.tinkerpop</shadedPattern>-->
-                <!--</relocation>-->
-                <!--<relocation>-->
-                <!--<pattern>com.carrotsearch</pattern>-->
-                <!--<shadedPattern>com.arcadeanalytics.connectors.rdbms.com.carrotsearch-->
-                <!--</shadedPattern>-->
-                <!--</relocation>-->
-                <!--<relocation>-->
-                <!--<pattern>com.googlecode</pattern>-->
-                <!--<shadedPattern>com.arcadeanalytics.connectors.rdbms.com.googlecode-->
-                <!--</shadedPattern>-->
-                <!--</relocation>-->
-                <!--<relocation>-->
-                <!--<pattern>org.xerial</pattern>-->
-                <!--<shadedPattern>com.arcadeanalytics.connectors.rdbms.org.xerial</shadedPattern>-->
-                <!--</relocation>-->
-                <!--<relocation>-->
-                <!--<pattern>net.java</pattern>-->
-                <!--<shadedPattern>com.arcadeanalytics.connectors.rdbms.net.java</shadedPattern>-->
-                <!--</relocation>-->
-                <!--<relocation>-->
-                <!--<pattern>com.sun</pattern>-->
-                <!--<shadedPattern>com.arcadeanalytics.connectors.rdbms.com.sun</shadedPattern>-->
-                <!--</relocation>-->
-                <!--<relocation>-->
-                <!--<pattern>com.microsoft</pattern>-->
-                <!--<shadedPattern>com.arcadeanalytics.connectors.rdbms.com.microsoft</shadedPattern>-->
-                <!--</relocation>-->
-                <!--<relocation>-->
-                <!--<pattern>microsoft.sql</pattern>-->
-                <!--<shadedPattern>com.arcadeanalytics.connectors.rdbms.microsoft.sql</shadedPattern>-->
-                <!--</relocation>-->
-                <!--<relocation>-->
-                <!--<pattern>mssql.googlecode</pattern>-->
-                <!--<shadedPattern>com.arcadeanalytics.connectors.rdbms.mssql.googlecode</shadedPattern>-->
-                <!--</relocation>-->
-
-
-                <!--</relocations>-->
-                <!--</configuration>-->
-                <!--</execution>-->
-                <!--</executions>-->
             </plugin>
         </plugins>
     </build>
