@@ -41,6 +41,7 @@ import kotlin.collections.HashSet
 
 /**
  * Specialized provider for OrientDB2
+ * @author Roberto Franchini
  */
 class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
 

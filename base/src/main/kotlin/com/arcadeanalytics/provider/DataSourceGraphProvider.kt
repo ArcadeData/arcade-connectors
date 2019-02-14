@@ -22,6 +22,10 @@ package com.arcadeanalytics.provider
 import com.arcadeanalytics.data.SpritePlayer
 
 
+/**
+ *
+ * @author Roberto Franchini
+ */
 interface DataSourceGraphProvider : DataSourceProvider {
 
 

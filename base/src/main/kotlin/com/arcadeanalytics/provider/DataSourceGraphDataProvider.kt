@@ -21,6 +21,7 @@ package com.arcadeanalytics.provider
 
 /**
  * Interface to be implemented by specialized data providers
+ *  @author Roberto Franchini
  */
 interface DataSourceGraphDataProvider : DataSourceProvider {
 

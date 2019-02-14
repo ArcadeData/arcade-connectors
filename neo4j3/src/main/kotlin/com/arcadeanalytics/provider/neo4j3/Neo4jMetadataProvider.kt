@@ -24,6 +24,10 @@ import org.neo4j.driver.v1.*
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
+/**
+ *
+ * @author Roberto Franchini
+ */
 class Neo4jMetadataProvider : DataSourceMetadataProvider {
     private val log = LoggerFactory.getLogger(Neo4jMetadataProvider::class.java)
 

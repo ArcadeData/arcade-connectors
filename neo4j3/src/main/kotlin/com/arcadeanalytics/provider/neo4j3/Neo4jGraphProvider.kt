@@ -33,6 +33,11 @@ import org.neo4j.driver.v1.Session
 import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
 
+/**
+ *
+ * @author Roberto Franchini
+ */
+
 class Neo4jGraphProvider : DataSourceGraphProvider {
 
     private val log = LoggerFactory.getLogger(Neo4jGraphProvider::class.java)

@@ -29,6 +29,10 @@ import org.neo4j.driver.v1.AccessMode
 import org.neo4j.driver.v1.Session
 import org.slf4j.LoggerFactory
 
+/**
+ *
+ * @author Roberto Franchini
+ */
 
 class Neo4jDataProvider : DataSourceGraphDataProvider {
 
