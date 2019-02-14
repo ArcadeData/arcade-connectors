@@ -251,16 +251,19 @@
                     <licenseName>apache_v2</licenseName>
                     <roots>${project.basedir}</roots>
                 </configuration>
-                <!--<executions>-->
-                <!--<execution>-->
-                <!--<id>first</id>-->
-                <!--<goals>-->
-                <!--<goal>update-file-header</goal>-->
-                <!--</goals>-->
-                <!--<phase>process-sources</phase>-->
-                <!--</execution>-->
-                <!--</executions>-->
             </plugin>
+            <plugin>
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <useReleaseProfile>false</useReleaseProfile>
+                    <releaseProfiles>release</releaseProfiles>
+                    <goals>deploy</goals>
+                    <tagNameFormat>v@{project.version}</tagNameFormat>
+                    <arguments>-Dmaven.test.skipTests=true -Dmaven.test.skip=true</arguments>
+                </configuration>
+            </plugin>
+
         </plugins>
         <pluginManagement>
             <plugins>
