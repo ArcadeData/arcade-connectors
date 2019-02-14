@@ -1,4 +1,12 @@
 language: java
+service: docker
+
+
+before_install:
+  - docker version
+  - docker info
+  - cd ./src/main/docker/orientdb && ./build.sh && cd -
+  - cd ./src/main/docker/postgresql-dvdrental && ./build.sh && cd -
 
 cache:
   directories:
