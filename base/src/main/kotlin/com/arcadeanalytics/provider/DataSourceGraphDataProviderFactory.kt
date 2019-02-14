@@ -42,7 +42,7 @@ class DataSourceGraphDataProviderFactory(pluginPath: String = "./plugins") {
                 .map { path ->
                     log.info("scanning:: ${path.toUri().toURL()}")
 
-                    val urlClassLoader = URLClassLoader.newInstance(arrayOf(path.toUri().toURL()))
+                    val urlClassLoader = URLClassLoader.newInstance(arrayOf(path.toUri().toURL()), javaClass.classLoader)
 
                     ServiceLoader.load(clazz, urlClassLoader)
 

@@ -220,7 +220,7 @@
             <groupId>com.arcadeanalytics</groupId>
             <artifactId>arcade-connectors-base</artifactId>
             <version>${project.parent.version}</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

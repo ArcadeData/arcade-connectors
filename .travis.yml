@@ -1,0 +1,15 @@
+language: java
+
+cache:
+  directories:
+    - ~/.m2/repository
+
+notifications:
+  email:
+    - ro.franchini@gmail.com
+
+script:
+  ./mvnw deploy --settings .travis/settings.xml
+
+jdk:
+  - openjdk8
