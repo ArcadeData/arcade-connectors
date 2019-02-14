@@ -257,29 +257,13 @@
                 <artifactId>maven-release-plugin</artifactId>
                 <configuration>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
-                    <useReleaseProfile>false</useReleaseProfile>
+                    <useReleaseProfile>true</useReleaseProfile>
                     <releaseProfiles>release</releaseProfiles>
                     <goals>deploy</goals>
                     <tagNameFormat>v@{project.version}</tagNameFormat>
                     <arguments>-DskipTests=true</arguments>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.jetbrains.dokka</groupId>
-                <artifactId>dokka-maven-plugin</artifactId>
-                <version>${dokka.version}</version>
-                <executions>
-                    <execution>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>dokka</goal>
-                            <goal>javadoc</goal>
-                            <goal>javadocJar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
         </plugins>
         <pluginManagement>
             <plugins>
@@ -352,6 +336,22 @@
                                 <id>attach-sources</id>
                                 <goals>
                                     <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.jetbrains.dokka</groupId>
+                        <artifactId>dokka-maven-plugin</artifactId>
+                        <version>${dokka.version}</version>
+                        <executions>
+                            <execution>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>dokka</goal>
+                                    <goal>javadoc</goal>
+                                    <goal>javadocJar</goal>
                                 </goals>
                             </execution>
                         </executions>
