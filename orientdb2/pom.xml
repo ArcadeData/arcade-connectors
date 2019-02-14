@@ -41,68 +41,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<phase>package</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>shade</goal>-->
-                        <!--</goals>-->
-
-                        <!--<configuration>-->
-                            <!--&lt;!&ndash;<minimizeJar>true</minimizeJar>&ndash;&gt;-->
-                            <!--<transformers>-->
-                                <!--<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>-->
-                            <!--</transformers>-->
-                            <!--<relocations>-->
-                                <!--&lt;!&ndash;<relocation>&ndash;&gt;-->
-                                    <!--&lt;!&ndash;<pattern>com.orientechnologies</pattern>&ndash;&gt;-->
-                                    <!--&lt;!&ndash;<shadedPattern>com.arcadeanalytics.connectors.orientdb2.com.orientechnologies&ndash;&gt;-->
-                                    <!--&lt;!&ndash;</shadedPattern>&ndash;&gt;-->
-                                <!--&lt;!&ndash;</relocation>&ndash;&gt;-->
-                                <!--<relocation>-->
-                                    <!--<pattern>com.tinkerpop</pattern>-->
-                                    <!--<shadedPattern>com.arcadeanalytics.connectors.orientdb2.com.tinkerpop-->
-                                    <!--</shadedPattern>-->
-                                <!--</relocation>-->
-                                <!--<relocation>-->
-                                    <!--<pattern>com.carrotsearch</pattern>-->
-                                    <!--<shadedPattern>com.arcadeanalytics.connectors.orientdb2.com.carrotsearch-->
-                                    <!--</shadedPattern>-->
-                                <!--</relocation>-->
-                                <!--<relocation>-->
-                                    <!--<pattern>com.fasterxml</pattern>-->
-                                    <!--<shadedPattern>com.arcadeanalytics.connectors.orientdb2.com.fasterxml-->
-                                    <!--</shadedPattern>-->
-                                <!--</relocation>-->
-                                <!--<relocation>-->
-                                    <!--<pattern>javax.mail</pattern>-->
-                                    <!--<shadedPattern>com.arcadeanalytics.connectors.orientdb2.javax.mail</shadedPattern>-->
-                                <!--</relocation>-->
-                                <!--<relocation>-->
-                                    <!--<pattern>javax.activation</pattern>-->
-                                    <!--<shadedPattern>com.arcadeanalytics.connectors.orientdb2.javax.activation</shadedPattern>-->
-                                <!--</relocation>-->
-                                <!--<relocation>-->
-                                    <!--<pattern>com.sun</pattern>-->
-                                    <!--<shadedPattern>com.arcadeanalytics.connectors.orientdb2.com.sun</shadedPattern>-->
-                                <!--</relocation>-->
-                                <!--<relocation>-->
-                                    <!--<pattern>com.googlecode</pattern>-->
-                                    <!--<shadedPattern>com.arcadeanalytics.connectors.orientdb2.com.googlecode-->
-                                    <!--</shadedPattern>-->
-                                <!--</relocation>-->
-                                <!--<relocation>-->
-                                    <!--<pattern>org.xerial</pattern>-->
-                                    <!--<shadedPattern>com.arcadeanalytics.connectors.orientdb2.org.xerial</shadedPattern>-->
-                                <!--</relocation>-->
-                                <!--<relocation>-->
-                                    <!--<pattern>net.java</pattern>-->
-                                    <!--<shadedPattern>com.arcadeanalytics.connectors.orientdb2.net.java</shadedPattern>-->
-                                <!--</relocation>-->
-                            <!--</relocations>-->
-                        <!--</configuration>-->
-                    <!--</execution>-->
-                <!--</executions>-->
             </plugin>
 
             <plugin>
@@ -124,7 +62,7 @@
         <dependency>
             <groupId>com.arcadeanalytics</groupId>
             <artifactId>arcade-connectors-base</artifactId>
-            <version>${parent.version}</version>
+            <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
