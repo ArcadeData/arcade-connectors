@@ -260,7 +260,7 @@
                     <releaseProfiles>release</releaseProfiles>
                     <goals>deploy</goals>
                     <tagNameFormat>v@{project.version}</tagNameFormat>
-                    <arguments>-Dmaven.test.skipTests=true -Dmaven.test.skip=true</arguments>
+                    <arguments>-DskipTests=true</arguments>
                 </configuration>
             </plugin>
 
