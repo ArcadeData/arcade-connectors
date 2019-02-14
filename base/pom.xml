@@ -72,15 +72,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.jetbrains.dokka</groupId>
-                <artifactId>dokka-maven-plugin</artifactId>
-                <configuration>
-                    <sourceDirectories>
-                        <dir>src/main/kotlin</dir>
-                    </sourceDirectories>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 
