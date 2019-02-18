@@ -15,7 +15,7 @@ notifications:
     - ro.franchini@gmail.com
 
 script:
-  ./mvnw deploy --settings .travis/settings.xml
+  ./mvnw -fae deploy --settings .travis/settings.xml
 
 jdk:
   - openjdk8
