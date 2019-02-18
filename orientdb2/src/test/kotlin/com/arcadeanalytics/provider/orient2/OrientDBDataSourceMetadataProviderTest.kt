@@ -19,8 +19,8 @@
  */
 package com.arcadeanalytics.provider.orientdb
 
-import com.arcadeanalytics.provider.orient2.OrientDBContainer.dataSource
 import com.arcadeanalytics.provider.orient2.OrientDBDataSourceMetadataProvider
+import com.arcadeanalytics.provider.orientdb.OrientDBContainer.dataSource
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 

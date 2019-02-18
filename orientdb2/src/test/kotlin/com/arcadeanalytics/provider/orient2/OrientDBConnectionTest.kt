@@ -20,8 +20,7 @@
 package com.arcadeanalytics.provider.orient2
 
 import com.arcadeanalytics.provider.DataSourceInfo
-import com.arcadeanalytics.provider.orientdb.OrientDBDataSourceGraphDataProviderIntTest
-import com.arcadeanalytics.provider.orientdb.OrientDBTestHelper
+import com.arcadeanalytics.provider.orientdb.*
 import com.arcadeanalytics.test.KGenericContainer
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
@@ -29,10 +28,10 @@ import org.testcontainers.containers.wait.strategy.Wait
 
 class OrientDBConnectionTest {
 
-    private val container: KGenericContainer = KGenericContainer(OrientDBTestHelper.ORIENTDB_DOCKER_IMAGE)
+    private val container: KGenericContainer = KGenericContainer(ORIENTDB_DOCKER_IMAGE)
             .apply {
                 withExposedPorts(2424)
-                withEnv("ORIENTDB_ROOT_PASSWORD", OrientDBTestHelper.ORIENTDB_ROOT_PASSWORD)
+                withEnv("ORIENTDB_ROOT_PASSWORD", ORIENTDB_ROOT_PASSWORD)
                 waitingFor(Wait.forListeningPort())
                 start()
 
@@ -56,12 +55,12 @@ class OrientDBConnectionTest {
         )
 
 
-        val serverUrl = OrientDBTestHelper.getServerUrl(container)
+        val serverUrl = getServerUrl(container)
 
 
-        val dbUrl = OrientDBTestHelper.createTestDataabse(serverUrl, OrientDBDataSourceGraphDataProviderIntTest::class.java.simpleName)
+        val dbUrl = createTestDataabse(serverUrl, OrientDBDataSourceGraphDataProviderIntTest::class.java.simpleName)
 
-        OrientDBTestHelper.createPersonSchema(dbUrl)
+        createPersonSchema(dbUrl)
 
         provider = OrientDBDataSourceGraphDataProvider()
     }

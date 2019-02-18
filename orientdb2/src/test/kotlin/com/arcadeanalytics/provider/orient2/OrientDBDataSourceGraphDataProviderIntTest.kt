@@ -1,9 +1,8 @@
 package com.arcadeanalytics.provider.orientdb
 
-import com.arcadeanalytics.provider.orient2.OrientDBContainer
-import com.arcadeanalytics.provider.orient2.OrientDBContainer.dataSource
-import com.arcadeanalytics.provider.orient2.OrientDBContainer.dbUrl
 import com.arcadeanalytics.provider.orient2.OrientDBDataSourceGraphDataProvider
+import com.arcadeanalytics.provider.orientdb.OrientDBContainer.dataSource
+import com.arcadeanalytics.provider.orientdb.OrientDBContainer.dbUrl
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx
 import com.orientechnologies.orient.core.record.impl.ODocument
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery

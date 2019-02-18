@@ -21,7 +21,6 @@ package com.arcadeanalytics.provider.orientdb
 
 import com.arcadeanalytics.data.Sprite
 import com.arcadeanalytics.data.SpritePlayer
-import com.arcadeanalytics.provider.orient2.OrientDBContainer
 import com.arcadeanalytics.provider.orient2.OrientDBDataSourceGraphProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test

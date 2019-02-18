@@ -1,41 +1,79 @@
 package com.arcadeanalytics.provider.orientdb
 
+import com.arcadeanalytics.provider.DataSourceInfo
+import com.arcadeanalytics.test.KGenericContainer
 import com.orientechnologies.orient.client.remote.OServerAdmin
 import com.orientechnologies.orient.core.command.script.OCommandScript
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx
 import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.wait.strategy.Wait
 import java.io.IOException
 
-/**
- * Helper class for tests on OrientDB
- */
-object OrientDBTestHelper {
+object OrientDBContainer {
 
-    val ORIENTDB_DOCKER_IMAGE = "orientdb:2.2.36"
+    val container: KGenericContainer
 
-    val ORIENTDB_ROOT_PASSWORD = "arcade"
+    val dataSource: DataSourceInfo
 
-    /**
-     * Given an OrientDB container instance, returns the remote url
-     *
-     * @param container
-     * @return
-     */
-    fun getServerUrl(container: GenericContainer<*>): String {
+    var dbUrl: String
 
-        return "remote:${container.getContainerIpAddress()}:${container.getMappedPort(2424)}"
+    init {
+        container = KGenericContainer(ORIENTDB_DOCKER_IMAGE)
+                .apply {
+                    withExposedPorts(2424)
+                    withEnv("ORIENTDB_ROOT_PASSWORD", ORIENTDB_ROOT_PASSWORD)
+                    waitingFor(Wait.forListeningPort())
+                    start()
+
+                }
+
+        dataSource = DataSourceInfo(id = 1L,
+                type = "ORIENTDB",
+                name = "testDataSource",
+                server = container.containerIpAddress,
+                port = container.firstMappedPort,
+                username = "admin",
+                password = "admin",
+                database = "testDatabase"
+        )
+
+
+        val serverUrl = getServerUrl(container)
+
+        dbUrl = createTestDataabse(serverUrl, dataSource.database)
+
+        createPersonSchema(dbUrl)
+
     }
 
-    /**
-     * Given an OrientDB's database url, creates the Person schema and fills it with samples data
-     *
-     * @param dbUrl
-     */
-    fun createPersonSchema(dbUrl: String) {
-        ODatabaseDocumentTx(dbUrl)
-                .open<ODatabaseDocumentTx>("admin", "admin")
-                .use {
-                    it.command(OCommandScript("sql", """
+
+}
+
+const val ORIENTDB_DOCKER_IMAGE = "orientdb:2.2.36"
+
+const val ORIENTDB_ROOT_PASSWORD = "arcade"
+
+/**
+ * Given an OrientDB container instance, returns the remote url
+ *
+ * @param container
+ * @return
+ */
+fun getServerUrl(container: GenericContainer<*>): String {
+
+    return "remote:${container.getContainerIpAddress()}:${container.getMappedPort(2424)}"
+}
+
+/**
+ * Given an OrientDB's database url, creates the Person schema and fills it with samples data
+ *
+ * @param dbUrl
+ */
+fun createPersonSchema(dbUrl: String) {
+    ODatabaseDocumentTx(dbUrl)
+            .open<ODatabaseDocumentTx>("admin", "admin")
+            .use {
+                it.command(OCommandScript("sql", """
 
                     CREATE CLASS Person EXTENDS V;
 
@@ -59,31 +97,31 @@ object OrientDBTestHelper {
                     CREATE EDGE HaterOf FROM (SELECT FROM Person WHERE name = 'jane') TO (SELECT FROM Person WHERE name = 'rob') set kind='killer';
                     CREATE EDGE HaterOf FROM (SELECT FROM Person WHERE name = 'frank') TO (SELECT FROM Person WHERE name = 'john') set kind='killer';
                     """.trimIndent()
-                    )).execute<Any>()
-                }
-
-    }
-
-    /**
-     * Creates the "test" database on the given server
-     *
-     * @param serverUrl
-     * @return
-     */
-    fun createTestDataabse(serverUrl: String, dbname: String): String {
-
-        try {
-            OServerAdmin(serverUrl).apply {
-                connect("root", ORIENTDB_ROOT_PASSWORD)
-                createDatabase(dbname, "graph", "plocal")
-                close()
+                )).execute<Any>()
             }
-            return "$serverUrl/$dbname"
-        } catch (e: IOException) {
-            throw RuntimeException("unable to create database on " + serverUrl, e)
-        }
 
-
-    }
 }
+
+/**
+ * Creates the "test" database on the given server
+ *
+ * @param serverUrl
+ * @return
+ */
+fun createTestDataabse(serverUrl: String, dbname: String): String {
+
+    try {
+        OServerAdmin(serverUrl).apply {
+            connect("root", ORIENTDB_ROOT_PASSWORD)
+            createDatabase(dbname, "graph", "plocal")
+            close()
+        }
+        return "$serverUrl/$dbname"
+    } catch (e: IOException) {
+        throw RuntimeException("unable to create database on " + serverUrl, e)
+    }
+
+
+}
+
 
