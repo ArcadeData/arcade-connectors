@@ -8,7 +8,7 @@ import org.testcontainers.containers.wait.strategy.Wait
 
 object JanusgraphContainer {
 
-    val container: KGenericContainer = KGenericContainer("arcade/janusgraph")
+    val container: KGenericContainer = KGenericContainer("arcadeanalytics/janusgraph")
             .apply {
                 withExposedPorts(8182)
                 waitingFor(Wait.defaultWaitStrategy())

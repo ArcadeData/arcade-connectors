@@ -40,7 +40,7 @@ public class MysqlGraphProviderTest extends AbstractRDBMSGraphProvider {
     private static final String driver = "com.mysql.cj.jdbc.Driver";
     private static final String username = "test";
     private static final String password = "test";
-    public static MySQLContainer container = new MySQLContainer("arcade:mysql-sakila")
+    public static MySQLContainer container = new MySQLContainer("arcadeanalytics/mysql-sakila")
             .withUsername(username)
             .withPassword(password)
             .withDatabaseName("sakila");
@@ -48,8 +48,6 @@ public class MysqlGraphProviderTest extends AbstractRDBMSGraphProvider {
     @BeforeAll
     public static void beforeClass() throws Exception {
         container.start();
-        Slf4jLogConsumer logConsumer = new Slf4jLogConsumer(LOGGER);
-        container.followOutput(logConsumer);
         container.withDatabaseName("sakila");
     }
 

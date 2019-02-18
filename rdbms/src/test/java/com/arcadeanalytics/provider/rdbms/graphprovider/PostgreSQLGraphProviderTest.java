@@ -9,9 +9,9 @@ package com.arcadeanalytics.provider.rdbms.graphprovider;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,35 +21,16 @@ package com.arcadeanalytics.provider.rdbms.graphprovider;
  */
 
 import com.arcadeanalytics.provider.DataSourceInfo;
-import com.arcadeanalytics.provider.rdbms.dataprovider.PostgreSQLDataProviderTest;
+import com.arcadeanalytics.provider.rdbms.dataprovider.PostgreSQLContainerHolder;
 import com.arcadeanalytics.provider.rdbms.dataprovider.RDBMSGraphProvider;
 import org.junit.Assert;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.containers.output.Slf4jLogConsumer;
 
 
 public class PostgreSQLGraphProviderTest extends AbstractRDBMSGraphProvider {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PostgreSQLDataProviderTest.class);
-    private static final String driver = "org.postgresql.Driver";
-    private static final String username = "postgres";
-    private static final String password = "postgres";
-    public static PostgreSQLContainer container = new PostgreSQLContainer("arcade:postgres-dvdrental")
-            .withUsername(username)
-            .withPassword(password);
-
-    @BeforeAll
-    public static void beforeClass() throws Exception {
-        container.start();
-        Slf4jLogConsumer logConsumer = new Slf4jLogConsumer(LOGGER);
-        container.followOutput(logConsumer);
-        container.withDatabaseName("dvdrental");
-    }
-
+    final PostgreSQLContainer container = PostgreSQLContainerHolder.container;
 
     @Test
     public void shouldFetchAllVertexes() {
@@ -63,8 +44,8 @@ public class PostgreSQLGraphProviderTest extends AbstractRDBMSGraphProvider {
                 container.getContainerIpAddress(),
                 container.getFirstMappedPort(),
                 container.getDatabaseName(),
-                username,
-                password,
+                "postgres",
+                "postgres",
                 false,
                 "{}",
                 false,
@@ -95,8 +76,8 @@ public class PostgreSQLGraphProviderTest extends AbstractRDBMSGraphProvider {
                 container.getContainerIpAddress(),
                 container.getFirstMappedPort(),
                 container.getDatabaseName(),
-                username,
-                password,
+                "postgres",
+                "postgres",
                 true,
                 "{}",
                 false,

@@ -6,7 +6,7 @@ import org.testcontainers.containers.wait.strategy.Wait
 
 object OrientDBGremlinContainer {
 
-    val container: KGenericContainer = KGenericContainer("arcade/orientdb:3.0.13-tp3")
+    val container: KGenericContainer = KGenericContainer("arcadeanalytics/orientdb:3.0.13-tp3")
             .apply {
 
                 withExposedPorts(8182, 2424)

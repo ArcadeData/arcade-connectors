@@ -23,11 +23,8 @@ package com.arcadeanalytics.provider.rdbms.dataprovider;
 import com.arcadeanalytics.provider.CytoData;
 import com.arcadeanalytics.provider.DataSourceInfo;
 import com.arcadeanalytics.provider.GraphData;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 import java.sql.Connection;
@@ -43,27 +40,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class PostgreSQLDataProviderTest extends AbstractRDBMSProviderTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PostgreSQLDataProviderTest.class);
-    private static final String driver = "org.postgresql.Driver";
-    private static final String username = "postgres";
-    private static final String password = "postgres";
+    private DataSourceInfo dataSource;
 
-    public static PostgreSQLContainer container = new PostgreSQLContainer("arcade:postgres-dvdrental")
-            .withUsername(username)
-            .withPassword(password);
-
-    private DataSourceInfo dataSource = null;
-
-    @BeforeAll
-    public static void beforeClass() {
-        container.start();
-        container.withDatabaseName("dvdrental");
-    }
 
     @BeforeEach
     public void setUp() throws Exception {
 
-        /* jdbc:postgresql://localhost:5432/dvdrental */
+        final PostgreSQLContainer container = PostgreSQLContainerHolder.container;
         String dbUrl = container.getJdbcUrl();
         this.dataSource = new DataSourceInfo(
                 1L,
@@ -479,8 +462,7 @@ public class PostgreSQLDataProviderTest extends AbstractRDBMSProviderTest {
 
         try {
 
-            Class.forName(this.driver);
-            connection = DriverManager.getConnection(container.getJdbcUrl(), this.username, this.password);
+            connection = DriverManager.getConnection(PostgreSQLContainerHolder.container.getJdbcUrl(), "postgres", "postgres");
 
             String distributioCountryTableBuilding = "create table distribution_country (distribution_country_id integer not null,"
                     + " name varchar(256) not null, distribution_language integer not null, primary key (distribution_country_id), "
@@ -831,8 +813,7 @@ public class PostgreSQLDataProviderTest extends AbstractRDBMSProviderTest {
         // dropping the new added table
         try {
 
-            Class.forName(this.driver);
-            connection = DriverManager.getConnection(container.getJdbcUrl(), this.username, this.password);
+            connection = DriverManager.getConnection(PostgreSQLContainerHolder.container.getJdbcUrl(), "postgres", "postgres");
 
             String deleteDistributionCountryTable = "drop table distribution_country";
             st = connection.createStatement();

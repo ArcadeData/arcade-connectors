@@ -20,6 +20,7 @@
 package com.arcadeanalytics.provider.rdbms
 
 import com.arcadeanalytics.provider.DataSourceInfo
+import com.arcadeanalytics.provider.rdbms.dataprovider.PostgreSQLContainerHolder
 import org.assertj.core.api.Assertions
 import org.junit.Assert
 import org.junit.jupiter.api.BeforeEach
@@ -31,17 +32,7 @@ import org.testcontainers.containers.PostgreSQLContainer
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PostgreSQLMetadataProviderTest {
 
-    private val container: PostgreSQLContainer<Nothing> = PostgreSQLContainer<Nothing>("arcade:postgres-dvdrental")
-            .apply {
-                withUsername("postgres")
-                withPassword("postgres")
-                start()
-            }
-
-    init {
-        container.withDatabaseName("dvdrental")
-
-    }
+    private val container: PostgreSQLContainer<Nothing> = PostgreSQLContainerHolder.container as PostgreSQLContainer<Nothing>
 
     private lateinit var providerNoAggregation: RDBMSMetadataProvider
     private lateinit var providerWithAggregation: RDBMSMetadataProvider

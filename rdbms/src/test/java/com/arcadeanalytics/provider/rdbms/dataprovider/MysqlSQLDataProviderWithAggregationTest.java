@@ -9,9 +9,9 @@ package com.arcadeanalytics.provider.rdbms.dataprovider;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,16 +23,10 @@ package com.arcadeanalytics.provider.rdbms.dataprovider;
 import com.arcadeanalytics.provider.CytoData;
 import com.arcadeanalytics.provider.DataSourceInfo;
 import com.arcadeanalytics.provider.GraphData;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.containers.output.Slf4jLogConsumer;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -41,32 +35,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class MysqlSQLDataProviderWithAggregationTest extends AbstractRDBMSProviderWithAggregationTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MysqlSQLDataProviderTest.class);
-    private static final String driver = "com.mysql.cj.jdbc.Driver";
-    private static final String username = "test";
-    private static final String password = "test";
-    private static final DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssX");
-
-    public static MySQLContainer container = new MySQLContainer("arcade:mysql-sakila")
-            .withUsername(username)
-            .withPassword(password)
-            .withDatabaseName("sakila");
     private DataSourceInfo dataSource = null;
 
-    @BeforeAll
-    public static void beforeClass() throws Exception {
-        container.start();
-        Slf4jLogConsumer logConsumer = new Slf4jLogConsumer(LOGGER);
-//        container.followOutput(logConsumer);
-        container.withDatabaseName("sakila");
-    }
+
 
     @BeforeEach
-    public void setUp() throws Exception {
+    public void setUp() {
 
-        /* jdbc:postgresql://localhost:5432/dvdrental */
-        String dbUrl = container.getJdbcUrl();
-
+        final MySQLContainer container = MySQLContainerHolder.container;
         this.dataSource = new DataSourceInfo(
                 1L,
                 "RDBMS_MYSQL",
@@ -75,8 +51,8 @@ public class MysqlSQLDataProviderWithAggregationTest extends AbstractRDBMSProvid
                 container.getContainerIpAddress(),
                 container.getFirstMappedPort(),
                 container.getDatabaseName(),
-                username,
-                password,
+                container.getUsername(),
+                container.getPassword(),
                 true,
                 "{}",
                 false,
