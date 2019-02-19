@@ -28,7 +28,7 @@ import org.testcontainers.containers.wait.strategy.Wait
 
 object Neo4jContainer {
 
-    val container: KGenericContainer = KGenericContainer("neo4j:latest")
+    private val container: KGenericContainer = KGenericContainer("neo4j:latest")
             .apply {
                 withExposedPorts(7687, 7474)
                 withEnv("NEO4J_AUTH", "neo4j/arcade")
