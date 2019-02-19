@@ -6,6 +6,7 @@ before_install:
   - docker version
   - docker info
 
+
 cache:
   directories:
     - ~/.m2/repository
@@ -19,3 +20,6 @@ script:
 
 jdk:
   - openjdk8
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash) -t ${CODECOV_TOKEN}
