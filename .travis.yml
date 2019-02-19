@@ -15,11 +15,10 @@ notifications:
   email:
     - ro.franchini@gmail.com
 
-script:
-  ./mvnw -fae deploy --settings .travis/settings.xml
+script: ./mvnw -fae deploy --settings .travis/settings.xml
 
 jdk:
   - openjdk8
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash) -t ${CODECOV_TOKEN}
+  - bash <(curl -s https://codecov.io/bash) -t ${env.CODECOV_TOKEN}
