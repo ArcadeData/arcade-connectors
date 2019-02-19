@@ -50,7 +50,8 @@ fun mapType(type: String): String = when (type.trim()
     "bool", "boolean"
     -> "Boolean"
     else -> {
-        log.error("type not mapped:: {} ", type)
+        log.isDebugEnabled
+        if (log.isDebugEnabled) log.debug("type not mapped:: {} ", type)
         type
     }
 
