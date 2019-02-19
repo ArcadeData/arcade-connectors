@@ -126,13 +126,12 @@ class OrientDBDataSourceGraphDataProviderIntTest {
 
     }
 
-    private fun getPersonsIdentity(count: Int): Array<String> {
+    private fun getPersonsIdentity(limit: Int): Array<String> {
         ODatabaseDocumentTx(dbUrl).open<ODatabaseDocumentTx>("admin", "admin")
                 .use {
 
-                    return it.query<List<ODocument>>(OSQLSynchQuery<ODocument>("SELECT from Person"))
+                    return it.query<List<ODocument>>(OSQLSynchQuery<ODocument>("""SELECT from Person limit $limit"""))
                             .asSequence()
-                            .take(count)
                             .map { doc -> doc.identity }
                             .map { id -> id.clusterId.toString() + "_" + id.clusterPosition }
                             .toList()
