@@ -29,18 +29,7 @@ import java.util.*
 
 class Neo4jStatementResultMapper(private val dataSource: DataSourceInfo, private val maxTraversal: Int) {
 
-    private fun countInOut(cyto: CytoData, rels: Set<Relationship>): CytoData {
-
-        val nodeId = toNeo4jId(dataSource, cyto.data.id).toLong()
-
-//        val inAndOutCountByEdgeType: MutableMap<String, Map<String, Int>> = rels.asSequence()
-//                .filter { r -> r.endNodeId() == nodeId || r.startNodeId() == nodeId }
-//                .groupBy { r -> if (r.endNodeId() == nodeId) "@in" else "@out" }
-//                .map { (key, value) -> Pair(key, value.groupingBy { r -> r.type() }.eachCount()) }
-//                .toMap(mutableMapOf())
-
-
-//        log.info("count in and out:: {} ", inAndOutCountByEdgeType)
+    private fun countInOut(cyto: CytoData): CytoData {
 
         val inAndOutCountByEdgeType: MutableMap<String, Map<String, Int>> = mutableMapOf()
         inAndOutCountByEdgeType.putIfAbsent("@in", mutableMapOf<String, Int>())
@@ -89,8 +78,8 @@ class Neo4jStatementResultMapper(private val dataSource: DataSourceInfo, private
     fun map(result: StatementResult): GraphData {
 
         log.info("mapping result max {} ", maxTraversal)
-        val nodesClasses = mutableMapOf<String, Map<String, Any>>()
-        val edgeClasses = mutableMapOf<String, Map<String, Any>>()
+        val nodesClasses = mutableMapOf<String, MutableMap<String, Any>>()
+        val edgeClasses = mutableMapOf<String, MutableMap<String, Any>>()
         val nodes = mutableSetOf<Node>()
         val rels = mutableSetOf<Relationship>()
         var fetchMore = true
@@ -153,7 +142,7 @@ class Neo4jStatementResultMapper(private val dataSource: DataSourceInfo, private
         val cytoNodes = nodes.asSequence()
                 .map { c -> mapProperties(nodesClasses, c) }
                 .map { n -> toCytoData(n) }
-                .map { c -> countInOut(c, relsWithEachEnds) }
+                .map { c -> countInOut(c) }
                 .toSet()
 
         val edges = relsWithEachEnds.asSequence()
@@ -168,27 +157,29 @@ class Neo4jStatementResultMapper(private val dataSource: DataSourceInfo, private
         return graphData
     }
 
-    private fun mapProperties(nodesClasses: MutableMap<String, Map<String, Any>>, node: Node): Node {
+    private fun mapProperties(nodesClasses: MutableMap<String, MutableMap<String, Any>>, node: Node): Node {
 
         val className = node.labels().joinToString("_")
-        (nodesClasses as java.util.Map<String, Map<String, Any>>).putIfAbsent(className, HashMap())
+
+        nodesClasses.putIfAbsent(className, HashMap())
+
         val properties = nodesClasses[className]
 
         node.keys()
-                .forEach { k -> (properties as java.util.Map<String, Any>).putIfAbsent(k, mapType(node.get(k).type().name())) }
+                .forEach { k -> properties?.putIfAbsent(k, mapType(node.get(k).type().name())) }
 
 
         return node
     }
 
-    private fun mapProperties(nodesClasses: MutableMap<String, Map<String, Any>>, rel: Relationship): Relationship {
+    private fun mapProperties(nodesClasses: MutableMap<String, MutableMap<String, Any>>, rel: Relationship): Relationship {
 
-        (nodesClasses as java.util.Map<String, Map<String, Any>>).putIfAbsent(rel.type(), HashMap())
+        nodesClasses.putIfAbsent(rel.type(), HashMap())
 
         val properties = nodesClasses[rel.type()]
 
         rel.keys()
-                .forEach { k -> (properties as java.util.Map<String, Any>).putIfAbsent(k, rel.get(k).type().name()) }
+                .forEach { k -> properties?.putIfAbsent(k, rel.get(k).type().name()) }
 
         return rel
     }

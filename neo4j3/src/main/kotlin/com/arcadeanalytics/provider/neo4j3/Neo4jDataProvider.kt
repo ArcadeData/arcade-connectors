@@ -38,15 +38,15 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
 
     private val log = LoggerFactory.getLogger(Neo4jDataProvider::class.java)
 
-    override fun fetchData(datasource: DataSourceInfo,
+    override fun fetchData(dataSource: DataSourceInfo,
                            query: String,
                            limit: Int): GraphData {
-        getDriver(datasource).use { driver ->
+        getDriver(dataSource).use { driver ->
             driver.session(AccessMode.READ).use { session ->
 
                 log.info("API:: fetching data from query '{}' with limit {}  ", query, limit)
 
-                val graphData = fetchData(session, datasource, query, limit, Neo4jStatementResultMapper(datasource, limit))
+                val graphData = fetchData(session, dataSource, query, limit, Neo4jStatementResultMapper(dataSource, limit))
 
                 session.closeAsync()
                 driver.closeAsync()
@@ -59,8 +59,8 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
     }
 
 
-    override fun expand(datasource: DataSourceInfo,
-                        nodeIds: Array<String>,
+    override fun expand(dataSource: DataSourceInfo,
+                        ids: Array<String>,
                         direction: String,
                         edgeLabel: String,
                         maxTraversal: Int): GraphData {
@@ -74,8 +74,8 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
             else -> "<-$label->"
         }
 
-        val cleanedIds = nodeIds.asSequence()
-                .map { id -> toNeo4jId(datasource, id) }
+        val cleanedIds = ids.asSequence()
+                .map { id -> toNeo4jId(dataSource, id) }
                 .distinct()
                 .joinToString(",")
 
@@ -83,10 +83,10 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
         val query = "MATCH (node)$rel(target) WHERE id(node) IN [$cleanedIds] return node, rel, target"
 
 
-        getDriver(datasource).use { driver ->
+        getDriver(dataSource).use { driver ->
             driver.session(AccessMode.READ).use { session ->
 
-                val graphData = fetchData(session, datasource, query, maxTraversal, Neo4jStatementResultMapper(datasource, maxTraversal))
+                val graphData = fetchData(session, dataSource, query, maxTraversal, Neo4jStatementResultMapper(dataSource, maxTraversal))
                 session.closeAsync()
                 driver.closeAsync()
 
@@ -99,10 +99,10 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
     }
 
 
-    override fun load(datasource: DataSourceInfo, ids: Array<String>): GraphData {
+    override fun load(dataSource: DataSourceInfo, ids: Array<String>): GraphData {
 
         val cleanedIds = ids.asSequence()
-                .map { id -> toNeo4jId(datasource, id) }
+                .map { id -> toNeo4jId(dataSource, id) }
                 .joinToString(",")
 
         val query = """MATCH (n)
@@ -110,11 +110,11 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
             RETURN n"""
 
 
-        getDriver(datasource).use { driver ->
+        getDriver(dataSource).use { driver ->
 
             driver.session(AccessMode.READ).use { session ->
 
-                val graphData = fetchData(session, datasource, query, ids.size, Neo4jStatementResultMapper(datasource, ids.size))
+                val graphData = fetchData(session, dataSource, query, ids.size, Neo4jStatementResultMapper(dataSource, ids.size))
                 session.closeAsync()
                 driver.closeAsync()
 
