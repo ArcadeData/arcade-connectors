@@ -11,18 +11,11 @@ import org.junit.jupiter.api.Test
 
 class OrientDBDataSourceGraphDataProviderIntTest {
 
-
     private val provider: OrientDBDataSourceGraphDataProvider = OrientDBDataSourceGraphDataProvider()
-
 
     @Test
     @Throws(Exception::class)
     fun shouldFetchDataWithQuery() {
-
-        //given
-
-
-        //when
 
         val query = "select from Person limit 20"
         val data = provider.fetchData(OrientDBContainer.dataSource, query, 20)
@@ -31,10 +24,7 @@ class OrientDBDataSourceGraphDataProviderIntTest {
         //then
         assertThat(data.nodes).hasSize(4)
 
-        //        assertThat(data.getEdges()).hasSize(1);
-
         assertThat(data.nodesClasses).containsKeys("Person")
-        //        assertThat(data.getEdgesClasses()).containsKeys("FriendOf");
 
         val cytoData = data.nodes.first()
         assertThat(cytoData.group).isEqualTo("nodes")
@@ -84,7 +74,6 @@ class OrientDBDataSourceGraphDataProviderIntTest {
         //when
         val data = provider.expand(dataSource, ids, "both", "", 300)
 
-        println("data = ${data}")
         //then
         assertThat(data.nodes).hasSize(4)
         assertThat(data.edges).hasSize(3)

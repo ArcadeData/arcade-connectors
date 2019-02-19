@@ -9,6 +9,10 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import java.io.IOException
 
+const val ORIENTDB_DOCKER_IMAGE = "orientdb:2.2.37-spatial"
+
+const val ORIENTDB_ROOT_PASSWORD = "arcade"
+
 object OrientDBContainer {
 
     private val container: KGenericContainer = KGenericContainer(ORIENTDB_DOCKER_IMAGE)
@@ -16,6 +20,7 @@ object OrientDBContainer {
                 withExposedPorts(2424)
                 withEnv("ORIENTDB_ROOT_PASSWORD", ORIENTDB_ROOT_PASSWORD)
                 waitingFor(Wait.forListeningPort())
+                start()
             }
 
     val dataSource: DataSourceInfo
@@ -23,8 +28,6 @@ object OrientDBContainer {
     val dbUrl: String
 
     init {
-
-        container.start()
 
         dataSource = DataSourceInfo(id = 1L,
                 type = "ORIENTDB",
@@ -47,9 +50,6 @@ object OrientDBContainer {
 
 }
 
-const val ORIENTDB_DOCKER_IMAGE = "orientdb:2.2.37-spatial"
-
-const val ORIENTDB_ROOT_PASSWORD = "arcade"
 
 /**
  * Given an OrientDB container instance, returns the remote url
@@ -109,11 +109,12 @@ fun createPersonSchema(dbUrl: String) {
 fun createTestDatabase(serverUrl: String, dbname: String): String {
 
     try {
-        OServerAdmin(serverUrl).apply {
-            connect("root", ORIENTDB_ROOT_PASSWORD)
-            createDatabase(dbname, "graph", "plocal")
-            close()
-        }
+        OServerAdmin(serverUrl)
+                .apply {
+                    connect("root", ORIENTDB_ROOT_PASSWORD)
+                    createDatabase(dbname, "graph", "plocal")
+                    close()
+                }
         return "$serverUrl/$dbname"
     } catch (e: IOException) {
         throw RuntimeException("unable to create database on " + serverUrl, e)
