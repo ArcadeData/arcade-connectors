@@ -40,7 +40,7 @@ object OrientDBContainer {
 
         val serverUrl = getServerUrl(container)
 
-        dbUrl = createTestDataabse(serverUrl, dataSource.database)
+        dbUrl = createTestDatabase(serverUrl, dataSource.database)
 
         createPersonSchema(dbUrl)
 
@@ -108,7 +108,7 @@ fun createPersonSchema(dbUrl: String) {
  * @param serverUrl
  * @return
  */
-fun createTestDataabse(serverUrl: String, dbname: String): String {
+fun createTestDatabase(serverUrl: String, dbname: String): String {
 
     try {
         OServerAdmin(serverUrl).apply {
