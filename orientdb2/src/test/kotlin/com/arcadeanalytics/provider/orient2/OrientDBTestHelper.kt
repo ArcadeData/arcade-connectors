@@ -11,21 +11,20 @@ import java.io.IOException
 
 object OrientDBContainer {
 
-    val container: KGenericContainer
+    private val container: KGenericContainer = KGenericContainer(ORIENTDB_DOCKER_IMAGE)
+            .apply {
+                withExposedPorts(2424)
+                withEnv("ORIENTDB_ROOT_PASSWORD", ORIENTDB_ROOT_PASSWORD)
+                waitingFor(Wait.forListeningPort())
+            }
 
     val dataSource: DataSourceInfo
 
-    var dbUrl: String
+    val dbUrl: String
 
     init {
-        container = KGenericContainer(ORIENTDB_DOCKER_IMAGE)
-                .apply {
-                    withExposedPorts(2424)
-                    withEnv("ORIENTDB_ROOT_PASSWORD", ORIENTDB_ROOT_PASSWORD)
-                    waitingFor(Wait.forListeningPort())
-                    start()
 
-                }
+        container.start()
 
         dataSource = DataSourceInfo(id = 1L,
                 type = "ORIENTDB",
@@ -36,7 +35,6 @@ object OrientDBContainer {
                 password = "admin",
                 database = "testDatabase"
         )
-
 
         val serverUrl = getServerUrl(container)
 
@@ -49,7 +47,7 @@ object OrientDBContainer {
 
 }
 
-const val ORIENTDB_DOCKER_IMAGE = "orientdb:2.2.36"
+const val ORIENTDB_DOCKER_IMAGE = "orientdb:2.2.37-spatial"
 
 const val ORIENTDB_ROOT_PASSWORD = "arcade"
 
