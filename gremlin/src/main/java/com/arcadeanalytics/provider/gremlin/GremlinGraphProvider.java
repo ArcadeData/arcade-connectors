@@ -9,9 +9,9 @@ package com.arcadeanalytics.provider.gremlin;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,6 +31,7 @@ import org.apache.tinkerpop.gremlin.driver.Result;
 import org.apache.tinkerpop.gremlin.driver.ResultSet;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,11 +91,14 @@ public class GremlinGraphProvider implements DataSourceGraphProvider {
 
                 Sprite sprite = new Sprite();
                 element.keys()
-                        .forEach(k -> sprite.add(k, element.value(k).toString()));
+                        .stream()
+                        .flatMap(key -> IteratorUtils.stream(element.properties(key)))
+                        .forEach(v -> sprite.add(v.label(), v.value()));
 
-                final Sprite add = sprite.add(ARCADE_ID, dataSource.getId() + "_" + cleanOrientId(element.id().toString()))
+                sprite.add(ARCADE_ID, dataSource.getId() + "_" + cleanOrientId(element.id().toString()))
                         .add(ARCADE_TYPE, ARCADE_NODE_TYPE)
                         .add("@class", element.label());
+
                 processor.play(sprite);
                 fetched++;
             }
