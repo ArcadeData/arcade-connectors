@@ -20,13 +20,15 @@
 package com.arcadeanalytics.provider
 
 import com.google.common.collect.Sets
-import com.google.common.io.ByteStreams
 import com.jcraft.jsch.JSch
 import com.jcraft.jsch.JSchException
 import com.jcraft.jsch.Session
 import org.slf4j.LoggerFactory
 import java.io.IOException
+import java.lang.System.getProperty
 import java.net.ServerSocket
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.*
 import java.util.function.BooleanSupplier
 import java.util.function.Consumer
@@ -42,9 +44,16 @@ abstract class SshTunnelTemplate {
         val jsch = JSch()
 
         try {
-            val privKey = ByteStreams.toByteArray(javaClass.classLoader.getResourceAsStream("config/ssh/id_rsa"))
-            val pubKey = ByteStreams.toByteArray(javaClass.classLoader.getResourceAsStream("config/ssh/id_rsa.pub"))
-            jsch.addIdentity(Optional.ofNullable(dataSourceInfo.sshUser).orElse(DEFAULT_SSH_USER), privKey, pubKey, null)
+
+            val privKeyFileName = getProperty("SSH_PRIV_KEY", ".ssh/id_rsa")
+            val pubKeyFileName = getProperty("SSH_PUB_KEY", ".ssh/id_rsa.pub")
+
+
+            val privKey = Files.readAllBytes(Paths.get(privKeyFileName))
+            val pubKey = Files.readAllBytes(Paths.get(pubKeyFileName))
+            val sshUser = Optional.ofNullable(dataSourceInfo.sshUser).orElse(DEFAULT_SSH_USER)
+
+            jsch.addIdentity(sshUser, privKey, pubKey, null)
 
             val session = jsch.getSession(dataSourceInfo.sshUser, dataSourceInfo.gateway, dataSourceInfo.sshPort)
             session.setConfig("StrictHostKeyChecking", "no")
