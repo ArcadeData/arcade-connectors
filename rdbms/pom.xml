@@ -84,28 +84,31 @@
         </dependency>
 
         <dependency>
+            <groupId>world.data</groupId>
+            <artifactId>dw-jdbc</artifactId>
+            <classifier>shaded</classifier>
+            <version>${dw-jdbc.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>${mysql-connector-java.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>${postgresql.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.hsqldb</groupId>
             <artifactId>hsqldb</artifactId>
             <version>${hsqldb.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>world.data</groupId>
-            <artifactId>dw-jdbc</artifactId>
-            <classifier>shaded</classifier>
-            <version>${dw-jdbc.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
