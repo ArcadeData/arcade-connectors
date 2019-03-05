@@ -42,11 +42,11 @@ class RDBMSMetadataProvider : DataSourceMetadataProvider {
             "RDBMS_DATA_WORLD"
     )
 
-    override fun fetchMetadata(dataSourceInfo: DataSourceInfo): DataSourceMetadata {
+    override fun fetchMetadata(dataSource: DataSourceInfo): DataSourceMetadata {
 
-        val mapper: ER2GraphMapper = getMapper(dataSourceInfo)
+        val mapper: ER2GraphMapper = getMapper(dataSource)
 
-        val dbQueryEngine: DBQueryEngine = DBQueryEngine(dataSourceInfo, 300)
+        val dbQueryEngine: DBQueryEngine = DBQueryEngine(dataSource, 300)
 
         val graphModel = mapper.graphModel
 
@@ -57,7 +57,7 @@ class RDBMSMetadataProvider : DataSourceMetadataProvider {
                             .toMap()
 
                     var cardinality: Long = 0
-                    if (dataSourceInfo.aggregationEnabled) {
+                    if (dataSource.aggregationEnabled) {
 
                         if (!it.isFromJoinTable) {
                             mapper.vertexType2EVClassMappers.get(it)?.get(0)?.entity?.name?.let { tableName ->
@@ -96,7 +96,7 @@ class RDBMSMetadataProvider : DataSourceMetadataProvider {
 
                     var cardinality: Long = 0
 
-                    if (dataSourceInfo.aggregationEnabled) {
+                    if (dataSource.aggregationEnabled) {
 
                         if (edgeType.isAggregatorEdge) {
                             mapper.getJoinVertexTypeByAggregatorEdgeName(edgeTypeName)?.run {
@@ -112,7 +112,7 @@ class RDBMSMetadataProvider : DataSourceMetadataProvider {
                             val mappedRelationships = mapper.edgeType2relationships.get(edgeType)
                             mappedRelationships?.forEach {
                                 if (!it.foreignEntity.isAggregableJoinTable) {   // excluding relationships that are aggregated in aggregator edges, then all that have a join table as parent entity
-                                    val queryResult: RelationshipQueryResult = dbQueryEngine.computeRelationshipCardinality(it, dataSourceInfo, edgeTypeName)
+                                    val queryResult: RelationshipQueryResult = dbQueryEngine.computeRelationshipCardinality(it, dataSource, edgeTypeName)
                                     val countResult: ResultSet = queryResult.result
                                     if (countResult.next()) {
                                         cardinality += countResult.getLong(1)
@@ -125,7 +125,7 @@ class RDBMSMetadataProvider : DataSourceMetadataProvider {
                     } else {
                         val mappedRelationships = mapper.edgeType2relationships.get(edgeType)
                         mappedRelationships?.forEach { rel ->
-                            val queryResult: RelationshipQueryResult = dbQueryEngine.computeRelationshipCardinality(rel, dataSourceInfo, edgeTypeName)
+                            val queryResult: RelationshipQueryResult = dbQueryEngine.computeRelationshipCardinality(rel, dataSource, edgeTypeName)
                             val countResult: ResultSet = queryResult.result
                             if (countResult.next()) {
                                 cardinality += countResult.getLong(1)

@@ -34,6 +34,7 @@ import com.tinkerpop.blueprints.Direction
 import com.tinkerpop.blueprints.impls.orient.OrientEdge
 import com.tinkerpop.blueprints.impls.orient.OrientGraphNoTx
 import com.tinkerpop.blueprints.impls.orient.OrientVertex
+import org.apache.commons.lang3.RegExUtils.removeFirst
 import org.apache.commons.lang3.StringUtils.*
 import org.slf4j.LoggerFactory
 import java.util.*

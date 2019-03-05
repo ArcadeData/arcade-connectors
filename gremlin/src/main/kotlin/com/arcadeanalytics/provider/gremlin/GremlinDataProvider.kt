@@ -144,8 +144,10 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
 
                 val sourceId = element.inVertex().id().toString()
                 val source = "${dataSource.id}_${cleanOrientId(sourceId)}"
+
                 val targetId = element.outVertex().id().toString()
                 val target = "${dataSource.id}_${cleanOrientId(targetId)}"
+
                 val data = Data(id = id, source = source, target = target, record = record)
                 CytoData(classes = element.label(), data = data, group = "edges")
 

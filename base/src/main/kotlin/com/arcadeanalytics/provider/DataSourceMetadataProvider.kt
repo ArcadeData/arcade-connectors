@@ -39,6 +39,6 @@ data class DataSourceMetadata(val nodesClasses: NodesClasses,
 
 interface DataSourceMetadataProvider : DataSourceProvider {
 
-    fun fetchMetadata(dataSourceInfo: DataSourceInfo): DataSourceMetadata
+    fun fetchMetadata(dataSource: DataSourceInfo): DataSourceMetadata
 
 }

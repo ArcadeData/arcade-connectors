@@ -42,25 +42,25 @@ class Neo4jMetadataProvider : DataSourceMetadataProvider {
 
     override fun supportedDataSourceTypes(): Set<String> = setOf("NEO4J", "NEO4J_MEMGRAPH")
 
-    override fun fetchMetadata(dataSourceInfo: DataSourceInfo): DataSourceMetadata {
+    override fun fetchMetadata(dataSource: DataSourceInfo): DataSourceMetadata {
 
-        val connectionUrl = createConnectionUrl(dataSourceInfo)
+        val connectionUrl = createConnectionUrl(dataSource)
 
-        log.info("fetching metadata for dataSource {} - {}", dataSourceInfo, connectionUrl)
+        log.info("fetching metadata for dataSource {} - {}", dataSource, connectionUrl)
 
         val config = Config.build()
                 .withConnectionTimeout(5, TimeUnit.SECONDS)
                 .withConnectionLivenessCheckTimeout(1L, TimeUnit.SECONDS)
                 .toConfig()
 
-        GraphDatabase.driver(connectionUrl, AuthTokens.basic(dataSourceInfo.username, dataSourceInfo.password), config)
+        GraphDatabase.driver(connectionUrl, AuthTokens.basic(dataSource.username, dataSource.password), config)
                 .use {
                     it.session(AccessMode.READ)
                             .use { session ->
 
-                                val nodesClasses = nodeClasses(session, dataSourceInfo.type)
+                                val nodesClasses = nodeClasses(session, dataSource.type)
 
-                                val edgeClasses = edgeClasses(session, dataSourceInfo.type)
+                                val edgeClasses = edgeClasses(session, dataSource.type)
 
                                 return DataSourceMetadata(nodesClasses, edgeClasses)
 
