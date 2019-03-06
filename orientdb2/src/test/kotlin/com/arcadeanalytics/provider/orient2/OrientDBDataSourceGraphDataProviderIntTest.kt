@@ -41,13 +41,12 @@ class OrientDBDataSourceGraphDataProviderIntTest {
     @Throws(Exception::class)
     fun shouldTraverseFromGivenNode() {
         //given
+        val person = provider.loadFromClass(dataSource, "Person", "name", "frank", 1)
 
+        val id = person.nodes.first().data.id
 
-        //        final String rid = getFirstPersonIdentity();
-
-        val ids = getPersonsIdentity(2)
         //when
-        val data = provider.expand(dataSource, ids, "out", "FriendOf", 300)
+        val data = provider.expand(dataSource, arrayOf(id), "in", "FriendOf", 300)
 
         //then
         assertThat(data.nodes).hasSize(2)
@@ -56,8 +55,9 @@ class OrientDBDataSourceGraphDataProviderIntTest {
         assertThat(data.nodesClasses).containsKeys("Person")
         assertThat(data.edgesClasses).containsKeys("FriendOf")
 
-        val cytoData = data.nodes.stream().findFirst().get()
-        assertThat(cytoData.data.record).isNotNull
+        val cytoData = data.nodes.first()
+        val record = cytoData.data.record
+        assertThat(record).isNotNull
         assertThat(cytoData.data.source).isEmpty()
 
     }
@@ -67,22 +67,23 @@ class OrientDBDataSourceGraphDataProviderIntTest {
     fun shouldTraverseAllEdgesNode() {
         //given
 
+        val person = provider.loadFromClass(dataSource, "Person", "name", "frank", 1)
 
-        //        final String rid = getFirstPersonIdentity();
+        val id = person.nodes.first().data.id
 
-        val ids = getPersonsIdentity(2)
         //when
-        val data = provider.expand(dataSource, ids, "both", "", 300)
+        val data = provider.expand(dataSource, arrayOf(id), "both", "", 300)
 
+        println("data = ${data}")
         //then
-        assertThat(data.nodes).hasSize(4)
-        assertThat(data.edges).hasSize(3)
+        assertThat(data.nodes).hasSize(3)
+        assertThat(data.edges).hasSize(2)
 
         assertThat(data.nodesClasses).containsKeys("Person")
         assertThat(data.edgesClasses).containsKeys("FriendOf")
         assertThat(data.edgesClasses).containsKeys("HaterOf")
 
-        val cytoData = data.nodes.stream().findFirst().get()
+        val cytoData = data.nodes.first()
         assertThat(cytoData.data.record).isNotNull
         assertThat(cytoData.data.source).isEmpty()
 

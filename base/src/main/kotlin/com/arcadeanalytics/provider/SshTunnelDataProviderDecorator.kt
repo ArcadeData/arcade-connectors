@@ -60,7 +60,7 @@ class SshTunnelDataProviderDecorator(private val factory: DataSourceGraphDataPro
     }
 
 
-    override fun expand(dataSource: DataSourceInfo, roots: Array<String>, direction: String, edgeLabel: String, maxTraversal: Int): GraphData {
+    override fun expand(dataSource: DataSourceInfo, ids: Array<String>, direction: String, edgeLabel: String, maxTraversal: Int): GraphData {
         val localPort = findFreePort()
 
         val session = buildTunnel(dataSource, localPort)
@@ -68,7 +68,7 @@ class SshTunnelDataProviderDecorator(private val factory: DataSourceGraphDataPro
         val wrapper = createLocalhostDataSource(dataSource, localPort)
 
         val provider = factory.create(wrapper)
-        val graphData = provider.expand(wrapper, roots, direction, edgeLabel, maxTraversal)
+        val graphData = provider.expand(wrapper, ids, direction, edgeLabel, maxTraversal)
 
         session.disconnect()
 

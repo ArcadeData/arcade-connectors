@@ -52,16 +52,16 @@ class Neo4jGraphProvider : DataSourceGraphProvider {
 
     private val allFields: Pattern = Pattern.compile(".*")
 
-    override fun provideTo(datasource: DataSourceInfo,
+    override fun provideTo(dataSource: DataSourceInfo,
                            processor: SpritePlayer) {
 
-        getDriver(datasource).use { driver ->
+        getDriver(dataSource).use { driver ->
 
             driver.session(AccessMode.READ).use { session ->
 
-                indexNodes(datasource, processor, session)
+                indexNodes(dataSource, processor, session)
 
-                indexRelationships(datasource, processor, session)
+                indexRelationships(dataSource, processor, session)
             }
         }
 
