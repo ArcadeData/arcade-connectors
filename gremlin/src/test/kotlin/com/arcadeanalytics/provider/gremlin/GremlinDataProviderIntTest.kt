@@ -54,8 +54,27 @@ class GremlinDataProviderIntTest {
         assertThat(record).isNotNull
                 .containsKeys("@in", "@out", "Name", "@edgeCount")
 
-        println("cytoData = ${cytoData}")
 
+    }
+
+    @Test
+    internal fun shouldFetchWithQuery() {
+        val query = "g.V().hasLabel('Countries').has('Name', 'Italy').inE()"
+
+        val data = provider.fetchData(OrientDBGremlinContainer.dataSource, query, 50)
+
+
+        assertThat(data.nodes).hasSize(5)
+        assertThat(data.edges).hasSize(4)
+
+        val aNode = data.nodes.first()
+
+        assertThat(aNode.data.source).isNullOrEmpty()
+        assertThat(aNode.data.target).isNullOrEmpty()
+
+        val anEdge = data.edges.first()
+
+        assertThat(anEdge.classes).isEqualTo("IsFromCountry")
 
     }
 
@@ -76,7 +95,6 @@ class GremlinDataProviderIntTest {
 
         assertThat(load.nodes).hasSize(10)
 
-        load.nodes.asSequence().forEach { n -> println("n = ${n}") }
     }
 
     @Test
@@ -102,6 +120,11 @@ class GremlinDataProviderIntTest {
         assertThat(load.nodes).hasSize(17)
         assertThat(load.edges).hasSize(11)
 
+        load.edges.forEach {
+            assertThat(ids).contains(it.data.target)
+
+        }
+
     }
 
     @Test
@@ -119,6 +142,11 @@ class GremlinDataProviderIntTest {
 
         assertThat(load.nodes).hasSize(17)
         assertThat(load.edges).hasSize(11)
+
+        load.edges.forEach {
+            assertThat(ids).contains(it.data.target)
+
+        }
 
     }
 

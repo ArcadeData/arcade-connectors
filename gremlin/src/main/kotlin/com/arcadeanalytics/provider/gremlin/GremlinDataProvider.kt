@@ -142,10 +142,10 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
             }
             is Edge -> {
 
-                val sourceId = element.inVertex().id().toString()
+                val sourceId = element.outVertex().id().toString()
                 val source = "${dataSource.id}_${cleanOrientId(sourceId)}"
 
-                val targetId = element.outVertex().id().toString()
+                val targetId = element.inVertex().id().toString()
                 val target = "${dataSource.id}_${cleanOrientId(targetId)}"
 
                 val data = Data(id = id, source = source, target = target, record = record)
@@ -165,7 +165,7 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
                 .replace(":", "_")
     }
 
-    protected fun populateClasses(classes: MutableMap<String, Map<String, Any>>, element: CytoData): CytoData {
+    private fun populateClasses(classes: MutableMap<String, Map<String, Any>>, element: CytoData): CytoData {
         if (classes[element.classes] == null) {
             classes[element.classes] = Maps.newHashMap()
         }
@@ -229,7 +229,7 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
     }
 
     override fun loadFromClass(dataSource: DataSourceInfo, className: String, propName: String, propValue: String, limit: Int): GraphData {
-        val query = "g.V().hasLabel(${splitMultilabel(className)}).has('$propName', eq(\"$propValue\")).limit($limit)"
+        val query = "g.V().hasLabel(${splitMultilabel(className)}).has('$propName', eq('$propValue')).limit($limit)"
 
         return this.fetchData(dataSource, query, limit)
     }
