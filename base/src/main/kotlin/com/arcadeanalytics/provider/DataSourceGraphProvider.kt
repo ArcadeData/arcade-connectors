@@ -29,5 +29,5 @@ import com.arcadeanalytics.data.SpritePlayer
 interface DataSourceGraphProvider : DataSourceProvider {
 
 
-    fun provideTo(dataSource: DataSourceInfo, processor: SpritePlayer)
+    fun provideTo(dataSource: DataSourceInfo, player: SpritePlayer)
 }

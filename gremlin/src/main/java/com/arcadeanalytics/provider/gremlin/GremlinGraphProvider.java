@@ -53,23 +53,23 @@ public class GremlinGraphProvider implements DataSourceGraphProvider {
     }
 
     @Override
-    public void provideTo(DataSourceInfo dataSource, SpritePlayer processor) {
+    public void provideTo(DataSourceInfo dataSource, SpritePlayer player) {
 
         Cluster cluster = GremlinUtilKt.getCluster(dataSource);
 
         Client client = cluster.connect().init();
         try {
 
-            provideNodes(dataSource, processor, client);
+            provideNodes(dataSource, player, client);
 
-            provideEdges(dataSource, processor, client);
+            provideEdges(dataSource, player, client);
 
             client.close();
 
         } finally {
             cluster.close();
             client.close();
-            processor.end();
+            player.end();
 
         }
     }

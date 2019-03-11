@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory
 class SshTunnelDataSourceGraphProviderDecorator(private val factory: DataSourceGraphProviderFactory) : SshTunnelTemplate(), DataSourceGraphProvider {
 
 
-    override fun provideTo(dataSource: DataSourceInfo, processor: SpritePlayer) {
+    override fun provideTo(dataSource: DataSourceInfo, player: SpritePlayer) {
 
         val localPort = findFreePort()
 
@@ -36,7 +36,7 @@ class SshTunnelDataSourceGraphProviderDecorator(private val factory: DataSourceG
         val wrapper = createLocalhostDataSource(dataSource, localPort)
 
         val provider = factory.create(wrapper)
-        provider.provideTo(wrapper, processor)
+        provider.provideTo(wrapper, player)
 
         log.info("ssh disconnecting:: {}", session.isConnected)
         session.disconnect()

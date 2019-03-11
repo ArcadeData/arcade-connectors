@@ -38,7 +38,6 @@ import org.apache.commons.lang3.RegExUtils.removeFirst
 import org.apache.commons.lang3.StringUtils.*
 import org.slf4j.LoggerFactory
 import java.util.*
-import kotlin.collections.HashSet
 
 /**
  * Specialized provider for OrientDB2
@@ -52,15 +51,13 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
     override fun testConnection(dataSource: DataSourceInfo): Boolean {
 
-        log.info("testing connection to :: '{}' ", dataSource.id)
+        log.info("testing connection to data source '{}' ", dataSource.id)
 
         try {
-            open(dataSource)
-                    .use {
 
-                        log.info("connection works fine:: '{}' ", it.url)
+            fetchData(dataSource, "SELECT FROM V LIMIT 1", 1)
+            log.info("connection to data source '{}' works fine", dataSource.id)
 
-                    }
         } catch (e: Exception) {
             throw RuntimeException(e)
         }
@@ -71,10 +68,9 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
     override fun fetchData(dataSource: DataSourceInfo, query: String, limit: Int): GraphData {
 
-        log.info("fetching data from '{}' with query '{}' ", dataSource.id, truncate(query, 256))
-
         open(dataSource)
                 .use { db ->
+                    log.info("fetching data from '{}' with query '{}' ", db.url, truncate(query, 256))
                     val collector = OrientDBDocumentCollector()
 
                     db.query<List<*>>(OSQLAsynchQuery<Any>(query, OrientDBResultListener(collector, limit)))
@@ -116,7 +112,7 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
                     e.key
                 }.toSet())
 
-        keys.stream()
+        keys.asSequence()
                 .forEach { k -> record.remove(k) }
 
         cleanRecord(record)
@@ -202,8 +198,8 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
         val graph = OrientGraphNoTx(db)
 
         // DIVIDE VERTICES FROM EDGES
-        val nodes = HashSet<OrientVertex>()
-        val edges = HashSet<OrientEdge>()
+        val nodes = mutableSetOf<OrientVertex>()
+        val edges = mutableSetOf<OrientEdge>()
         val resultSet = collector.collected()
 
         resultSet.asSequence()
@@ -223,7 +219,7 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
         log.info("Computing edge map on {} edges...", edges.size)
 
-        val edgeClasses = HashMap<String, Map<String, Any>>()
+        val edgeClasses = mutableMapOf<String, Map<String, Any>>()
         val cytoEdges = edges.asSequence()
                 .map { e -> e.record }
                 .map { d -> populateClasses(edgeClasses, d) }
@@ -235,7 +231,7 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
         log.info("Computing vertex map on {} vertices...", nodes.size)
 
-        val nodeClasses = HashMap<String, Map<String, Any>>()
+        val nodeClasses = mutableMapOf<String, Map<String, Any>>()
         val cytoNodes = nodes.asSequence()
                 .map { e -> e.record }
                 .map { d -> populateClasses(nodeClasses, d) }
@@ -283,16 +279,15 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
     }
 
     private fun mapInAndOut(d: ODocument): ODocument {
-        var rid: ORID
         if (!d.containsField("out"))
             return d
 
-        rid = (d.rawField<Any>("out") as OIdentifiable).identity
-        d.field("@outId", rid.clusterId.toString() + "_" + rid.clusterPosition)
+        val outRid = (d.rawField<Any>("out") as OIdentifiable).identity
+        d.field("@outId", "${outRid.clusterId}_${outRid.clusterPosition}")
         d.removeField("out")
 
-        rid = (d.rawField<Any>("in") as OIdentifiable).identity
-        d.field("@inId", rid.clusterId.toString() + "_" + rid.clusterPosition)
+        val inRid = (d.rawField<Any>("in") as OIdentifiable).identity
+        d.field("@inId", "${inRid.clusterId}_${inRid.clusterPosition}")
         d.removeField("in")
         return d
     }
@@ -300,7 +295,7 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
     private fun mapRid(doc: ODocument): ODocument {
         val rid = doc.identity
 
-        doc.field("@id", rid.clusterId.toString() + "_" + rid.clusterPosition)
+        doc.field("@id", "${rid.clusterId}_${rid.clusterPosition}")
 
         return doc
     }
@@ -315,7 +310,7 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
     private fun populateProperties(classes: Map<String, Map<String, Any>>, element: ODocument) {
 
-        val properties = classes[element.className]
+        val properties = classes[element.className] as MutableMap
 
         element.fieldNames()
                 .asSequence()
@@ -333,7 +328,7 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
                 .forEach { f ->
                     val type = element.fieldType(f)
                     if (type != null)
-                        (properties as MutableMap<String, Any>).putIfAbsent(f, mapType(type.name))
+                        properties.putIfAbsent(f, mapType(type.name))
                 }
 
     }

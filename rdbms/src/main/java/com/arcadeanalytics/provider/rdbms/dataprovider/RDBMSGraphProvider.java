@@ -63,7 +63,7 @@ public class RDBMSGraphProvider implements DataSourceGraphProvider {
     private final Logger log = LoggerFactory.getLogger(RDBMSGraphProvider.class);
 
     @Override
-    public void provideTo(DataSourceInfo datasource, final SpritePlayer processor) {
+    public void provideTo(DataSourceInfo datasource, final SpritePlayer player) {
 
         Statistics statistics = new Statistics();
 
@@ -106,14 +106,14 @@ public class RDBMSGraphProvider implements DataSourceGraphProvider {
                     for (int i = 1; i <= columnCount; i++) {
                         document.add(rsmd.getColumnName(i), currentRecord.getObject(i));
                     }
-                    processor.play(document);
+                    player.play(document);
                 }
-                processor.end();
+                player.end();
 
                 // releasing the resources
                 queryResult.closeAll();
             }
-            processor.end();
+            player.end();
 
             if (datasource.isAggregationEnabled()) {
 
@@ -151,16 +151,16 @@ public class RDBMSGraphProvider implements DataSourceGraphProvider {
                                     document.add(rsmd.getColumnName(i), currentRecord.getObject(i));
                                 }
                             }
-                            processor.play(document);
+                            player.play(document);
                         }
-                        processor.end();
+                        player.end();
 
                         // releasing the resources
                         queryResult.closeAll();
                     }
                 }
             }
-            processor.end();
+            player.end();
 
         } catch (Exception e) {
             log.error("error while connecting to  " + datasource, e);

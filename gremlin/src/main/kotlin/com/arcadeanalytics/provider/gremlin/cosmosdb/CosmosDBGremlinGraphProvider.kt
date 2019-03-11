@@ -44,7 +44,7 @@ class CosmosDBGremlinGraphProvider : DataSourceGraphProvider {
         return Sets.newHashSet("GREMLIN_COSMOSDB")
     }
 
-    override fun provideTo(dataSource: DataSourceInfo, processor: SpritePlayer) {
+    override fun provideTo(dataSource: DataSourceInfo, player: SpritePlayer) {
 
         val cluster = Cluster.build(dataSource.server)
                 .port(dataSource.port)
@@ -56,14 +56,14 @@ class CosmosDBGremlinGraphProvider : DataSourceGraphProvider {
 
         val client = cluster.connect<Client>().init()
 
-        provideNodes(dataSource, processor, client)
+        provideNodes(dataSource, player, client)
 
-        provideEdges(dataSource, processor, client)
+        provideEdges(dataSource, player, client)
 
         client.close()
 
         cluster.close()
-        processor.end()
+        player.end()
     }
 
     private fun provideNodes(dataSource: DataSourceInfo, processor: SpritePlayer, client: Client) {
