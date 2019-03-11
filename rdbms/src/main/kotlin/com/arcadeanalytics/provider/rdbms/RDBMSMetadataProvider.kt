@@ -66,7 +66,7 @@ class RDBMSMetadataProvider : DataSourceMetadataProvider {
                                 if (countResult.next()) {
                                     cardinality = countResult.getLong(1)
                                 }
-                                queryResult.closeAll()
+                                queryResult.close()
                             }
                         }
                     } else {
@@ -76,7 +76,7 @@ class RDBMSMetadataProvider : DataSourceMetadataProvider {
                             if (countResult.next()) {
                                 cardinality = countResult.getLong(1)
                             }
-                            queryResult.closeAll()
+                            queryResult.close()
                         }
                     }
 
@@ -106,7 +106,7 @@ class RDBMSMetadataProvider : DataSourceMetadataProvider {
                                 if (countResult.next()) {
                                     cardinality += countResult.getLong(1)
                                 }
-                                queryResult.closeAll()
+                                queryResult.close()
                             }
                         } else {
                             val mappedRelationships = mapper.edgeType2relationships.get(edgeType)
@@ -117,7 +117,7 @@ class RDBMSMetadataProvider : DataSourceMetadataProvider {
                                     if (countResult.next()) {
                                         cardinality += countResult.getLong(1)
                                     }
-                                    queryResult.closeAll()
+                                    queryResult.close()
                                 }
                             }
                         }
@@ -130,7 +130,7 @@ class RDBMSMetadataProvider : DataSourceMetadataProvider {
                             if (countResult.next()) {
                                 cardinality += countResult.getLong(1)
                             }
-                            queryResult.closeAll()
+                            queryResult.close()
                         }
                     }
                     TypeClass(edgeType.name, cardinality, props)
@@ -139,6 +139,7 @@ class RDBMSMetadataProvider : DataSourceMetadataProvider {
                 }.toMap()
 
 
+        dbQueryEngine.close()
         return DataSourceMetadata(nodesClasses, edgesClasses)
     }
 

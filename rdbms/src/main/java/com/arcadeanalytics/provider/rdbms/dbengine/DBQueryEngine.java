@@ -9,9 +9,9 @@ package com.arcadeanalytics.provider.rdbms.dbengine;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -56,12 +56,15 @@ public class DBQueryEngine implements DataSourceQueryEngine {
     private final QueryBuilder queryBuilder;
     private final DataSourceInfo dataSource;
     private final int maxElements;
+    private final Connection dbConnection;
 
     public DBQueryEngine(DataSourceInfo dataSource, int maxElements) {
         this.dataSource = dataSource;
         this.maxElements = maxElements;
         QueryBuilderFactory queryBuilderFactory = new QueryBuilderFactory();
         this.queryBuilder = queryBuilderFactory.buildQueryBuilder(dataSource.getType());
+        dbConnection = DBSourceConnection.getConnection(dataSource);
+
     }
 
     public QueryResult countTableRecords(String currentTableName, String currentTableSchema) throws SQLException {
@@ -128,7 +131,6 @@ public class DBQueryEngine implements DataSourceQueryEngine {
 
         log.debug("query:: {}", query);
 
-        Connection dbConnection = DBSourceConnection.getConnection(dataSource);
         Statement statement = dbConnection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         ResultSet result = statement.executeQuery(query);
 
@@ -180,7 +182,7 @@ public class DBQueryEngine implements DataSourceQueryEngine {
     }
 
 
-//    /**
+    //    /**
 //     * Returns a count of 'joinable' records for each record of the pivot table, that is the table for which we are collecting the counts.
 //     *
 //     * @param relationship
@@ -382,4 +384,13 @@ public class DBQueryEngine implements DataSourceQueryEngine {
         return statement;
     }
 
+
+    public void close() {
+        try {
+            dbConnection.close();
+        } catch (SQLException e) {
+            log.error("", e);
+        }
+
+    }
 }

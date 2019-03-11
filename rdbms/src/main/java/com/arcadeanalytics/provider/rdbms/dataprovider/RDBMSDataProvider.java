@@ -202,19 +202,20 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
         } finally {
             // closing resultset, connection and statement
             if (queryResult != null) {
-                queryResult.closeAll();
+                queryResult.close();
             }
             for (RelationshipQueryResult outRelationshipsQueryResult : outCountResults) {
                 if (outRelationshipsQueryResult != null) {
-                    outRelationshipsQueryResult.closeAll();
+                    outRelationshipsQueryResult.close();
                 }
             }
             for (RelationshipQueryResult inRelationshipsQueryResult : inCountResults) {
                 if (inRelationshipsQueryResult != null) {
-                    inRelationshipsQueryResult.closeAll();
+                    inRelationshipsQueryResult.close();
                 }
             }
         }
+        dbQueryEngine.close();
         return data;
     }
 
@@ -452,20 +453,21 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
         } finally {
             // closing resultset, connection and statement
             if (queryResult != null) {
-                queryResult.closeAll();
+                queryResult.close();
             }
             for (RelationshipQueryResult outRelationshipsQueryResult : outCountResults) {
                 if (outRelationshipsQueryResult != null) {
-                    outRelationshipsQueryResult.closeAll();
+                    outRelationshipsQueryResult.close();
                 }
             }
             for (RelationshipQueryResult inRelationshipsQueryResult : inCountResults) {
                 if (inRelationshipsQueryResult != null) {
-                    inRelationshipsQueryResult.closeAll();
+                    inRelationshipsQueryResult.close();
                 }
             }
         }
 
+        dbQueryEngine.close();
         final GraphData graphData = collectGraphDatasInSingle(graphDataCollection);
         return graphData;
     }
@@ -497,6 +499,7 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
             GraphData currGraphData = fetchData(datasource, currentQueryDto, ids.length);
             graphDataCollection.add(currGraphData);
         }
+        dbQueryEngine.close();
         final GraphData graphData = collectGraphDatasInSingle(graphDataCollection);
         return graphData;
     }
@@ -594,7 +597,7 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
      * Input Entity cannot be an aggregated join table.
      *
      * @param datasource the datasource
-     * @param entity the entity
+     * @param entity     the entity
      * @return list of results
      */
 

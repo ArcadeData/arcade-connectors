@@ -95,28 +95,25 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
         val outs = HashMap<String, Any>()
         record["@out"] = outs
 
-        record.entries
+        val keys = record.entries
                 .asSequence()
                 .filter { e -> e.key.startsWith("in_") }
                 .map { e ->
                     ins[removeFirst(e.key, "in_")] = e.value
                     e.key
                 }
-                .forEach {
-                    record.remove(it)
-                }
+                .toMutableSet()
 
-        record.entries
+        keys.addAll(record.entries
                 .asSequence()
                 .filter { e -> e.key.startsWith("out_") }
                 .map { e ->
                     outs[removeFirst(e.key, "out_")] = e.value
                     e.key
+                }.toSet())
 
-                }.forEach {
-                    record.remove(it)
-                }
-
+        keys.asSequence()
+                .forEach { k -> record.remove(k) }
 
         cleanRecord(record)
 
