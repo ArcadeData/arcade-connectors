@@ -95,40 +95,43 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
         val outs = HashMap<String, Any>()
         record["@out"] = outs
 
-        val keys = record.entries
+        record.entries
                 .asSequence()
                 .filter { e -> e.key.startsWith("in_") }
                 .map { e ->
                     ins[removeFirst(e.key, "in_")] = e.value
                     e.key
                 }
-                .toMutableSet()
+                .forEach {
+                    record.remove(it)
+                }
 
-        keys.addAll(record.entries
+        record.entries
                 .asSequence()
                 .filter { e -> e.key.startsWith("out_") }
                 .map { e ->
                     outs[removeFirst(e.key, "out_")] = e.value
                     e.key
-                }.toSet())
 
-        keys.asSequence()
-                .forEach { k -> record.remove(k) }
+                }.forEach {
+                    record.remove(it)
+                }
+
 
         cleanRecord(record)
 
-        when {
+        return when {
             doc.isEdgeType() -> {
                 val source = doc.field<String>("@outId")
                 val target = doc.field<String>("@inId")
                 val id = doc.field<String>("@id")
                 val data = Data(id = id, record = record, source = source, target = target)
-                return CytoData(group = "edge", data = data, classes = doc.field("@class"))
+                CytoData(group = "edge", data = data, classes = doc.field("@class"))
             }
             else -> {
                 val id = doc.field<String>("@id")
                 val data = Data(id = id, record = record)
-                return CytoData(group = "nodes", data = data, classes = doc.field("@class"))
+                CytoData(group = "nodes", data = data, classes = doc.field("@class"))
             }
         }
 
@@ -192,8 +195,8 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
         return doc.field(fieldName)
     }
 
-    fun mapResultSet(db: ODatabaseDocumentTx,
-                     collector: OrientDBDocumentCollector): GraphData {
+    private fun mapResultSet(db: ODatabaseDocumentTx,
+                             collector: OrientDBDocumentCollector): GraphData {
 
         val graph = OrientGraphNoTx(db)
 
@@ -266,7 +269,7 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
         return doc
     }
 
-    protected fun clean(d: ODocument): ODocument {
+    private fun clean(d: ODocument): ODocument {
 
         for (f in d.fieldNames()) {
             val fieldValue = d.field<Any>(f)
