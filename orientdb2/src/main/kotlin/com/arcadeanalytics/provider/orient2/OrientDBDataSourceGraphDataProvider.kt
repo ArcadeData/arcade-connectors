@@ -77,7 +77,7 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
                     log.info("Query executed, returned {} records with limit {} ", collector.size(), limit)
 
-                    val data = mapResultSet(db, collector)
+                    val data = mapResultSet(dataSource, db, collector)
                     log.info("Fetched {} nodes and {} edges ", data.nodes.size, data.edges.size)
 
                     return data
@@ -192,7 +192,8 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
         return doc.field(fieldName)
     }
 
-    private fun mapResultSet(db: ODatabaseDocumentTx,
+    private fun mapResultSet(dataSource: DataSourceInfo,
+                             db: ODatabaseDocumentTx,
                              collector: OrientDBDocumentCollector): GraphData {
 
         val graph = OrientGraphNoTx(db)
@@ -223,8 +224,8 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
         val cytoEdges = edges.asSequence()
                 .map { e -> e.record }
                 .map { d -> populateClasses(edgeClasses, d) }
-                .map { d -> mapRid(d) }
-                .map { d -> mapInAndOut(d) }
+                .map { d -> mapRid(dataSource, d) }
+                .map { d -> mapInAndOut(dataSource, d) }
                 .map { d -> countInAndOut(d) }
                 .map { d -> toData(d) }
                 .toSet()
@@ -235,7 +236,7 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
         val cytoNodes = nodes.asSequence()
                 .map { e -> e.record }
                 .map { d -> populateClasses(nodeClasses, d) }
-                .map { d -> mapRid(d) }
+                .map { d -> mapRid(dataSource, d) }
                 .map { d -> countInAndOut(d) }
                 .map { d -> toData(d) }
                 .toSet()
@@ -278,24 +279,24 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
         return d
     }
 
-    private fun mapInAndOut(d: ODocument): ODocument {
+    private fun mapInAndOut(dataSource: DataSourceInfo, d: ODocument): ODocument {
         if (!d.containsField("out"))
             return d
 
         val outRid = (d.rawField<Any>("out") as OIdentifiable).identity
-        d.field("@outId", "${outRid.clusterId}_${outRid.clusterPosition}")
+        d.field("@outId", "${dataSource.id}_${outRid.clusterId}_${outRid.clusterPosition}")
         d.removeField("out")
 
         val inRid = (d.rawField<Any>("in") as OIdentifiable).identity
-        d.field("@inId", "${inRid.clusterId}_${inRid.clusterPosition}")
+        d.field("@inId", "${dataSource.id}_${inRid.clusterId}_${inRid.clusterPosition}")
         d.removeField("in")
         return d
     }
 
-    private fun mapRid(doc: ODocument): ODocument {
+    private fun mapRid(dataSource: DataSourceInfo, doc: ODocument): ODocument {
         val rid = doc.identity
 
-        doc.field("@id", "${rid.clusterId}_${rid.clusterPosition}")
+        doc.field("@id", "${dataSource.id}_${rid.clusterId}_${rid.clusterPosition}")
 
         return doc
     }
@@ -354,6 +355,7 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
         query += ids
                 .asSequence()
+                .map { r -> r.removePrefix("${dataSource.id}_") }
                 .map { r -> "#" + r.replace('_', ':') }
                 .joinToString { it }
 
@@ -369,6 +371,7 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
         query += ids
                 .asSequence()
+                .map { r -> r.removePrefix("${dataSource.id}_") }
                 .map { r -> "#" + r.replace('_', ':') }
                 .joinToString { it }
 

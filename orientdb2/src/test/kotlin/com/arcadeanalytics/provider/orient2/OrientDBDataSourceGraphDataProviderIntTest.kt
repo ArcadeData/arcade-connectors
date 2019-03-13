@@ -18,7 +18,7 @@ class OrientDBDataSourceGraphDataProviderIntTest {
     fun shouldFetchDataWithQuery() {
 
         val query = "select from Person limit 20"
-        val data = provider.fetchData(OrientDBContainer.dataSource, query, 20)
+        val data = provider.fetchData(dataSource, query, 20)
 
 
         //then
@@ -30,6 +30,7 @@ class OrientDBDataSourceGraphDataProviderIntTest {
         assertThat(cytoData.group).isEqualTo("nodes")
         assertThat(cytoData.data.source).isEmpty()
 
+        assertThat(cytoData.data.id).startsWith("${dataSource.id}")
         val record = cytoData.data.record
         assertThat(record).isNotNull
                 .containsKeys("name", "@out", "@in", "@edgeCount")
