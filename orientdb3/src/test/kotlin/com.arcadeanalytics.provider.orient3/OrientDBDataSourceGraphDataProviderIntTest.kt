@@ -1,36 +1,51 @@
-package com.arcadeanalytics.provider.orientdb
+package com.arcadeanalytics.provider.orient3
 
-import com.arcadeanalytics.provider.orient2.OrientDBDataSourceGraphDataProvider
-import com.arcadeanalytics.provider.orient2.OrientDBContainer.dataSource
-import com.arcadeanalytics.provider.orient2.OrientDBContainer.dbUrl
-import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx
+import com.arcadeanalytics.provider.orient3.OrientDBContainer.dataSource
+import com.orientechnologies.orient.core.db.OrientDB
+import com.orientechnologies.orient.core.db.OrientDBConfig
 import com.orientechnologies.orient.core.record.impl.ODocument
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.testcontainers.containers.GenericContainer
 
 class OrientDBDataSourceGraphDataProviderIntTest {
 
-    private val provider: OrientDBDataSourceGraphDataProvider = OrientDBDataSourceGraphDataProvider()
+
+    private val provider: OrientDBDataSourceGraphDataProvider
+
+
+    init {
+
+        provider = OrientDBDataSourceGraphDataProvider()
+    }
+
 
     @Test
     @Throws(Exception::class)
     fun shouldFetchDataWithQuery() {
 
+        //given
+
+
+        //when
+
         val query = "select from Person limit 20"
-        val data = provider.fetchData(dataSource, query, 20)
+        val data = provider.fetchData(OrientDBContainer.dataSource, query, 20)
 
 
         //then
         assertThat(data.nodes).hasSize(4)
 
+        //        assertThat(data.getEdges()).hasSize(1);
+
         assertThat(data.nodesClasses).containsKeys("Person")
+        //        assertThat(data.getEdgesClasses()).containsKeys("FriendOf");
 
         val cytoData = data.nodes.first()
         assertThat(cytoData.group).isEqualTo("nodes")
         assertThat(cytoData.data.source).isEmpty()
 
-        assertThat(cytoData.data.id).startsWith("${dataSource.id}")
         val record = cytoData.data.record
         assertThat(record).isNotNull
                 .containsKeys("name", "@out", "@in", "@edgeCount")
@@ -42,12 +57,13 @@ class OrientDBDataSourceGraphDataProviderIntTest {
     @Throws(Exception::class)
     fun shouldTraverseFromGivenNode() {
         //given
-        val person = provider.loadFromClass(dataSource, "Person", "name", "frank", 1)
 
-        val id = person.nodes.first().data.id
 
+        //        final String rid = getFirstPersonIdentity();
+
+        val ids = getPersonsIdentity(2)
         //when
-        val data = provider.expand(dataSource, arrayOf(id), "in", "FriendOf", 300)
+        val data = provider.expand(dataSource, ids, "out", "FriendOf", 300)
 
         //then
         assertThat(data.nodes).hasSize(2)
@@ -56,9 +72,8 @@ class OrientDBDataSourceGraphDataProviderIntTest {
         assertThat(data.nodesClasses).containsKeys("Person")
         assertThat(data.edgesClasses).containsKeys("FriendOf")
 
-        val cytoData = data.nodes.first()
-        val record = cytoData.data.record
-        assertThat(record).isNotNull
+        val cytoData = data.nodes.stream().findFirst().get()
+        assertThat(cytoData.data.record).isNotNull
         assertThat(cytoData.data.source).isEmpty()
 
     }
@@ -68,23 +83,23 @@ class OrientDBDataSourceGraphDataProviderIntTest {
     fun shouldTraverseAllEdgesNode() {
         //given
 
-        val person = provider.loadFromClass(dataSource, "Person", "name", "frank", 1)
 
-        val id = person.nodes.first().data.id
+        //        final String rid = getFirstPersonIdentity();
 
+        val ids = getPersonsIdentity(2)
         //when
-        val data = provider.expand(dataSource, arrayOf(id), "both", "", 300)
+        val data = provider.expand(dataSource, ids, "both", "", 300)
 
         println("data = ${data}")
         //then
-        assertThat(data.nodes).hasSize(3)
-        assertThat(data.edges).hasSize(2)
+        assertThat(data.nodes).hasSize(4)
+        assertThat(data.edges).hasSize(3)
 
         assertThat(data.nodesClasses).containsKeys("Person")
         assertThat(data.edgesClasses).containsKeys("FriendOf")
         assertThat(data.edgesClasses).containsKeys("HaterOf")
 
-        val cytoData = data.nodes.first()
+        val cytoData = data.nodes.stream().findFirst().get()
         assertThat(cytoData.data.record).isNotNull
         assertThat(cytoData.data.source).isEmpty()
 
@@ -128,12 +143,14 @@ class OrientDBDataSourceGraphDataProviderIntTest {
 
     }
 
-    private fun getPersonsIdentity(limit: Int): Array<String> {
-        ODatabaseDocumentTx(dbUrl).open<ODatabaseDocumentTx>("admin", "admin")
+    private fun getPersonsIdentity(count: Int): Array<String> {
+        val orientDB = OrientDB(getServerUrl(OrientDBContainer as GenericContainer<*>), OrientDBConfig.defaultConfig())
+        orientDB.open(dataSource.name, "admin", "admin")
                 .use {
 
-                    return it.query<List<ODocument>>(OSQLSynchQuery<ODocument>("""SELECT from Person limit $limit"""))
+                    return it.query<List<ODocument>>(OSQLSynchQuery<ODocument>("SELECT from Person"))
                             .asSequence()
+                            .take(count)
                             .map { doc -> doc.identity }
                             .map { id -> id.clusterId.toString() + "_" + id.clusterPosition }
                             .toList()

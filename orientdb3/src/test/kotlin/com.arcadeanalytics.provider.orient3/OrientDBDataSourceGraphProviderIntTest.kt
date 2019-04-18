@@ -17,12 +17,10 @@
  * limitations under the License.
  * #L%
  */
-package com.arcadeanalytics.provider.orientdb
+package com.arcadeanalytics.provider.orient3
 
 import com.arcadeanalytics.data.Sprite
 import com.arcadeanalytics.data.SpritePlayer
-import com.arcadeanalytics.provider.orient2.OrientDBContainer
-import com.arcadeanalytics.provider.orient2.OrientDBDataSourceGraphProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance

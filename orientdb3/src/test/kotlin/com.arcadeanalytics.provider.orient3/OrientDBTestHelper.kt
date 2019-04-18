@@ -18,18 +18,20 @@
  * #L%
  */
 
-package com.arcadeanalytics.provider.orient2
+package com.arcadeanalytics.provider.orient3
 
 import com.arcadeanalytics.provider.DataSourceInfo
 import com.arcadeanalytics.test.KGenericContainer
-import com.orientechnologies.orient.client.remote.OServerAdmin
-import com.orientechnologies.orient.core.command.script.OCommandScript
-import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx
+import com.orientechnologies.orient.core.db.OrientDB
+import com.orientechnologies.orient.core.db.OrientDBConfig
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import java.io.IOException
+import com.orientechnologies.orient.core.db.ODatabaseType
 
-const val ORIENTDB_DOCKER_IMAGE = "orientdb:2.2.37-spatial"
+
+
+const val ORIENTDB_DOCKER_IMAGE = "orientdb:3.0.18"
 
 const val ORIENTDB_ROOT_PASSWORD = "arcade"
 
@@ -63,7 +65,7 @@ object OrientDBContainer {
 
         dbUrl = createTestDatabase(serverUrl, dataSource.database)
 
-        createPersonSchema(dbUrl)
+        createPersonSchema(dbUrl, dataSource)
 
     }
 
@@ -87,11 +89,15 @@ fun getServerUrl(container: GenericContainer<*>): String {
  *
  * @param dbUrl
  */
-fun createPersonSchema(dbUrl: String) {
-    ODatabaseDocumentTx(dbUrl)
-            .open<ODatabaseDocumentTx>("admin", "admin")
+fun createPersonSchema(dbUrl: String, dataSource: DataSourceInfo) {
+
+
+
+    val orientDB = OrientDB(dbUrl, OrientDBConfig.defaultConfig())
+
+    orientDB.open(dataSource.name,dataSource.username, dataSource.password)
             .use {
-                it.command(OCommandScript("sql", """
+                it.command("""
 
                     CREATE CLASS Person EXTENDS V;
 
@@ -115,7 +121,7 @@ fun createPersonSchema(dbUrl: String) {
                     CREATE EDGE HaterOf FROM (SELECT FROM Person WHERE name = 'jane') TO (SELECT FROM Person WHERE name = 'rob') set kind='killer';
                     CREATE EDGE HaterOf FROM (SELECT FROM Person WHERE name = 'frank') TO (SELECT FROM Person WHERE name = 'john') set kind='killer';
                     """.trimIndent()
-                )).execute<Any>()
+                )
             }
 
 }
@@ -129,12 +135,11 @@ fun createPersonSchema(dbUrl: String) {
 fun createTestDatabase(serverUrl: String, dbname: String): String {
 
     try {
-        OServerAdmin(serverUrl)
-                .apply {
-                    connect("root", ORIENTDB_ROOT_PASSWORD)
-                    createDatabase(dbname, "graph", "plocal")
-                    close()
-                }
+
+        val orientDB = OrientDB(serverUrl, "root", ORIENTDB_ROOT_PASSWORD, OrientDBConfig.defaultConfig())
+        orientDB.create(dbname, ODatabaseType.PLOCAL)
+        orientDB.close()
+
         return "$serverUrl/$dbname"
     } catch (e: IOException) {
         throw RuntimeException("unable to create database on " + serverUrl, e)

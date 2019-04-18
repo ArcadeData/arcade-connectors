@@ -55,8 +55,9 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
 
 
     private fun getGraphData(dataSource: DataSourceInfo, query: String, limit: Int, client: Client): GraphData {
-        val nodes = HashSet<CytoData>()
-        val edges = HashSet<CytoData>()
+
+        val cytoNodes = HashSet<CytoData>()
+        val cytoEdges = HashSet<CytoData>()
         val edgeClasses = HashMap<String, Map<String, Any>>()
         val nodeClasses = HashMap<String, Map<String, Any>>()
 
@@ -68,11 +69,11 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
                 .map { r -> toCytoData(dataSource, r, client) }
                 .map { data ->
                     if (data.group == "nodes") {
-                        nodes.add(data)
+                        cytoNodes.add(data)
                         populateClasses(nodeClasses, data)
                         emptyList<String>()
                     } else {
-                        edges.add(data)
+                        cytoEdges.add(data)
 
                         populateClasses(edgeClasses, data)
                         listOf(data.data.source, data.data.target)
@@ -89,14 +90,14 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
             load.nodes
                     .stream()
                     .forEach { n ->
-                        nodes.add(n)
+                        cytoNodes.add(n)
                         populateClasses(nodeClasses, n)
                     }
         }
 
-        val graphData = GraphData(nodeClasses, edgeClasses, nodes, edges)
+        val graphData = GraphData(nodeClasses, edgeClasses, cytoNodes, cytoEdges)
 
-        log.info("fetched {} nodes and {} edges ", nodes.size, edges.size)
+        log.info("fetched {} nodes and {} edges ", cytoNodes.size, cytoEdges.size)
         return graphData
     }
 
