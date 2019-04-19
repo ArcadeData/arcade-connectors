@@ -98,6 +98,12 @@
         </dependency>
         <dependency>
             <groupId>com.arcadeanalytics</groupId>
+            <artifactId>arcade-connectors-orientdb3</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.arcadeanalytics</groupId>
             <artifactId>arcade-connectors-neo4j3</artifactId>
             <version>${project.parent.version}</version>
             <scope>provided</scope>

@@ -22,8 +22,6 @@ package com.arcadeanalytics.provider.orient3
 
 import com.arcadeanalytics.provider.DataSourceInfo
 import com.arcadeanalytics.test.KGenericContainer
-import com.orientechnologies.orient.core.command.OCommandRequest
-import com.orientechnologies.orient.core.command.script.OCommandScript
 import com.orientechnologies.orient.core.db.OrientDB
 import com.orientechnologies.orient.core.db.OrientDBConfig
 import org.testcontainers.containers.GenericContainer
