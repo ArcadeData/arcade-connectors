@@ -75,11 +75,10 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
         open(dataSource)
                 .use { db ->
-                    val collector = OrientDB3DocumentCollector()
 
                     val resultSet: OResultSet = db.query(query)
 
-                    log.info("Query executed, returned {} records with limit {} ", collector.size(), limit)
+                    log.info("Query executed")
 
                     val data = mapResultSet(resultSet)
                     log.info("Fetched {} nodes and {} edges ", data.nodes.size, data.edges.size)
