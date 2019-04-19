@@ -62,10 +62,14 @@ object OrientDBContainer {
 
         val serverUrl = getServerUrl(container)
 
-        dbUrl = createTestDatabase(serverUrl, dataSource.database)
+        dbUrl = createTestDatabase(serverUrl, dataSource.name)
 
         createPersonSchema(dbUrl, dataSource)
 
+    }
+
+    fun getContainer(): KGenericContainer {
+        return container
     }
 
 

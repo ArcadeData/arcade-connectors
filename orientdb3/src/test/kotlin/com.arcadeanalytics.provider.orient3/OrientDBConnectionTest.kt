@@ -27,7 +27,7 @@ import org.testcontainers.containers.wait.strategy.Wait
 
 class OrientDBConnectionTest {
 
-    private val container: KGenericContainer = KGenericContainer(ORIENTDB_DOCKER_IMAGE)
+    public val container: KGenericContainer = KGenericContainer(ORIENTDB_DOCKER_IMAGE)
             .apply {
                 withExposedPorts(2424)
                 withEnv("ORIENTDB_ROOT_PASSWORD", ORIENTDB_ROOT_PASSWORD)
@@ -63,6 +63,8 @@ class OrientDBConnectionTest {
 
         provider = OrientDBDataSourceGraphDataProvider()
     }
+
+
 
 
     @Test

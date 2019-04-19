@@ -25,7 +25,10 @@ import com.arcadeanalytics.provider.DataSourceGraphProvider
 import com.arcadeanalytics.provider.DataSourceInfo
 import com.arcadeanalytics.provider.IndexConstants.ARCADE_ID
 import com.arcadeanalytics.provider.IndexConstants.ARCADE_TYPE
+import com.orientechnologies.orient.core.record.OElement
 import com.orientechnologies.orient.core.record.impl.ODocument
+import com.orientechnologies.orient.core.record.impl.OEdgeDocument
+import com.orientechnologies.orient.core.record.impl.OVertexDocument
 import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
 
@@ -63,10 +66,24 @@ class OrientDBDataSourceGraphProvider : DataSourceGraphProvider {
                         while (resultset.hasNext()) {
 
                             resultset.asSequence()
-                                    .map { res -> res as ODocument }
-                                    .filter { doc -> doc.fields() > 0 }
-                                    .map { doc -> toSprite(doc) }
-                                    .forEach { doc -> player.play(doc) }
+                                    .map { res ->
+                                        res.element.get()
+                                    }
+                                    .filter { elem -> elem.propertyNames.size > 0 }
+                                    .map { elem: OElement ->
+
+                                        when {
+                                            elem.isVertex() -> {
+                                                elem as OVertexDocument
+                                                toSprite(elem)
+                                            }
+                                            else -> {
+                                                elem as OEdgeDocument
+                                                toSprite(elem)
+                                            }
+                                        }
+                                    }
+                                    .forEach { doc: Sprite -> player.play(doc) }
 
                             resultset = db.query(sql)
 

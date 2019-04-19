@@ -3,11 +3,8 @@ package com.arcadeanalytics.provider.orient3
 import com.arcadeanalytics.provider.orient3.OrientDBContainer.dataSource
 import com.orientechnologies.orient.core.db.OrientDB
 import com.orientechnologies.orient.core.db.OrientDBConfig
-import com.orientechnologies.orient.core.record.impl.ODocument
-import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.testcontainers.containers.GenericContainer
 
 class OrientDBDataSourceGraphDataProviderIntTest {
 
@@ -144,15 +141,15 @@ class OrientDBDataSourceGraphDataProviderIntTest {
     }
 
     private fun getPersonsIdentity(count: Int): Array<String> {
-        val orientDB = OrientDB(getServerUrl(OrientDBContainer as GenericContainer<*>), OrientDBConfig.defaultConfig())
+        val orientDB = OrientDB(getServerUrl(OrientDBContainer.getContainer()), OrientDBConfig.defaultConfig())
         orientDB.open(dataSource.name, "admin", "admin")
                 .use {
 
-                    return it.query<List<ODocument>>(OSQLSynchQuery<ODocument>("SELECT from Person"))
+                    return it.execute("sql","SELECT from Person")
                             .asSequence()
                             .take(count)
                             .map { doc -> doc.identity }
-                            .map { id -> id.clusterId.toString() + "_" + id.clusterPosition }
+                            .map { id -> id.get().clusterId.toString() + "_" + id.get().clusterPosition }
                             .toList()
                             .toTypedArray()
 
