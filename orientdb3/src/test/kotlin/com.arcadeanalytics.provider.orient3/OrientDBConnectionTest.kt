@@ -57,7 +57,7 @@ class OrientDBConnectionTest {
         val serverUrl = getServerUrl(container)
 
 
-        val dbUrl = createTestDatabase(serverUrl, OrientDBDataSourceGraphDataProviderIntTest::class.java.simpleName)
+        val dbUrl = createTestDatabase(serverUrl, dataSource.name)
 
         createPersonSchema(dbUrl, dataSource)
 

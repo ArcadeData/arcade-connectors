@@ -22,13 +22,13 @@ package com.arcadeanalytics.provider.orient3
 
 import com.arcadeanalytics.provider.DataSourceInfo
 import com.arcadeanalytics.test.KGenericContainer
+import com.orientechnologies.orient.core.command.script.OCommandScript
 import com.orientechnologies.orient.core.db.OrientDB
 import com.orientechnologies.orient.core.db.OrientDBConfig
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import java.io.IOException
 import com.orientechnologies.orient.core.db.ODatabaseType
-
 
 
 const val ORIENTDB_DOCKER_IMAGE = "orientdb:3.0.18"
@@ -91,13 +91,7 @@ fun getServerUrl(container: GenericContainer<*>): String {
  */
 fun createPersonSchema(dbUrl: String, dataSource: DataSourceInfo) {
 
-
-
-    val orientDB = OrientDB(dbUrl, OrientDBConfig.defaultConfig())
-
-    orientDB.open(dataSource.name,dataSource.username, dataSource.password)
-            .use {
-                it.command("""
+    val command = OCommandScript("sql", """
 
                     CREATE CLASS Person EXTENDS V;
 
@@ -120,8 +114,14 @@ fun createPersonSchema(dbUrl: String, dataSource: DataSourceInfo) {
                     CREATE EDGE FriendOf FROM (SELECT FROM Person WHERE name = 'john') TO (SELECT FROM Person WHERE name = 'jane') set kind='fraternal';
                     CREATE EDGE HaterOf FROM (SELECT FROM Person WHERE name = 'jane') TO (SELECT FROM Person WHERE name = 'rob') set kind='killer';
                     CREATE EDGE HaterOf FROM (SELECT FROM Person WHERE name = 'frank') TO (SELECT FROM Person WHERE name = 'john') set kind='killer';
-                    """.trimIndent()
-                )
+                    """.trimIndent())
+
+
+    val orientDB = OrientDB(dbUrl, OrientDBConfig.defaultConfig())
+
+    orientDB.open(dataSource.name,dataSource.username, dataSource.password)
+            .use {
+                it.command(command).execute()
             }
 
 }
