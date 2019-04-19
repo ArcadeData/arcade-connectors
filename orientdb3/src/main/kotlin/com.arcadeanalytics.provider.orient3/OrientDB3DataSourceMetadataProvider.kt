@@ -24,10 +24,10 @@ import com.orientechnologies.orient.core.db.document.ODatabaseDocument
 import com.orientechnologies.orient.core.metadata.schema.OSchema
 import org.slf4j.LoggerFactory
 
-class OrientDBDataSourceMetadataProvider() : DataSourceMetadataProvider {
+class OrientDB3DataSourceMetadataProvider() : DataSourceMetadataProvider {
 
 
-    private val log = LoggerFactory.getLogger(OrientDBDataSourceMetadataProvider::class.java)
+    private val log = LoggerFactory.getLogger(OrientDB3DataSourceMetadataProvider::class.java)
 
 
     override fun fetchMetadata(dataSource: DataSourceInfo): DataSourceMetadata {

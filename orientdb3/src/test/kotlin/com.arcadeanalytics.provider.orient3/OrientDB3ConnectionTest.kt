@@ -25,7 +25,7 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.testcontainers.containers.wait.strategy.Wait
 
-class OrientDBConnectionTest {
+class OrientDB3ConnectionTest {
 
     public val container: KGenericContainer = KGenericContainer(ORIENTDB_DOCKER_IMAGE)
             .apply {
@@ -36,7 +36,7 @@ class OrientDBConnectionTest {
 
             }
 
-    private val provider: OrientDBDataSourceGraphDataProvider
+    private val provider: OrientDB3DataSourceGraphDataProvider
 
 
     private var dataSource: DataSourceInfo
@@ -50,7 +50,7 @@ class OrientDBConnectionTest {
                 port = container.firstMappedPort,
                 username = "admin",
                 password = "admin",
-                database = OrientDBDataSourceGraphDataProviderIntTest::class.java.simpleName
+                database = OrientDB3DataSourceGraphDataProviderIntTest::class.java.simpleName
         )
 
 
@@ -61,7 +61,7 @@ class OrientDBConnectionTest {
 
         createPersonSchema(dbUrl, dataSource)
 
-        provider = OrientDBDataSourceGraphDataProvider()
+        provider = OrientDB3DataSourceGraphDataProvider()
     }
 
 

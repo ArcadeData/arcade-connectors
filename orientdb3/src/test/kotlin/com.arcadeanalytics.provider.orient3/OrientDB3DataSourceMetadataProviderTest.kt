@@ -19,15 +19,15 @@
  */
 package com.arcadeanalytics.provider.orient3
 
-import com.arcadeanalytics.provider.orient3.OrientDBContainer.dataSource
+import com.arcadeanalytics.provider.orient3.OrientDB3Container.dataSource
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 
-class OrientDBDataSourceMetadataProviderTest {
+class OrientDB3DataSourceMetadataProviderTest {
 
 
-    private val provider: OrientDBDataSourceMetadataProvider = OrientDBDataSourceMetadataProvider()
+    private val provider: OrientDB3DataSourceMetadataProvider = OrientDB3DataSourceMetadataProvider()
 
     @Test
     fun shouldFetchMetadata() {

@@ -33,10 +33,10 @@ import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 
-class OrientDBDataSourceGraphProviderIntTest {
+class OrientDB3DataSourceGraphProviderIntTest {
 
 
-    private val provider: OrientDBDataSourceGraphProvider = OrientDBDataSourceGraphProvider()
+    private val provider: OrientDB3DataSourceGraphProvider = OrientDB3DataSourceGraphProvider()
 
 
     @Test
@@ -59,7 +59,7 @@ class OrientDBDataSourceGraphProviderIntTest {
 
         }
 
-        provider.provideTo(OrientDBContainer.dataSource, indexer)
+        provider.provideTo(OrientDB3Container.dataSource, indexer)
 
         assertThat(docs).hasSize(8)
 

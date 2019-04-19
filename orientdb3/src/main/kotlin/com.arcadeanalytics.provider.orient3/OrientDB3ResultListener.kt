@@ -22,8 +22,8 @@ package com.arcadeanalytics.provider.orient3
 import com.orientechnologies.orient.core.command.OCommandResultListener
 import com.orientechnologies.orient.core.record.impl.ODocument
 
-internal class OrientDBResultListener(private val documentCollector: OrientDBDocumentCollector,
-                                      private val limit: Int)
+internal class OrientDB3ResultListener(private val documentCollector: OrientDB3DocumentCollector,
+                                       private val limit: Int)
     : OCommandResultListener {
 
     //state

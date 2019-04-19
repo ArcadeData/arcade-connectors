@@ -32,9 +32,9 @@ import com.orientechnologies.orient.core.record.impl.OVertexDocument
 import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
 
-class OrientDBDataSourceGraphProvider : DataSourceGraphProvider {
+class OrientDB3DataSourceGraphProvider : DataSourceGraphProvider {
 
-    private val log = LoggerFactory.getLogger(OrientDBDataSourceGraphProvider::class.java)
+    private val log = LoggerFactory.getLogger(OrientDB3DataSourceGraphProvider::class.java)
 
     private val queries: List<String>
 

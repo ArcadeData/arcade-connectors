@@ -20,14 +20,15 @@
 package com.arcadeanalytics.provider.orient3
 
 import com.orientechnologies.orient.core.record.OElement
+import com.orientechnologies.orient.core.record.impl.ODocument
 import java.util.*
 
-class OrientDBDocumentCollector {
+class OrientDB3DocumentCollector {
 
-    private val documents = ArrayList<OElement>()
+    private val documents = ArrayList<ODocument>()
     internal var isTruncated = false
 
-    fun collect(document: OElement) {
+    fun collect(document: ODocument) {
         documents.add(document)
     }
 

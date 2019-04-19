@@ -34,7 +34,7 @@ const val ORIENTDB_DOCKER_IMAGE = "orientdb:3.0.18"
 
 const val ORIENTDB_ROOT_PASSWORD = "arcade"
 
-object OrientDBContainer {
+object OrientDB3Container {
 
     private val container: KGenericContainer = KGenericContainer(ORIENTDB_DOCKER_IMAGE)
             .apply {

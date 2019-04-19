@@ -1,20 +1,20 @@
 package com.arcadeanalytics.provider.orient3
 
-import com.arcadeanalytics.provider.orient3.OrientDBContainer.dataSource
+import com.arcadeanalytics.provider.orient3.OrientDB3Container.dataSource
 import com.orientechnologies.orient.core.db.OrientDB
 import com.orientechnologies.orient.core.db.OrientDBConfig
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-class OrientDBDataSourceGraphDataProviderIntTest {
+class OrientDB3DataSourceGraphDataProviderIntTest {
 
 
-    private val provider: OrientDBDataSourceGraphDataProvider
+    private val provider: OrientDB3DataSourceGraphDataProvider
 
 
     init {
 
-        provider = OrientDBDataSourceGraphDataProvider()
+        provider = OrientDB3DataSourceGraphDataProvider()
     }
 
 
@@ -28,7 +28,7 @@ class OrientDBDataSourceGraphDataProviderIntTest {
         //when
 
         val query = "select from Person limit 20"
-        val data = provider.fetchData(OrientDBContainer.dataSource, query, 20)
+        val data = provider.fetchData(OrientDB3Container.dataSource, query, 20)
 
 
         //then
@@ -141,7 +141,7 @@ class OrientDBDataSourceGraphDataProviderIntTest {
     }
 
     private fun getPersonsIdentity(count: Int): Array<String> {
-        val orientDB = OrientDB(getServerUrl(OrientDBContainer.getContainer()), OrientDBConfig.defaultConfig())
+        val orientDB = OrientDB(getServerUrl(OrientDB3Container.getContainer()), OrientDBConfig.defaultConfig())
         orientDB.open(dataSource.name, "admin", "admin")
                 .use {
 

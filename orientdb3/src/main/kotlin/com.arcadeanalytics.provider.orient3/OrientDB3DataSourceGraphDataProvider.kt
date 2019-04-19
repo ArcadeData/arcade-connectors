@@ -34,6 +34,7 @@ import com.orientechnologies.orient.core.record.impl.ODocument
 import com.orientechnologies.orient.core.record.impl.ODocumentHelper
 import com.orientechnologies.orient.core.record.impl.OEdgeDocument
 import com.orientechnologies.orient.core.record.impl.OVertexDocument
+import com.orientechnologies.orient.core.sql.executor.OResultSet
 import org.apache.commons.lang3.StringUtils.*
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -43,9 +44,9 @@ import kotlin.collections.HashSet
  * Specialized provider for OrientDB2
  * @author Roberto Franchini
  */
-class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
+class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
-    private val log = LoggerFactory.getLogger(OrientDBDataSourceGraphDataProvider::class.java)
+    private val log = LoggerFactory.getLogger(OrientDB3DataSourceGraphDataProvider::class.java)
 
     override fun supportedDataSourceTypes(): Set<String> = setOf("ORIENTDB")
 
@@ -74,13 +75,13 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
         open(dataSource)
                 .use { db ->
-                    val collector = OrientDBDocumentCollector()
+                    val collector = OrientDB3DocumentCollector()
 
-                    db.query(query, OrientDBResultListener(collector, limit))
+                    val resultSet: OResultSet = db.query(query)
 
                     log.info("Query executed, returned {} records with limit {} ", collector.size(), limit)
 
-                    val data = mapResultSet(db, collector)
+                    val data = mapResultSet(resultSet)
                     log.info("Fetched {} nodes and {} edges ", data.nodes.size, data.edges.size)
 
                     return data
@@ -205,15 +206,13 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
         return doc.field(fieldName)
     }
 
-    fun mapResultSet(graph: ODatabaseDocument,
-                     collector: OrientDBDocumentCollector): GraphData {
+    fun mapResultSet(resultSet: OResultSet): GraphData {
 
         // DIVIDE VERTICES FROM EDGES
         val nodes = HashSet<OVertex>()
         val edges = HashSet<OEdge>()
-        val resultSet: List<OElement> = collector.collected()
-
         resultSet.asSequence()
+                .map { res -> res.element.get() }
                 .forEach { element ->
                     if (element.isVertex()) {
                         val vertex: OVertexDocument = element as OVertexDocument
@@ -250,19 +249,31 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
                 .toSet()
 
 
-        return GraphData(nodeClasses, edgeClasses, cytoNodes, cytoEdges, collector.isTruncated)
+        return GraphData(nodeClasses, edgeClasses, cytoNodes, cytoEdges, false)
     }
 
     private fun countInAndOut(element: OElement): OElement {
-        element as OVertexDocument
-        element.fieldNames()
-                .asSequence()
-                .filter { f -> f.startsWith("out_") || f.startsWith("in_") }
-                .forEach { f ->
-                    val size = OMultiValue.getSize(element.field(f))
-                    element.removeField(f)
-                    element.field(f, size)
-                }
+        if (element.isVertex) {
+            element as OVertexDocument
+            element.fieldNames()
+                    .asSequence()
+                    .filter { f -> f.startsWith("out_") || f.startsWith("in_") }
+                    .forEach { f ->
+                        val size = OMultiValue.getSize(element.field(f))
+                        element.removeField(f)
+                        element.field(f, size)
+                    }
+        } else {
+            element as OEdgeDocument
+            element.fieldNames()
+                    .asSequence()
+                    .filter { f -> f.startsWith("out_") || f.startsWith("in_") }
+                    .forEach { f ->
+                        val size = OMultiValue.getSize(element.field(f))
+                        element.removeField(f)
+                        element.field(f, size)
+                    }
+        }
 
         return element
     }
@@ -294,7 +305,7 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
     private fun populateClasses(classes: MutableMap<String, Map<String, Any>>, element: OElement): OElement {
 
-        classes.putIfAbsent(element.schemaType.toString(), Maps.newHashMap())
+        classes.putIfAbsent(element.schemaType.get().toString(), Maps.newHashMap())
 
         if (element.isVertex) {
             populateProperties(classes, element as OVertexDocument)
@@ -306,7 +317,7 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
     private fun populateProperties(classes: Map<String, Map<String, Any>>, vertex: OVertexDocument) {
 
-        val properties = classes[vertex.schemaType.toString()]
+        val properties = classes[vertex.schemaType.get().toString()]
 
         vertex.propertyNames
                 .asSequence()
@@ -331,7 +342,7 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
     private fun populateProperties(classes: Map<String, Map<String, Any>>, edge: OEdgeDocument) {
 
-        val properties = classes[edge.schemaType.toString()]
+        val properties = classes[edge.schemaType.get().toString()]
 
         edge.propertyNames
                 .asSequence()
@@ -347,7 +358,6 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
                             propertyType != OType.LINKBAG
                 }
                 .forEach { f ->
-                    edge as OVertexDocument
                     val type = edge.fieldType(f)
                     if (type != null)
                         (properties as MutableMap<String, Any>).putIfAbsent(f, mapType(type.name))
