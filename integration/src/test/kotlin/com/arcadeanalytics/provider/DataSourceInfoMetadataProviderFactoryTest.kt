@@ -67,7 +67,7 @@ internal class DataSourceInfoMetadataProviderFactoryTest {
     @Test
     internal fun `should provides all apis`() {
         assertThat(factory.provides())
-                .hasSize(13)
+                .hasSize(14)
                 .contains("ORIENTDB",
                         "ORIENTDB3",
                         "NEO4J",

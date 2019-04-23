@@ -81,6 +81,6 @@ class OrientDB3DataSourceMetadataProvider() : DataSourceMetadataProvider {
     }
 
 
-    override fun supportedDataSourceTypes(): Set<String> = setOf("ORIENTDB")
+    override fun supportedDataSourceTypes(): Set<String> = setOf("ORIENTDB3")
 
 }
