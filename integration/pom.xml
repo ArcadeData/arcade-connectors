@@ -66,6 +66,11 @@
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>com.arcadeanalytics</groupId>
+                                    <artifactId>arcade-connectors-orientdb3</artifactId>
+                                    <version>${project.parent.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.arcadeanalytics</groupId>
                                     <artifactId>arcade-connectors-gremlin</artifactId>
                                     <version>${project.parent.version}</version>
                                 </artifactItem>

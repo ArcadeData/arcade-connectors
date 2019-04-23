@@ -23,6 +23,7 @@ import com.arcadeanalytics.provider.gremlin.GremlinGraphProvider
 import com.arcadeanalytics.provider.gremlin.cosmosdb.CosmosDBGremlinGraphProvider
 import com.arcadeanalytics.provider.neo4j3.Neo4jGraphProvider
 import com.arcadeanalytics.provider.orient2.OrientDBDataSourceGraphProvider
+import com.arcadeanalytics.provider.orient3.OrientDB3DataSourceGraphProvider
 import com.arcadeanalytics.provider.rdbms.dataprovider.RDBMSGraphProvider
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
@@ -38,6 +39,7 @@ internal class DataSourceGraphProviderFactoryTest {
         @JvmStatic
         fun types2implementation() = listOf(
                 Arguments.of("ORIENTDB", OrientDBDataSourceGraphProvider::class.java),
+                Arguments.of("ORIENTDB3", OrientDB3DataSourceGraphProvider::class.java),
                 Arguments.of("GREMLIN_ORIENTDB", GremlinGraphProvider::class.java),
                 Arguments.of("GREMLIN_NEPTUNE", GremlinGraphProvider::class.java),
                 Arguments.of("GREMLIN_JANUSGRAPH", GremlinGraphProvider::class.java),
@@ -67,6 +69,7 @@ internal class DataSourceGraphProviderFactoryTest {
         assertThat(factory.provides())
                 .hasSize(13)
                 .contains("ORIENTDB",
+                        "ORIENTDB3",
                         "NEO4J",
                         "NEO4J_MEMGRAPH",
                         "GREMLIN_ORIENTDB",

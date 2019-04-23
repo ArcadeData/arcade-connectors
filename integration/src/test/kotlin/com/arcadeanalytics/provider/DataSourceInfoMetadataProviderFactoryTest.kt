@@ -23,6 +23,7 @@ import com.arcadeanalytics.provider.gremlin.GremlinMetadataProvider
 import com.arcadeanalytics.provider.gremlin.cosmosdb.CosmosDBGremlinMetadataProvider
 import com.arcadeanalytics.provider.neo4j3.Neo4jMetadataProvider
 import com.arcadeanalytics.provider.orient2.OrientDBDataSourceMetadataProvider
+import com.arcadeanalytics.provider.orient3.OrientDB3DataSourceMetadataProvider
 import com.arcadeanalytics.provider.rdbms.RDBMSMetadataProvider
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
@@ -38,6 +39,7 @@ internal class DataSourceInfoMetadataProviderFactoryTest {
         @JvmStatic
         fun types2implementation() = listOf(
                 Arguments.of("ORIENTDB", OrientDBDataSourceMetadataProvider::class.java),
+                Arguments.of("ORIENTDB3", OrientDB3DataSourceMetadataProvider::class.java),
                 Arguments.of("GREMLIN_ORIENTDB", GremlinMetadataProvider::class.java),
                 Arguments.of("GREMLIN_NEPTUNE", GremlinMetadataProvider::class.java),
                 Arguments.of("GREMLIN_JANUSGRAPH", GremlinMetadataProvider::class.java),
@@ -67,6 +69,7 @@ internal class DataSourceInfoMetadataProviderFactoryTest {
         assertThat(factory.provides())
                 .hasSize(13)
                 .contains("ORIENTDB",
+                        "ORIENTDB3",
                         "NEO4J",
                         "NEO4J_MEMGRAPH",
                         "GREMLIN_ORIENTDB",
