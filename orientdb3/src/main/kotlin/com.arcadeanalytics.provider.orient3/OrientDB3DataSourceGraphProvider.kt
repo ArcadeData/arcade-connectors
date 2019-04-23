@@ -36,18 +36,12 @@ class OrientDB3DataSourceGraphProvider : DataSourceGraphProvider {
 
     private val log = LoggerFactory.getLogger(OrientDB3DataSourceGraphProvider::class.java)
 
-    private val queries: List<String>
+    private val V_COUNT = "select count(*) as count from V"
 
-    private val ALL_V = "SELECT FROM V LIMIT 1000"
-
-    private val ALL_E = "SELECT FROM E LIMIT 1000"
+    private val E_COUNT = "select count(*) as count from E"
 
     private val allFields: Pattern = Pattern.compile(".*")
 
-    init {
-
-        this.queries = listOf(ALL_V, ALL_E)
-    }
 
     override fun supportedDataSourceTypes(): Set<String> {
         return setOf("ORIENTDB")
@@ -55,44 +49,111 @@ class OrientDB3DataSourceGraphProvider : DataSourceGraphProvider {
 
     override fun provideTo(dataSource: DataSourceInfo, player: SpritePlayer) {
 
-        open(dataSource).use { db ->
-
-            queries.asSequence()
-                    .onEach { query -> log.info("fetching documents with query ' {} ' ", query) }
-                    .forEach { sql ->
-
-                        var resultset = db.query(sql)
-
-                        while (resultset.hasNext()) {
-
-                            resultset.asSequence()
-                                    .map { res ->
-                                        res.element.get()
-                                    }
-                                    .filter { elem -> elem.propertyNames.size > 0 }
-                                    .map { elem: OElement ->
-
-                                        when {
-                                            elem.isVertex() -> {
-                                                elem as OVertexDocument
-                                                toSprite(elem)
-                                            }
-                                            else -> {
-                                                elem as OEdgeDocument
-                                                toSprite(elem)
-                                            }
-                                        }
-                                    }
-                                    .forEach { doc: Sprite -> player.play(doc) }
-
-                            resultset = db.query(sql)
-
-                        }
-                        player.end()
-                    }
+        try {
+            provideNodes(dataSource, player)
+            provideEdges(dataSource, player)
+        } finally {
+            player.end()
         }
 
+    }
 
+    private fun provideNodes(dataSource: DataSourceInfo, player: SpritePlayer) {
+
+        open(dataSource).use { db ->
+
+            val nodesCount: Long = db.query(V_COUNT).asSequence().iterator().next().getProperty("count")
+            var fetched: Long = 0
+            var skip: Long = 0
+            var limit = Math.min(nodesCount, 1000)
+
+            log.info("start indexing of data-source {} - total nodes:: {} ", dataSource.id, nodesCount)
+
+            while (fetched < nodesCount) {
+
+                val resultSet = db.query("select * from V skip $skip limit $limit")
+
+                while (resultSet.hasNext()) {
+
+                    resultSet.asSequence()
+                            .map { res ->
+                                res.element.get()
+                            }
+                            .filter { elem -> elem.propertyNames.size > 0 }
+                            .map { elem: OElement ->
+
+                                when {
+                                    elem.isVertex() -> {
+                                        elem as OVertexDocument
+                                        toSprite(elem)
+                                    }
+                                    else -> {
+                                        elem as OEdgeDocument
+                                        toSprite(elem)
+                                    }
+                                }
+                            }
+                            .forEach {
+                                doc: Sprite -> player.play(doc)
+                                fetched++
+                            }
+                }
+                player.end()
+
+                skip = limit
+                limit += 10000
+            }
+
+        }
+    }
+
+    private fun provideEdges(dataSource: DataSourceInfo, player: SpritePlayer) {
+
+        open(dataSource).use { db ->
+
+            val edgesCount: Long = db.query(E_COUNT).asSequence().iterator().next().getProperty("count")
+            var fetched: Long = 0
+            var skip: Long = 0
+            var limit = Math.min(edgesCount, 1000)
+
+            log.info("start indexing of data-source {} - total nodes:: {} ", dataSource.id, edgesCount)
+
+            while (fetched < edgesCount) {
+
+                val resultSet = db.query("select * from E skip $skip limit $limit")
+
+                while (resultSet.hasNext()) {
+
+                    resultSet.asSequence()
+                            .map { res ->
+                                res.element.get()
+                            }
+                            .filter { elem -> elem.propertyNames.size > 0 }
+                            .map { elem: OElement ->
+
+                                when {
+                                    elem.isVertex() -> {
+                                        elem as OVertexDocument
+                                        toSprite(elem)
+                                    }
+                                    else -> {
+                                        elem as OEdgeDocument
+                                        toSprite(elem)
+                                    }
+                                }
+                            }
+                            .forEach {
+                                doc: Sprite -> player.play(doc)
+                                fetched++
+                            }
+                }
+                player.end()
+
+                skip = limit
+                limit += 10000
+            }
+
+        }
     }
 
     private fun toSprite(document: ODocument): Sprite {
