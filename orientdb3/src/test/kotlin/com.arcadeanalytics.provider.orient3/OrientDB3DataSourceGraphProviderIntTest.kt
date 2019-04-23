@@ -22,7 +22,6 @@ package com.arcadeanalytics.provider.orient3
 import com.arcadeanalytics.data.Sprite
 import com.arcadeanalytics.data.SpritePlayer
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.util.*
@@ -41,7 +40,6 @@ class OrientDB3DataSourceGraphProviderIntTest {
 
 
     @Test
-    @Disabled
     fun shouldFetchAllVerticesAndEdges() {
 
 
