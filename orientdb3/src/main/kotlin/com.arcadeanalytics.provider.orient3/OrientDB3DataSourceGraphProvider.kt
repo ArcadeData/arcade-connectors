@@ -44,7 +44,7 @@ class OrientDB3DataSourceGraphProvider : DataSourceGraphProvider {
 
 
     override fun supportedDataSourceTypes(): Set<String> {
-        return setOf("ORIENTDB")
+        return setOf("ORIENTDB_3")
     }
 
     override fun provideTo(dataSource: DataSourceInfo, player: SpritePlayer) {
