@@ -48,7 +48,7 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
     private val log = LoggerFactory.getLogger(OrientDB3DataSourceGraphDataProvider::class.java)
 
-    override fun supportedDataSourceTypes(): Set<String> = setOf("ORIENTDB")
+    override fun supportedDataSourceTypes(): Set<String> = setOf("ORIENTDB3")
 
     override fun testConnection(dataSource: DataSourceInfo): Boolean {
 
