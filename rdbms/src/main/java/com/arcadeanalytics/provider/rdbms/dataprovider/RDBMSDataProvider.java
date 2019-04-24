@@ -224,7 +224,7 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
      * <p>
      * At the moment adds "row_index" column when the datasource is a DataWorld dataset
      *
-     * @param datasource data soruce
+     * @param datasource data source
      * @param query      the original query
      * @return the fixed query
      */
