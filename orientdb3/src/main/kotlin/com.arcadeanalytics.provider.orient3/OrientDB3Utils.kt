@@ -42,7 +42,7 @@ fun open(dataSource: DataSourceInfo): ODatabaseDocument {
 
     val orientdbConnectionUrl = createOrientdbConnectionUrl(dataSource);
     val orientDB = OrientDB(orientdbConnectionUrl, OrientDBConfig.defaultConfig())
-    return orientDB.open(dataSource.name, dataSource.username, dataSource.password)
+    return orientDB.open(dataSource.database, dataSource.username, dataSource.password)
 }
 
 fun ODatabaseDocument.getVertex(document: ODocument): Optional<OVertex>? {
