@@ -2,7 +2,7 @@ package com.arcadeanalytics.provider.rdbms.mapper.rdbms;
 
 /*-
  * #%L
- * Arcade Data
+ * Arcade Connectors
  * %%
  * Copyright (C) 2018 - 2019 ArcadeAnalytics
  * %%

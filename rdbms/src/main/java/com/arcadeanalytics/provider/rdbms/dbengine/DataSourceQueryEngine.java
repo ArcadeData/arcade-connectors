@@ -22,7 +22,7 @@ package com.arcadeanalytics.provider.rdbms.dbengine;
 
 /*-
  * #%L
- * Arcade Data
+ * Arcade Connectors
  * %%
  * Copyright (C) 2018 - 2019 ArcadeAnalytics
  * %%

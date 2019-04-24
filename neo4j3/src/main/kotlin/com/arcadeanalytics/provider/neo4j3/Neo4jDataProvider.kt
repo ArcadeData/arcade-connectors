@@ -1,6 +1,6 @@
 /*-
  * #%L
- * Arcade Data
+ * Arcade Connectors
  * %%
  * Copyright (C) 2018 - 2019 ArcadeAnalytics
  * %%
@@ -74,10 +74,7 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
             else -> "<-$label->"
         }
 
-        val cleanedIds = ids.asSequence()
-                .map { id -> toNeo4jId(dataSource, id) }
-                .distinct()
-                .joinToString(",")
+        val cleanedIds = cleanIds(ids, dataSource)
 
 
         val query = "MATCH (node)$rel(target) WHERE id(node) IN [$cleanedIds] return node, rel, target"
@@ -101,9 +98,7 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
 
     override fun load(dataSource: DataSourceInfo, ids: Array<String>): GraphData {
 
-        val cleanedIds = ids.asSequence()
-                .map { id -> toNeo4jId(dataSource, id) }
-                .joinToString(",")
+        val cleanedIds = cleanIds(ids, dataSource)
 
         val query = """MATCH (n)
             WHERE id(n) IN [${cleanedIds}]
@@ -125,6 +120,13 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
         }
 
 
+    }
+
+    private fun cleanIds(ids: Array<String>, dataSource: DataSourceInfo): String {
+        return ids.asSequence()
+                .map { id -> toNeo4jId(dataSource, id) }
+                .distinct()
+                .joinToString(",")
     }
 
     override fun loadFromClass(dataSource: DataSourceInfo, className: String, limit: Int): GraphData {

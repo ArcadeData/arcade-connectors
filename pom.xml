@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   #%L
-  Arcade Data
+  Arcade Connectors
   %%
   Copyright (C) 2018 - 2019 ArcadeAnalytics
   %%
@@ -245,7 +245,7 @@
                 <version>1.20</version>
                 <configuration>
                     <verbose />
-                    <projectName>Arcade Data</projectName>
+                    <projectName>Arcade Connectors</projectName>
                     <inceptionYear>2018</inceptionYear>
                     <organizationName>ArcadeAnalytics</organizationName>
                     <licenseName>apache_v2</licenseName>
