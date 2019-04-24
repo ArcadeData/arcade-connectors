@@ -48,9 +48,6 @@ class JanusgraphGremlinDataProviderIntTest {
         assertThat(record).isNotNull
                 .containsKeys("@in", "@out", "name", "@edgeCount")
 
-        println("cytoData = ${cytoData}")
-
-
     }
 
     @Test
@@ -70,7 +67,6 @@ class JanusgraphGremlinDataProviderIntTest {
 
         assertThat(load.nodes).hasSize(10)
 
-        load.nodes.asSequence().forEach { n -> println("n = ${n}") }
     }
 
     @Test

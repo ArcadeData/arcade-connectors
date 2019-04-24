@@ -36,8 +36,6 @@ class JanusgraphGremlinMetadataProviderTest {
     fun fetchMetadata() {
         val metadata = provider.fetchMetadata(JanusgraphContainer.dataSource)
 
-        println("metadata = ${metadata}")
-
         Assertions.assertThat(metadata.nodesClasses)
                 .hasSize(2)
                 .containsKeys("artist")

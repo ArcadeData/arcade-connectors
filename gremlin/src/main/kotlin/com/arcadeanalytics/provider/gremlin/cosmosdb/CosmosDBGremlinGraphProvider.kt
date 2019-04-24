@@ -23,6 +23,10 @@ import com.arcadeanalytics.data.Sprite
 import com.arcadeanalytics.data.SpritePlayer
 import com.arcadeanalytics.provider.DataSourceGraphProvider
 import com.arcadeanalytics.provider.DataSourceInfo
+import com.arcadeanalytics.provider.IndexConstants.ARCADE_EDGE_TYPE
+import com.arcadeanalytics.provider.IndexConstants.ARCADE_ID
+import com.arcadeanalytics.provider.IndexConstants.ARCADE_NODE_TYPE
+import com.arcadeanalytics.provider.IndexConstants.ARCADE_TYPE
 import com.arcadeanalytics.provider.gremlin.GremlinSerializerFactory
 import com.google.common.collect.Sets
 import org.apache.tinkerpop.gremlin.driver.Client
@@ -95,8 +99,8 @@ class CosmosDBGremlinGraphProvider : DataSourceGraphProvider {
                 res.keys
                         .forEach { k -> sprite.add(k, res[k].toString()) }
 
-                sprite.add(com.arcadeanalytics.provider.IndexConstants.ARCADE_ID, dataSource.id.toString() + "_" + res["id"])
-                        .add(com.arcadeanalytics.provider.IndexConstants.ARCADE_TYPE, com.arcadeanalytics.provider.IndexConstants.ARCADE_NODE_TYPE)
+                sprite.add(ARCADE_ID, dataSource.id.toString() + "_" + res["id"])
+                        .add(ARCADE_TYPE, ARCADE_NODE_TYPE)
                         .add("@class", res["label"])
                         .apply<Any, String>(allFields) { v -> v.toString() }
                 processor.play(sprite)
@@ -140,8 +144,8 @@ class CosmosDBGremlinGraphProvider : DataSourceGraphProvider {
                 res.keys
                         .forEach { k -> sprite.add(k, res[k].toString()) }
 
-                sprite.add(com.arcadeanalytics.provider.IndexConstants.ARCADE_ID, dataSource.id.toString() + "_" + res["id"])
-                        .add(com.arcadeanalytics.provider.IndexConstants.ARCADE_TYPE, com.arcadeanalytics.provider.IndexConstants.ARCADE_EDGE_TYPE)
+                sprite.add(ARCADE_ID, dataSource.id.toString() + "_" + res["id"])
+                        .add(ARCADE_TYPE, ARCADE_EDGE_TYPE)
                         .add("@class", res["label"])
                         .apply<Any, String>(allFields) { v -> v.toString() }
                 processor.play(sprite)

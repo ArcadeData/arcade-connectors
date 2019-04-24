@@ -83,12 +83,11 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
                 .toSet()
                 .toTypedArray()
 
-
         if (ids.isNotEmpty()) {
             val load = load(dataSource, ids, client)
 
             load.nodes
-                    .stream()
+                    .asSequence()
                     .forEach { n ->
                         cytoNodes.add(n)
                         populateClasses(nodeClasses, n)
@@ -197,26 +196,16 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
     }
 
     override fun load(dataSource: DataSourceInfo, ids: Array<String>): GraphData {
+
         val query = loadQuery(dataSource, ids)
 
-        val cluster = getCluster(dataSource)
-        val client = cluster.connect<Client>().init()
+        return fetchData(dataSource, query, ids.size)
 
-        log.info("fetching data from '{}' with query '{}' ", cluster.availableHosts()[0], query)
-
-        try {
-
-            return load(dataSource, ids, client)
-        } catch (e: Exception) {
-            throw RuntimeException(e)
-        } finally {
-            client.close()
-            cluster.close()
-        }
 
     }
 
     private fun load(dataSource: DataSourceInfo, ids: Array<String>, client: Client): GraphData {
+
         val query = loadQuery(dataSource, ids)
 
         return getGraphData(dataSource, query, ids.size, client)
@@ -226,28 +215,26 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
     override fun loadFromClass(dataSource: DataSourceInfo, className: String, limit: Int): GraphData {
         val query = "g.V().hasLabel(${splitMultilabel(className)}).limit($limit)"
 
-        return this.fetchData(dataSource, query, limit)
+        return fetchData(dataSource, query, limit)
     }
 
     override fun loadFromClass(dataSource: DataSourceInfo, className: String, propName: String, propValue: String, limit: Int): GraphData {
         val query = "g.V().hasLabel(${splitMultilabel(className)}).has('$propName', eq('$propValue')).limit($limit)"
 
-        return this.fetchData(dataSource, query, limit)
+        return fetchData(dataSource, query, limit)
     }
 
     private fun loadQuery(dataSource: DataSourceInfo, ids: Array<String>): String {
-        var query = "g.V("
-
+        check(ids.isNotEmpty())
         log.debug("load ids {} ", *ids)
 
-        query += ids.asSequence()
+        val joinedIds = ids.asSequence()
                 .map { id -> removeStart(id, "${dataSource.id}_") }
                 .map { id -> arcadeIdToNativeId(dataSource, id) }
                 .map { id -> """ '$id' """ }
                 .joinToString(",")
 
-        query += ")"
-        return query
+        return "g.V($joinedIds)"
     }
 
     private fun arcadeIdToNativeId(dataSource: DataSourceInfo, id: String): String {
