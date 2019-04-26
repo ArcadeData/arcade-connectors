@@ -22,12 +22,12 @@ package com.arcadeanalytics.provider.orient3
 
 import com.arcadeanalytics.provider.DataSourceInfo
 import com.arcadeanalytics.test.KGenericContainer
+import com.orientechnologies.orient.core.db.ODatabaseType
 import com.orientechnologies.orient.core.db.OrientDB
 import com.orientechnologies.orient.core.db.OrientDBConfig
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import java.io.IOException
-import com.orientechnologies.orient.core.db.ODatabaseType
 
 
 const val ORIENTDB_DOCKER_IMAGE = "orientdb:3.0.18"
@@ -62,7 +62,7 @@ object OrientDB3Container {
 
         val serverUrl = getServerUrl(container)
 
-        dbUrl = createTestDatabase(serverUrl, dataSource.name)
+        dbUrl = createTestDatabase(serverUrl, dataSource.database)
 
         createPersonSchema(dbUrl, dataSource)
 
@@ -122,7 +122,7 @@ fun createPersonSchema(dbUrl: String, dataSource: DataSourceInfo) {
 
     val orientDB = OrientDB(dbUrl, OrientDBConfig.defaultConfig())
 
-    orientDB.open(dataSource.name,dataSource.username, dataSource.password)
+    orientDB.open(dataSource.database, dataSource.username, dataSource.password)
             .use {
                 it.execute("sql", command)
             }

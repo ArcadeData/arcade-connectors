@@ -163,7 +163,7 @@ class OrientDB3DataSourceGraphDataProviderIntTest {
 
     private fun getPersonsIdentity(count: Int): Array<String> {
         val orientDB = OrientDB(getServerUrl(OrientDB3Container.getContainer()), OrientDBConfig.defaultConfig())
-        orientDB.open(dataSource.name, "admin", "admin")
+        orientDB.open(dataSource.database, "admin", "admin")
                 .use {
 
                     return it.execute("sql","SELECT from Person")
