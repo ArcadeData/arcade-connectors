@@ -30,6 +30,8 @@ import com.orientechnologies.orient.core.sql.executor.OResultSet
 import java.util.*
 
 
+const val ORIENTDB3 = "ORIENTDB3"
+
 private val orientdbConnectionUrl = "remote:{server}:{port}"
 
 

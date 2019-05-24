@@ -27,57 +27,30 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 
-internal class DataSourceGraphProviderFactoryTest {
+internal class DataSourceTableDataProviderFactoryTest {
 
     companion object {
         @JvmStatic
         fun types2implementation() = listOf(
-                Arguments.of("ORIENTDB", "OrientDBDataSourceGraphProvider"),
-                Arguments.of("ORIENTDB3", "OrientDB3DataSourceGraphProvider"),
-                Arguments.of("GREMLIN_ORIENTDB", "GremlinGraphProvider"),
-                Arguments.of("GREMLIN_NEPTUNE", "GremlinGraphProvider"),
-                Arguments.of("GREMLIN_JANUSGRAPH", "GremlinGraphProvider"),
-                Arguments.of("GREMLIN_COSMOSDB", "CosmosDBGremlinGraphProvider"),
-                Arguments.of("NEO4J", "Neo4jGraphProvider"),
-                Arguments.of("NEO4J_MEMGRAPH", "Neo4jGraphProvider"),
-                Arguments.of("RDBMS_MYSQL", "RDBMSGraphProvider"),
-                Arguments.of("RDBMS_MSSQLSERVER", "RDBMSGraphProvider"),
-                Arguments.of("RDBMS_ORACLE", "RDBMSGraphProvider"),
-                Arguments.of("RDBMS_HSQL", "RDBMSGraphProvider"),
-                Arguments.of("RDBMS_DATA_WORLD", "RDBMSGraphProvider")
-
+                Arguments.of("ORIENTDB3", "OrientDB3DataSourceTableDataProvider")
         )
 
     }
 
 
-    private lateinit var factory: DataSourceProviderFactory<DataSourceGraphProvider>
+    private lateinit var factory: DataSourceProviderFactory<DataSourceTableDataProvider>
 
     @BeforeEach
     internal fun setUp() {
-        factory = DataSourceProviderFactory(DataSourceGraphProvider::class.java)
+        factory = DataSourceProviderFactory(DataSourceTableDataProvider::class.java)
     }
-
 
     @Test
     internal fun `should provides all apis`() {
         assertThat(factory.provides())
-                .hasSize(14)
-                .contains("ORIENTDB",
-                        "ORIENTDB3",
-                        "NEO4J",
-                        "NEO4J_MEMGRAPH",
-                        "GREMLIN_ORIENTDB",
-                        "GREMLIN_NEPTUNE",
-                        "GREMLIN_COSMOSDB",
-                        "GREMLIN_JANUSGRAPH",
-                        "RDBMS_POSTGRESQL",
-                        "RDBMS_MYSQL",
-                        "RDBMS_MSSQLSERVER",
-                        "RDBMS_HSQL",
-                        "RDBMS_ORACLE",
-                        "RDBMS_DATA_WORLD"
-                )
+                .hasSize(1)
+                .contains(
+                        "ORIENTDB3")
 
     }
 
@@ -101,4 +74,6 @@ internal class DataSourceGraphProviderFactoryTest {
 
         Assertions.assertThat(provider::class.java.simpleName).isEqualTo(impl)
     }
+
+
 }

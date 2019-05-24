@@ -25,25 +25,75 @@ package com.arcadeanalytics.provider
  */
 interface DataSourceGraphDataProvider : DataSourceProvider {
 
+    /**
+     * Test the connection to the given {@link DataSourceInfo}
+     * @param dataSource to be tested
+     * @return true if the connection works fine, false in other cases
+     */
     fun testConnection(dataSource: DataSourceInfo): Boolean = true
 
 
+    /**
+     * Fetch data from the given dataSource using the provided query in the appropriate query language.
+     * Result set could be limited passing a limit value.
+     *
+     *  @param dataSource the data source
+     * @param query the query in the appropriate query language (SQL, Cypher, Gremlin)
+     * @param limit max number of element to retrieve
+     * @return the {@link GraphData} representation of the result set
+     */
     fun fetchData(dataSource: DataSourceInfo,
                   query: String,
                   limit: Int): GraphData
 
+    /**
+     * Given a list of nodes ids, a direction and an edge label, expand the graph.
+     * A max number of traversal step could be passed and it is usually implemented in approximate way.
+     *
+     * @param dataSource the data spurce
+     * @param ids nodes identifiers
+     * @param direction out, in or both
+     * @param edgeLabel which edge label use to expand the graph
+     * @param maxTraversal max number of traversal step
+     * @return the {@link GraphData} representation of the result set
+     */
     fun expand(dataSource: DataSourceInfo,
                ids: Array<String>,
                direction: String,
                edgeLabel: String,
                maxTraversal: Int): GraphData
 
+    /**
+     * Load elements by ids
+     * @param dataSource the data source
+     * @param ids list of identifiers to be loaded
+     * @return the {@link GraphData} representation of the result set
+     */
     fun load(dataSource: DataSourceInfo,
              ids: Array<String>): GraphData
 
+
+    /**
+     * Loads element from a given class. A class is a different concept in  different data stores: type, table, label, class.
+     * @param dataSource the data source
+     * @param className the class name
+     * @param limit max number of element to load
+     * @return the {@link GraphData} representation of the result set
+     */
     fun loadFromClass(dataSource: DataSourceInfo,
                       className: String,
                       limit: Int): GraphData
+
+    /**
+     * Loads element from a given class filtering by a property value.
+     * A class is a different concept in  different data stores: type, table, label, class.
+     * @param dataSource the data source
+     * @param className the class name
+     * @param propName the property to use in filter
+     * @param propValue the property value
+     * @param limit max number of element to load
+     * @return the {@link GraphData} representation of the result set
+     */
 
     fun loadFromClass(dataSource: DataSourceInfo,
                       className: String,

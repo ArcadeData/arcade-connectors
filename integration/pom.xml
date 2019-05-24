@@ -19,6 +19,9 @@
   -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <properties>
+        <arcade-data.version>1.0.1</arcade-data.version>
+    </properties>
 
     <parent>
         <groupId>com.arcadeanalytics</groupId>
@@ -95,41 +98,36 @@
             <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>com.arcadeanalytics</groupId>
-            <artifactId>arcade-connectors-orientdb2</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.arcadeanalytics</groupId>
-            <artifactId>arcade-connectors-orientdb3</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.arcadeanalytics</groupId>
-            <artifactId>arcade-connectors-neo4j3</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.arcadeanalytics</groupId>
-            <artifactId>arcade-connectors-gremlin</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.arcadeanalytics</groupId>
-            <artifactId>arcade-connectors-rdbms</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.arcadeanalytics</groupId>
-            <artifactId>arcade-data</artifactId>
-            <version>1.0.1</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.arcadeanalytics</groupId>-->
+<!--            <artifactId>arcade-connectors-orientdb2</artifactId>-->
+<!--            <version>${project.parent.version}</version>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.arcadeanalytics</groupId>-->
+<!--            <artifactId>arcade-connectors-orientdb3</artifactId>-->
+<!--            <version>${project.parent.version}</version>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.arcadeanalytics</groupId>-->
+<!--            <artifactId>arcade-connectors-neo4j3</artifactId>-->
+<!--            <version>${project.parent.version}</version>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.arcadeanalytics</groupId>-->
+<!--            <artifactId>arcade-connectors-gremlin</artifactId>-->
+<!--            <version>${project.parent.version}</version>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.arcadeanalytics</groupId>-->
+<!--            <artifactId>arcade-connectors-rdbms</artifactId>-->
+<!--            <version>${project.parent.version}</version>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
 
     </dependencies>
 

@@ -19,12 +19,6 @@
  */
 package com.arcadeanalytics.provider
 
-import com.arcadeanalytics.provider.gremlin.GremlinMetadataProvider
-import com.arcadeanalytics.provider.gremlin.cosmosdb.CosmosDBGremlinMetadataProvider
-import com.arcadeanalytics.provider.neo4j3.Neo4jMetadataProvider
-import com.arcadeanalytics.provider.orient2.OrientDBDataSourceMetadataProvider
-import com.arcadeanalytics.provider.orient3.OrientDB3DataSourceMetadataProvider
-import com.arcadeanalytics.provider.rdbms.RDBMSMetadataProvider
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -38,31 +32,30 @@ internal class DataSourceInfoMetadataProviderFactoryTest {
     companion object {
         @JvmStatic
         fun types2implementation() = listOf(
-                Arguments.of("ORIENTDB", OrientDBDataSourceMetadataProvider::class.java),
-                Arguments.of("ORIENTDB3", OrientDB3DataSourceMetadataProvider::class.java),
-                Arguments.of("GREMLIN_ORIENTDB", GremlinMetadataProvider::class.java),
-                Arguments.of("GREMLIN_NEPTUNE", GremlinMetadataProvider::class.java),
-                Arguments.of("GREMLIN_JANUSGRAPH", GremlinMetadataProvider::class.java),
-                Arguments.of("GREMLIN_COSMOSDB", CosmosDBGremlinMetadataProvider::class.java),
-                Arguments.of("NEO4J", Neo4jMetadataProvider::class.java),
-                Arguments.of("NEO4J_MEMGRAPH", Neo4jMetadataProvider::class.java),
-                Arguments.of("RDBMS_MYSQL", RDBMSMetadataProvider::class.java),
-                Arguments.of("RDBMS_MSSQLSERVER", RDBMSMetadataProvider::class.java),
-                Arguments.of("RDBMS_ORACLE", RDBMSMetadataProvider::class.java),
-                Arguments.of("RDBMS_HSQL", RDBMSMetadataProvider::class.java),
-                Arguments.of("RDBMS_DATA_WORLD", RDBMSMetadataProvider::class.java)
+                Arguments.of("ORIENTDB", "OrientDBDataSourceMetadataProvider"),
+                Arguments.of("ORIENTDB3", "OrientDB3DataSourceMetadataProvider"),
+                Arguments.of("GREMLIN_ORIENTDB", "GremlinMetadataProvider"),
+                Arguments.of("GREMLIN_NEPTUNE", "GremlinMetadataProvider"),
+                Arguments.of("GREMLIN_JANUSGRAPH", "GremlinMetadataProvider"),
+                Arguments.of("GREMLIN_COSMOSDB", "CosmosDBGremlinMetadataProvider"),
+                Arguments.of("NEO4J", "Neo4jMetadataProvider"),
+                Arguments.of("NEO4J_MEMGRAPH", "Neo4jMetadataProvider"),
+                Arguments.of("RDBMS_MYSQL", "RDBMSMetadataProvider"),
+                Arguments.of("RDBMS_MSSQLSERVER", "RDBMSMetadataProvider"),
+                Arguments.of("RDBMS_ORACLE", "RDBMSMetadataProvider"),
+                Arguments.of("RDBMS_HSQL", "RDBMSMetadataProvider"),
+                Arguments.of("RDBMS_DATA_WORLD", "RDBMSMetadataProvider")
         )
 
     }
 
-    private lateinit var factory: DataSourceMetadataProviderFactory
-
+    private lateinit var factory: DataSourceProviderFactory<DataSourceMetadataProvider>
 
     @BeforeEach
     internal fun setUp() {
-        factory = DataSourceMetadataProviderFactory()
-
+        factory = DataSourceProviderFactory(DataSourceMetadataProvider::class.java)
     }
+
 
     @Test
     internal fun `should provides all apis`() {
@@ -91,7 +84,7 @@ internal class DataSourceInfoMetadataProviderFactoryTest {
     @MethodSource("types2implementation")
     internal fun `should create right data provider for given data source type`(
             type: String,
-            impl: Class<DataSourceGraphDataProvider>) {
+            impl: String) {
 
         val dataSource = DataSourceInfo(id = 1L,
                 type = type,
@@ -102,8 +95,10 @@ internal class DataSourceInfoMetadataProviderFactoryTest {
                 password = "admin",
                 database = "testDb")
 
-        Assertions.assertThat(factory.create(dataSource)).isNotNull
-                .isInstanceOf(impl)
+        val provider = factory.create(dataSource)
+        Assertions.assertThat(provider).isNotNull
+
+        Assertions.assertThat(provider::class.java.simpleName).isEqualTo(impl)
     }
 
 

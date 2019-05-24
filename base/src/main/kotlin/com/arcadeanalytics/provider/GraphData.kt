@@ -19,8 +19,24 @@
  */
 package com.arcadeanalytics.provider
 
-import com.google.common.collect.Maps
-import com.google.common.collect.Sets
+data class Position(private val x: Double, private val y: Double)
+
+data class Data(val id: String,
+                val parent: String = "",
+                val source: String = "",
+                val target: String = "",
+                val record: MutableMap<String, Any> = mutableMapOf())
+
+
+data class CytoData(
+        val classes: String,
+        val group: String,
+        val data: Data,
+        var position: Position = Position(0.0, 0.0),
+        val selected: String = "",
+        val selectable: String = "",
+        val locked: String = "",
+        val grabbable: String = "")
 
 data class GraphData(val nodesClasses: Map<String, Map<String, Any>> = emptyMap(),
                      val edgesClasses: Map<String, Map<String, Any>> = emptyMap(),
@@ -35,10 +51,10 @@ data class GraphData(val nodesClasses: Map<String, Map<String, Any>> = emptyMap(
          * Null object
          */
         @JvmStatic
-        val EMPTY = GraphData(Maps.newHashMap(),
-                Maps.newHashMap(),
-                Sets.newHashSet(),
-                Sets.newHashSet(),
+        val EMPTY = GraphData(emptyMap(),
+                emptyMap(),
+                emptySet(),
+                emptySet(),
                 false)
 
     }
