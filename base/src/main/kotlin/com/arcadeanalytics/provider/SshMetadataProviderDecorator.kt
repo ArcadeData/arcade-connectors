@@ -19,18 +19,13 @@
  */
 package com.arcadeanalytics.provider
 
-class SshTunnelMetadataProviderDecorator(val factory: DataSourceMetadataProviderFactory) : SshTunnelTemplate(), DataSourceMetadataProvider {
+class SshMetadataProviderDecorator(val provider: DataSourceMetadataProvider) : SshTunnelTemplate(), DataSourceMetadataProvider {
 
 
     override fun fetchMetadata(dataSource: DataSourceInfo): DataSourceMetadata {
 
-        val localPort = findFreePort()
 
-        val session = buildTunnel(dataSource, localPort)
-
-        val wrapper = createLocalhostDataSource(dataSource, localPort)
-
-        val provider = factory.create(wrapper)
+        val (session, wrapper) = buildTunnel(dataSource)
 
         val metadata = provider.fetchMetadata(wrapper)
 

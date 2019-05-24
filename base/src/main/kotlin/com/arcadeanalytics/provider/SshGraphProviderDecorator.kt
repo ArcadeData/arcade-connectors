@@ -22,20 +22,14 @@ package com.arcadeanalytics.provider
 import com.arcadeanalytics.data.SpritePlayer
 import org.slf4j.LoggerFactory
 
-class SshTunnelDataSourceGraphProviderDecorator(private val factory: DataSourceGraphProviderFactory) : SshTunnelTemplate(), DataSourceGraphProvider {
+class SshGraphProviderDecorator(private val provider: DataSourceGraphProvider) : SshTunnelTemplate(), DataSourceGraphProvider {
 
+    private val log = LoggerFactory.getLogger(SshGraphProviderDecorator::class.java)
 
     override fun provideTo(dataSource: DataSourceInfo, player: SpritePlayer) {
 
-        val localPort = findFreePort()
+        val (session, wrapper) = buildTunnel(dataSource)
 
-        log.info("local port for tunnel is {}", localPort)
-        val session = buildTunnel(dataSource, localPort)
-
-        log.info("ssh session connected:: {}", session.isConnected)
-        val wrapper = createLocalhostDataSource(dataSource, localPort)
-
-        val provider = factory.create(wrapper)
         provider.provideTo(wrapper, player)
 
         log.info("ssh disconnecting:: {}", session.isConnected)
@@ -44,9 +38,5 @@ class SshTunnelDataSourceGraphProviderDecorator(private val factory: DataSourceG
 
     }
 
-    companion object {
-
-        private val log = LoggerFactory.getLogger(SshTunnelDataSourceGraphProviderDecorator::class.java)
-    }
 
 }

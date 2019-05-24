@@ -21,19 +21,14 @@ package com.arcadeanalytics.provider
 
 import org.slf4j.LoggerFactory
 
-class SshTunnelDataProviderDecorator(private val factory: DataSourceGraphDataProviderFactory) : SshTunnelTemplate(), DataSourceGraphDataProvider {
+class SshDataProviderDecorator(private val provider: DataSourceGraphDataProvider) : SshTunnelTemplate(), DataSourceGraphDataProvider {
 
-    private val log = LoggerFactory.getLogger(SshTunnelDataProviderDecorator::class.java)
+    private val log = LoggerFactory.getLogger(SshDataProviderDecorator::class.java)
 
 
     override fun testConnection(dataSource: DataSourceInfo): Boolean {
-        val localPort = findFreePort()
+        val (session, wrapper) = buildTunnel(dataSource)
 
-        val session = buildTunnel(dataSource, localPort)
-
-        val wrapper = createLocalhostDataSource(dataSource, localPort)
-
-        val provider = factory.create(wrapper)
 
         val testConnection = provider.testConnection(wrapper)
 
@@ -45,13 +40,8 @@ class SshTunnelDataProviderDecorator(private val factory: DataSourceGraphDataPro
 
     override fun fetchData(dataSource: DataSourceInfo, query: String, limit: Int): GraphData {
 
-        val localPort = findFreePort()
+        val (session, wrapper) = buildTunnel(dataSource)
 
-        val session = buildTunnel(dataSource, localPort)
-
-        val wrapper = createLocalhostDataSource(dataSource, localPort)
-
-        val provider = factory.create(wrapper)
         val graphData = provider.fetchData(wrapper, query, limit)
 
         session.disconnect()
@@ -61,13 +51,8 @@ class SshTunnelDataProviderDecorator(private val factory: DataSourceGraphDataPro
 
 
     override fun expand(dataSource: DataSourceInfo, ids: Array<String>, direction: String, edgeLabel: String, maxTraversal: Int): GraphData {
-        val localPort = findFreePort()
+        val (session, wrapper) = buildTunnel(dataSource)
 
-        val session = buildTunnel(dataSource, localPort)
-
-        val wrapper = createLocalhostDataSource(dataSource, localPort)
-
-        val provider = factory.create(wrapper)
         val graphData = provider.expand(wrapper, ids, direction, edgeLabel, maxTraversal)
 
         session.disconnect()
@@ -76,12 +61,8 @@ class SshTunnelDataProviderDecorator(private val factory: DataSourceGraphDataPro
     }
 
     override fun load(dataSource: DataSourceInfo, ids: Array<String>): GraphData {
-        val localPort = findFreePort()
+        val (session, wrapper) = buildTunnel(dataSource)
 
-        val session = buildTunnel(dataSource, localPort)
-        val wrapper = createLocalhostDataSource(dataSource, localPort)
-
-        val provider = factory.create(wrapper)
         val graphData = provider.load(wrapper, ids)
 
 
@@ -92,13 +73,8 @@ class SshTunnelDataProviderDecorator(private val factory: DataSourceGraphDataPro
 
     override fun loadFromClass(dataSource: DataSourceInfo, className: String, limit: Int): GraphData {
 
-        val localPort = findFreePort()
+        val (session, wrapper) = buildTunnel(dataSource)
 
-        val session = buildTunnel(dataSource, localPort)
-
-        val wrapper = createLocalhostDataSource(dataSource, localPort)
-
-        val provider = factory.create(wrapper)
         val graphData = provider.loadFromClass(wrapper, className, limit)
 
         session.disconnect()
@@ -107,13 +83,8 @@ class SshTunnelDataProviderDecorator(private val factory: DataSourceGraphDataPro
     }
 
     override fun loadFromClass(dataSource: DataSourceInfo, className: String, propName: String, propValue: String, limit: Int): GraphData {
-        val localPort = findFreePort()
+        val (session, wrapper) = buildTunnel(dataSource)
 
-        val session = buildTunnel(dataSource, localPort)
-
-        val wrapper = createLocalhostDataSource(dataSource, localPort)
-
-        val provider = factory.create(wrapper)
         val graphData = provider.loadFromClass(wrapper, className, propName, propValue, limit)
 
         session.disconnect()

@@ -36,13 +36,13 @@ import java.util.function.Consumer
 /**
  * Template class to be extended if an ssh tunnel should be created
  */
-abstract class SshTunnelTemplate {
+abstract class SshTunnelTemplate : DataSourceProvider {
 
-    protected fun buildTunnel(dataSourceInfo: DataSourceInfo, localPort: Int): Session {
+    protected fun buildTunnel(dataSourceInfo: DataSourceInfo): Pair<Session, DataSourceInfo> {
 
         JSch.setLogger(JschSlf4jLogger())
         val jsch = JSch()
-
+        val localPort = findFreePort()
         try {
 
             val privKeyFileName = getProperty("SSH_PRIV_KEY", ".ssh/id_rsa")
@@ -61,7 +61,8 @@ abstract class SshTunnelTemplate {
 
             session.setPortForwardingL(localPort, dataSourceInfo.server, dataSourceInfo.port)
 
-            return session
+            val wrapper = createLocalhostDataSource(dataSourceInfo, localPort)
+            return Pair(session, wrapper)
 
         } catch (e: IOException) {
             throw RuntimeException(e)
@@ -72,7 +73,7 @@ abstract class SshTunnelTemplate {
 
     }
 
-    protected fun findFreePort(): Int {
+    private fun findFreePort(): Int {
         var socket: ServerSocket? = null
         try {
             socket = ServerSocket(0)
@@ -98,7 +99,7 @@ abstract class SshTunnelTemplate {
         throw IllegalStateException("Could not find a free TCP/IP port to open the ssh tunnel")
     }
 
-    protected fun createLocalhostDataSource(dataSourceInfo: DataSourceInfo, localPort: Int): DataSourceInfo {
+    private fun createLocalhostDataSource(dataSourceInfo: DataSourceInfo, localPort: Int): DataSourceInfo {
 
         return DataSourceInfo(dataSourceInfo.id,
                 dataSourceInfo.type,
@@ -117,7 +118,7 @@ abstract class SshTunnelTemplate {
                 "")
     }
 
-    fun supportedDataSourceTypes(): Set<String> {
+    override fun supportedDataSourceTypes(): Set<String> {
         return Sets.newHashSet("SSH")
     }
 
