@@ -2,6 +2,7 @@ package com.arcadeanalytics.provider.orient3
 
 import com.arcadeanalytics.provider.QueryParam
 import com.arcadeanalytics.provider.QueryParams
+import com.arcadeanalytics.provider.TABLE_CLASS
 import com.arcadeanalytics.provider.TypeProperties
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
