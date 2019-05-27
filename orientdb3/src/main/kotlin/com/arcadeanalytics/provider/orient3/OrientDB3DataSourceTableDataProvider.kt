@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory
 import java.util.*
 
 
-const val TABLE_CLASS = "Table"
 
 /**
  * Specialized provider for OrientDB 3.0.x
@@ -183,6 +182,3 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
 }
 
 
-internal inline fun String.prefixIfAbsent(prefix: String): String {
-    return if (this.startsWith(prefix)) this else prefix + this
-}
