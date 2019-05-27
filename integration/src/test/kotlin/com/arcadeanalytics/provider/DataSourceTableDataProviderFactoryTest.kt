@@ -32,7 +32,13 @@ internal class DataSourceTableDataProviderFactoryTest {
     companion object {
         @JvmStatic
         fun types2implementation() = listOf(
-                Arguments.of("ORIENTDB3", "OrientDB3DataSourceTableDataProvider")
+                Arguments.of("ORIENTDB3", "OrientDB3DataSourceTableDataProvider"),
+                Arguments.of("RDBMS_POSTGRESQL", "RDBMSTableDataProvider"),
+                Arguments.of("RDBMS_MYSQL", "RDBMSTableDataProvider"),
+                Arguments.of("RDBMS_MSSQLSERVER", "RDBMSTableDataProvider"),
+                Arguments.of("RDBMS_HSQL", "RDBMSTableDataProvider"),
+                Arguments.of("RDBMS_ORACLE", "RDBMSTableDataProvider"),
+                Arguments.of("RDBMS_DATA_WORLD", "RDBMSTableDataProvider")
         )
 
     }
@@ -48,8 +54,14 @@ internal class DataSourceTableDataProviderFactoryTest {
     @Test
     internal fun `should provides all apis`() {
         assertThat(factory.provides())
-                .hasSize(1)
+                .hasSize(7)
                 .contains(
+                        "RDBMS_POSTGRESQL",
+                        "RDBMS_MYSQL",
+                        "RDBMS_MSSQLSERVER",
+                        "RDBMS_HSQL",
+                        "RDBMS_ORACLE",
+                        "RDBMS_DATA_WORLD",
                         "ORIENTDB3")
 
     }
