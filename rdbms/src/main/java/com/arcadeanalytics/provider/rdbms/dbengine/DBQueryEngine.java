@@ -9,9 +9,9 @@ package com.arcadeanalytics.provider.rdbms.dbengine;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -65,6 +65,10 @@ public class DBQueryEngine implements DataSourceQueryEngine {
         this.queryBuilder = queryBuilderFactory.buildQueryBuilder(dataSource.getType());
         dbConnection = DBSourceConnection.getConnection(dataSource);
 
+    }
+
+    public Connection getDbConnection() {
+        return dbConnection;
     }
 
     public QueryResult countTableRecords(String currentTableName, String currentTableSchema) throws SQLException {
@@ -141,7 +145,6 @@ public class DBQueryEngine implements DataSourceQueryEngine {
 
     public QueryResult scanTableAndOrder(String query, int limit, Entity entity, DataSourceInfo dataSource) throws SQLException {
 
-        Connection dbConnection = DBSourceConnection.getConnection(dataSource);
         Statement statement = dbConnection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 
         // setting the threshold for the number of rows
@@ -199,7 +202,6 @@ public class DBQueryEngine implements DataSourceQueryEngine {
                                                                                String relationshipName) throws SQLException {
 
 
-        Connection dbConnection = DBSourceConnection.getConnection(dataSource);
         Statement statement = dbConnection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 
         // setting the threshold for the number of rows
@@ -244,7 +246,6 @@ public class DBQueryEngine implements DataSourceQueryEngine {
                                                                   DataSourceInfo dataSource,
                                                                   String relationshipName) throws SQLException {
 
-        Connection dbConnection = DBSourceConnection.getConnection(dataSource);
         Statement statement = dbConnection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 
         // setting the threshold for the number of rows
@@ -273,7 +274,6 @@ public class DBQueryEngine implements DataSourceQueryEngine {
                                           String direction,
                                           DataSourceInfo dataSource) throws SQLException {
 
-        Connection dbConnection = DBSourceConnection.getConnection(dataSource);
         Statement statement = dbConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
         // setting the threshold for the number of rows
@@ -387,6 +387,7 @@ public class DBQueryEngine implements DataSourceQueryEngine {
 
     public void close() {
         try {
+            log.debug("    closing connection");
             dbConnection.close();
         } catch (SQLException e) {
             log.error("", e);

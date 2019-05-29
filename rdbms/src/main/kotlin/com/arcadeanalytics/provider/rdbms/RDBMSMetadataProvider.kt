@@ -44,9 +44,9 @@ class RDBMSMetadataProvider : DataSourceMetadataProvider {
 
     override fun fetchMetadata(dataSource: DataSourceInfo): DataSourceMetadata {
 
-        val mapper: ER2GraphMapper = getMapper(dataSource)
-
         val dbQueryEngine: DBQueryEngine = DBQueryEngine(dataSource, 300)
+
+        val mapper: ER2GraphMapper = getMapper(dbQueryEngine, dataSource)
 
         val graphModel = mapper.graphModel
 
@@ -143,9 +143,7 @@ class RDBMSMetadataProvider : DataSourceMetadataProvider {
         return DataSourceMetadata(nodesClasses, edgesClasses)
     }
 
-    private fun getMapper(dataSource: DataSourceInfo): ER2GraphMapper {
-
-        val dbQueryEngine = DBQueryEngine(dataSource, 300)
+    private fun getMapper(dbQueryEngine: DBQueryEngine, dataSource: DataSourceInfo): ER2GraphMapper {
 
         val statistics = Statistics()
 
@@ -154,12 +152,14 @@ class RDBMSMetadataProvider : DataSourceMetadataProvider {
         val chosenStrategy = if (aggregate) "interactive-aggr" else "interactive"
 
         val dataTypeHandlerFactory = DataTypeHandlerFactory()
+
         val handler = dataTypeHandlerFactory.buildDataTypeHandler(dataSource.type)
 
         val nameResolverFactory = NameResolverFactory()
         val nameResolver = nameResolverFactory.buildNameResolver("original")
 
         val strategyFactory = StrategyFactory()
+
         val mapper = (strategyFactory.buildStrategy(chosenStrategy) as AbstractDBMSModelBuildingStrategy)
                 .createSchemaMapper(dataSource,
                         null,

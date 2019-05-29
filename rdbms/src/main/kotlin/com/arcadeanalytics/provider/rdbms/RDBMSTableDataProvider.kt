@@ -6,13 +6,14 @@ import java.sql.ResultSet
 
 
 class RDBMSTableDataProvider : DataSourceTableDataProvider {
+
     override fun fetchData(dataSource: DataSourceInfo, query: String, limit: Int): GraphData {
 
         DBSourceConnection.getConnection(dataSource).use { conn ->
 
             conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY).use { stmt ->
 
-                val rs = stmt.executeQuery(query).use { rs ->
+                stmt.executeQuery(query).use { rs ->
 
                     val md = rs.metaData
                     val columns = md.columnCount
@@ -59,7 +60,7 @@ class RDBMSTableDataProvider : DataSourceTableDataProvider {
             }
         }
 
-        return GraphData(emptyMap(), emptyMap(), emptySet(), emptySet())
+        return GraphData.EMPTY
     }
 
 

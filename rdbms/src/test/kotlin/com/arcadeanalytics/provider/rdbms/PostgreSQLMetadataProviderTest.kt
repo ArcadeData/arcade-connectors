@@ -22,6 +22,7 @@ package com.arcadeanalytics.provider.rdbms
 import com.arcadeanalytics.provider.DataSourceInfo
 import com.arcadeanalytics.provider.rdbms.dataprovider.PostgreSQLContainerHolder
 import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.Assert
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -74,13 +75,12 @@ class PostgreSQLMetadataProviderTest {
     @Test
     fun shouldFetchMetadata() {
 
-
         val metadata = providerNoAggregation.fetchMetadata(dataSourceNoAggregation)
 
-        println("metadata = ${metadata}")
+        assertThat(metadata.nodesClasses).isNotEmpty
+                .containsKeys("actor", "address", "category", "city", "country", "customer", "film", "rental", "payment", "language")
 
-        Assertions.assertThat(metadata.nodesClasses).isNotEmpty
-        Assertions.assertThat(metadata.edgesClasses).isNotEmpty
+        assertThat(metadata.edgesClasses).isNotEmpty
     }
 
     @Test

@@ -36,9 +36,9 @@ internal class OrientDB3DataSourceTableDataProviderTest {
 
         assertThat(tableClass).containsKeys("name", "cardinality", "properties")
 
-        val get: TypeProperties = tableClass?.get("properties") as TypeProperties
+        val properties: TypeProperties = tableClass?.get("properties") as TypeProperties
 
-        assertThat(get).containsKeys("count", "age")
+        assertThat(properties).containsKeys("count", "age")
 
         val cytoData = data.nodes.first()
         assertThat(cytoData.classes).isEqualTo(TABLE_CLASS)

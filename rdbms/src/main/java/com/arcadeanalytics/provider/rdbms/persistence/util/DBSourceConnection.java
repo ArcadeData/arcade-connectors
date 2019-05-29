@@ -62,7 +62,7 @@ public class DBSourceConnection {
     public static Connection getConnection(DataSourceInfo datasource) {
 
         String uri = createConnectionUrl(datasource);
-        log.info("getting connection for:: {} ", uri);
+        log.debug("getting connection for:: {} ", uri);
 
         Properties props = new Properties();
         props.setProperty("user", datasource.getUsername());

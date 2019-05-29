@@ -9,9 +9,9 @@ package com.arcadeanalytics.provider.rdbms.mapper.rdbms;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,7 +41,6 @@ import com.arcadeanalytics.provider.rdbms.model.graphmodel.ModelProperty;
 import com.arcadeanalytics.provider.rdbms.model.graphmodel.VertexType;
 import com.arcadeanalytics.provider.rdbms.nameresolver.NameResolver;
 import com.arcadeanalytics.provider.rdbms.persistence.handler.DBMSDataTypeHandler;
-import com.arcadeanalytics.provider.rdbms.persistence.util.DBSourceConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -250,8 +249,9 @@ public class ER2GraphMapper {
         statistics.startWork1Time = new Date();
         statistics.runningStepNumber = 1;
 
-        try (Connection connection = DBSourceConnection.getConnection(dataSource)) {
 
+        try {
+            Connection connection = queryEngine.getDbConnection();
             DatabaseMetaData databaseMetaData = connection.getMetaData();
 
             log.debug("databaseMetaData:: {} ", databaseMetaData);
