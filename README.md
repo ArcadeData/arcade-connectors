@@ -3,6 +3,7 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.arcadeanalytics/arcade-connectors-parent/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.arcadeanalytics/arcade-connectors-parent)
 [![security status](https://www.meterian.com/badge/gh/ArcadeAnalytics/arcade-connectors/security)](https://www.meterian.com/report/gh/ArcadeAnalytics/arcade-connectors)
 [![stability status](https://www.meterian.com/badge/gh/ArcadeAnalytics/arcade-connectors/stability)](https://www.meterian.com/report/gh/ArcadeAnalytics/arcade-connectors)
+[![Javadocs](https://javadoc.io/badge/com.arcadeanalytics/arcade-connectors-base.svg)](https://javadoc.io/doc/com.arcadeanalytics/arcade-connectors-base)
 
 # Arcade Connectors 
 
