@@ -57,9 +57,8 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
 
                     val resultSet: OResultSet = db.query(query)
 
-                    log.info("Query executed")
-
                     val data = mapResultSet(resultSet)
+
                     log.info("Fetched {} rows", data.nodes.size)
 
                     return data
@@ -138,7 +137,7 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
                 .map { v -> toCytoData(v, count++) }
                 .toSet()
 
-        log.info("properties:: {} ", nodesProperties)
+        log.debug("properties:: {} ", nodesProperties)
         val tableClass = mutableMapOf<String, Any>()
         tableClass.put("name", TABLE_CLASS)
         tableClass.put("cardinality", count)

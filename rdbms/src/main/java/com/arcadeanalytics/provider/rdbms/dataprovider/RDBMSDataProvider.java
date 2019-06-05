@@ -9,9 +9,9 @@ package com.arcadeanalytics.provider.rdbms.dataprovider;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -139,7 +139,7 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
 
         query = fixQuery(datasource, query);
 
-        log.info("query datasource {} with '{}'", datasource, query);
+        log.info("query datasource {} with '{}'", datasource.getId(), query);
         // preparing the mapper in the data fetcher
 
         prepareMapperAndDataFetcher(datasource);
@@ -245,7 +245,7 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
                         .collect(Collectors.toList())
                         .isEmpty();
                 if (notFound) {
-                    log.info("fixing query to DW, add 'row_index' column");
+                    log.debug("fixing query to DW, add 'row_index' column");
                     plain.addSelectItems(new SelectExpressionItem(new Column("row_index")));
                 }
 
@@ -521,7 +521,7 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
     public boolean testConnection(DataSourceInfo datasource) {
 
         try (Connection connection = DBSourceConnection.getConnection(datasource)) {
-            log.info("connection works fine:: '{}' ", datasource);
+            log.info("connection works fine:: '{}' ", datasource.getId());
         } catch (Exception e) {
             throw new RDBMSProviderRuntimeException(e);
         }
