@@ -21,7 +21,7 @@
     <modelVersion>4.0.0</modelVersion>
     <properties>
         <commons-lang3.version>3.9</commons-lang3.version>
-        <orientdb-core.version>3.0.19</orientdb-core.version>
+        <orientdb-core.version>3.0.20</orientdb-core.version>
         <orientdb-graphdb.version>2.2.37</orientdb-graphdb.version>
         <mysql-connector-java.version>8.0.16</mysql-connector-java.version>
         <postgresql.version>42.2.5</postgresql.version>
