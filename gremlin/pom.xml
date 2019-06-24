@@ -23,7 +23,7 @@
         <gremlin-driver.version>3.3.4</gremlin-driver.version>
         <orientdb-gremlin.version>3.0.21</orientdb-gremlin.version>
         <commons-lang3.version>3.9</commons-lang3.version>
-        <janusgraph.version>0.3.1</janusgraph.version>
+        <janusgraph.version>0.3.2</janusgraph.version>
     </properties>
 
     <parent>
