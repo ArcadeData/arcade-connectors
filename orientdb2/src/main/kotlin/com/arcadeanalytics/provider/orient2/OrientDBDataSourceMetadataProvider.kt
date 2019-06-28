@@ -32,6 +32,7 @@ class OrientDBDataSourceMetadataProvider() : DataSourceMetadataProvider {
 
     override fun fetchMetadata(dataSource: DataSourceInfo): DataSourceMetadata {
 
+        log.info("fetcing metadata from datasource '{}' ", dataSource.id)
 
         open(dataSource).use {
             val schema = it.metadata.immutableSchemaSnapshot

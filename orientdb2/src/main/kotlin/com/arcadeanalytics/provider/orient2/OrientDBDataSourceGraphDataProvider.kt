@@ -70,7 +70,7 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
         open(dataSource)
                 .use { db ->
-                    log.info("fetching data from '{}' with query '{}' ", db.url, truncate(query, 256))
+                    log.info("fetching data from '{}' with query '{}' ", dataSource.id, truncate(query, 256))
                     val collector = OrientDBDocumentCollector()
 
                     db.query<List<*>>(OSQLAsynchQuery<Any>(query, OrientDBResultListener(collector, limit)))

@@ -56,7 +56,7 @@ class OrientDBDataSourceGraphProvider : DataSourceGraphProvider {
         open(dataSource).use { db ->
 
             queries.asSequence()
-                    .onEach { query -> log.info("fetching documents with query ' {} ' ", query) }
+                    .onEach { query -> log.info("fetching documents from datasource {} with query ' {} ' ", dataSource.id, query) }
                     .forEach { sql ->
 
                         val query = OSQLSynchQuery<ODocument>(sql)
