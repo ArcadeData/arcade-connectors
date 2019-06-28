@@ -46,7 +46,7 @@ class Neo4jMetadataProvider : DataSourceMetadataProvider {
 
         val connectionUrl = createConnectionUrl(dataSource)
 
-        log.info("fetching metadata for dataSource {} - {}", dataSource, connectionUrl)
+        log.info("fetching metadata for dataSource {} ", dataSource.id)
 
         val config = Config.build()
                 .withConnectionTimeout(5, TimeUnit.SECONDS)

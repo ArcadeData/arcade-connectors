@@ -44,13 +44,13 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
         getDriver(dataSource).use { driver ->
             driver.session(AccessMode.READ).use { session ->
 
-                log.info("API:: fetching data from query '{}' with limit {}  ", query, limit)
+                log.info("fetching data from datasource {} with query '{}' with limit {}  ", dataSource.id, query, limit)
 
                 val graphData = fetchData(session, dataSource, query, limit, Neo4jStatementResultMapper(dataSource, limit))
 
                 session.closeAsync()
                 driver.closeAsync()
-                log.info("API:: totals: nodes {} - edges {} - truncated {} ", graphData.nodes.size, graphData.edges.size, graphData.truncated)
+                log.info("totals: nodes {} - edges {} - truncated {} ", graphData.nodes.size, graphData.edges.size, graphData.truncated)
 
                 return graphData
 
@@ -113,7 +113,6 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
                 session.closeAsync()
                 driver.closeAsync()
 
-                log.info("totals loaded: nodes {} - edges {} - truncated {} ", graphData.nodes.size, graphData.edges.size, graphData.truncated)
                 return graphData
             }
 
@@ -145,7 +144,7 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
 
         getDriver(dataSource).use { driver ->
 
-            log.info("testing connection to :: '{}' ", connectionUrl)
+            log.info("testing connection to datasource {}  - '{}' ", dataSource.id, connectionUrl)
 
             try {
                 driver.session(AccessMode.READ).use { session ->
@@ -170,8 +169,6 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
                           mapper: Neo4jStatementResultMapper): GraphData {
 
 
-        log.info("INT:: fetching data from query '{}' with limit {}  ", query, limit)
-
         val (nodesClasses,
                 edgesClasses,
                 nodes,
@@ -186,7 +183,6 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
                 nodes,
                 edges,
                 truncated)
-        log.info("INT:: totals: nodes {} - edges {} - truncated {} ", graphData.nodes.size, graphData.edges.size, graphData.truncated)
         return graphData
     }
 
@@ -195,13 +191,13 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
                                      mapper: Neo4jStatementResultMapper): GraphData {
 
 
-        log.info("run query and map:: '{}' ", query)
+        log.debug("run query and map:: '{}' ", query)
 
         val result = session.run(query)
 
         val graphData = mapper.map(result)
 
-        log.info("run query and map -results:: nodes {} - edges {} - truncated {} ", graphData.nodes.size, graphData.edges.size, graphData.truncated)
+        log.debug("run query and map -results:: nodes {} - edges {} - truncated {} ", graphData.nodes.size, graphData.edges.size, graphData.truncated)
 
         return graphData
     }
