@@ -24,7 +24,6 @@ class SshMetadataProviderDecorator(val provider: DataSourceMetadataProvider) : S
 
     override fun fetchMetadata(dataSource: DataSourceInfo): DataSourceMetadata {
 
-
         val (session, wrapper) = buildTunnel(dataSource)
 
         val metadata = provider.fetchMetadata(wrapper)

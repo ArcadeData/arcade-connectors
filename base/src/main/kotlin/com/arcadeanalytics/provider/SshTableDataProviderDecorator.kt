@@ -19,11 +19,8 @@
  */
 package com.arcadeanalytics.provider
 
-import org.slf4j.LoggerFactory
-
 class SshTableDataProviderDecorator(private val provider: DataSourceTableDataProvider) : SshTunnelTemplate(), DataSourceTableDataProvider {
 
-    private val log = LoggerFactory.getLogger(SshTableDataProviderDecorator::class.java)
 
     override fun fetchData(dataSource: DataSourceInfo, query: String, params: QueryParams, limit: Int): GraphData {
 

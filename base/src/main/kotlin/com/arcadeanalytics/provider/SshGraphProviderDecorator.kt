@@ -32,7 +32,6 @@ class SshGraphProviderDecorator(private val provider: DataSourceGraphProvider) :
 
         provider.provideTo(wrapper, player)
 
-        log.info("ssh disconnecting:: {}", session.isConnected)
         session.disconnect()
 
 
