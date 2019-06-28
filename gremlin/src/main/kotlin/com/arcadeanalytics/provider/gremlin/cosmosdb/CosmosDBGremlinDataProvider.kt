@@ -45,7 +45,7 @@ class CosmosDBGremlinDataProvider : DataSourceGraphDataProvider {
 
         val cluster = getCluster(dataSource)
 
-        log.info("fetching data from '{}' with query '{}' ", cluster, query)
+        log.info("fetching data from '{}' with query '{}' ", dataSource.id, query)
 
         val client = cluster.connect<Client>().init()
 

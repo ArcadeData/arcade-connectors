@@ -61,7 +61,7 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
         val edgeClasses = HashMap<String, Map<String, Any>>()
         val nodeClasses = HashMap<String, Map<String, Any>>()
 
-        log.info("fetching data from '{}' with query '{}' ", client.cluster, query)
+        log.info("fetching data from '{}' with query '{}' ", dataSource.id, query)
 
         val ids: Array<String> = client.submit(query)
                 .asSequence()

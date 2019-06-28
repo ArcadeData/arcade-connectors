@@ -32,7 +32,7 @@ class GremlinMetadataProvider : DataSourceMetadataProvider {
     override fun fetchMetadata(dataSource: DataSourceInfo): DataSourceMetadata {
 
 
-        log.info("fetching metadata for dataSource {} ", dataSource)
+        log.info("fetching metadata for dataSource {} ", dataSource.id)
 
         val cluster = getCluster(dataSource)
 
@@ -41,8 +41,6 @@ class GremlinMetadataProvider : DataSourceMetadataProvider {
 
             val nodeClasses = mapNodeClasses(client)
             val edgesClasses = mapEdgesClasses(client)
-
-            log.info("metadata fetched for dataSource {} ", dataSource)
 
             return DataSourceMetadata(nodeClasses, edgesClasses)
 
