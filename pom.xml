@@ -48,7 +48,7 @@
         <dokka.version>0.9.18</dokka.version>
 
         <arcade-data.version>1.0.3</arcade-data.version>
-        <junit.jupiter.version>5.4.2</junit.jupiter.version>
+        <junit.jupiter.version>5.5.0</junit.jupiter.version>
         <junit.platform.version>1.2.0</junit.platform.version>
         <slf4j-api.version>1.7.26</slf4j-api.version>
         <logback-classic.version>1.2.3</logback-classic.version>
