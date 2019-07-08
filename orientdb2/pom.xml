@@ -22,7 +22,7 @@
     <properties>
         <orientdb-client.version>2.2.36</orientdb-client.version>
         <orientdb-graphdb.version>2.2.37</orientdb-graphdb.version>
-        <commons-text.version>1.6</commons-text.version>
+        <commons-text.version>1.7</commons-text.version>
     </properties>
 
     <parent>
