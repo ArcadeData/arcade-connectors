@@ -20,7 +20,7 @@
     <properties>
         <orientdb-core.version>3.0.21</orientdb-core.version>
         <orientdb-graphdb.version>3.0.18</orientdb-graphdb.version>
-        <commons-text.version>1.6</commons-text.version>
+        <commons-text.version>1.7</commons-text.version>
     </properties>
 
     <parent>
