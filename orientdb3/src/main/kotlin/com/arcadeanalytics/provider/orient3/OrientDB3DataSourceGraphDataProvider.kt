@@ -22,7 +22,6 @@ package com.arcadeanalytics.provider.orient3
 import com.arcadeanalytics.provider.*
 import com.google.common.collect.Maps
 import com.orientechnologies.common.collection.OMultiValue
-import com.orientechnologies.orient.core.db.document.ODatabaseDocument
 import com.orientechnologies.orient.core.db.record.OIdentifiable
 import com.orientechnologies.orient.core.id.ORID
 import com.orientechnologies.orient.core.metadata.schema.OType
@@ -76,15 +75,18 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
         open(dataSource)
                 .use { db ->
 
-                    val resultSet: OResultSet = db.query(query)
+                    val lang = if (query.startsWith("gremlin:")) "gremlin" else "sql"
 
-                    log.info("Query executed")
+                    db.execute(lang, query.removePrefix("gremlin:"))
+                            .use { resultSet ->
 
-                    val data = mapResultSet(resultSet)
-                    log.info("Fetched {} nodes and {} edges ", data.nodes.size, data.edges.size)
+                                log.info("Query executed")
 
-                    return data
+                                val data = mapResultSet(resultSet)
+                                log.info("Fetched {} nodes and {} edges ", data.nodes.size, data.edges.size)
 
+                                return data
+                            }
                 }
 
     }

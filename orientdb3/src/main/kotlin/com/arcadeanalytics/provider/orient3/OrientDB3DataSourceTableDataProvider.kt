@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory
 import java.util.*
 
 
-
 /**
  * Specialized provider for OrientDB 3.0.x
  * @author Roberto Franchini
@@ -55,13 +54,19 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
         open(dataSource)
                 .use { db ->
 
-                    val resultSet: OResultSet = db.query(query)
+                    val lang = if (query.startsWith("gremlin:")) "gremlin" else "sql"
 
-                    val data = mapResultSet(resultSet)
+                    db.execute(lang, query.removePrefix("gremlin:"))
+                            .use { resultSet ->
 
-                    log.info("Fetched {} rows", data.nodes.size)
+                                val data = mapResultSet(resultSet)
 
-                    return data
+                                log.info("Fetched {} rows", data.nodes.size)
+
+                                return data
+
+                            }
+
 
                 }
 

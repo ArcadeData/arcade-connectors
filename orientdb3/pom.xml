@@ -16,89 +16,91 @@
   #L%
   -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <properties>
-        <orientdb-core.version>3.0.21</orientdb-core.version>
-        <orientdb-graphdb.version>3.0.18</orientdb-graphdb.version>
-        <commons-text.version>1.7</commons-text.version>
-    </properties>
+  <modelVersion>4.0.0</modelVersion>
+  <properties>
+    <orientdb.version>3.0.21</orientdb.version>
+    <commons-text.version>1.7</commons-text.version>
+  </properties>
 
-    <parent>
-        <groupId>com.arcadeanalytics</groupId>
-        <artifactId>arcade-connectors-parent</artifactId>
-        <version>1.0.8-SNAPSHOT</version>
-        <relativePath>../</relativePath>
-    </parent>
+  <parent>
+    <groupId>com.arcadeanalytics</groupId>
+    <artifactId>arcade-connectors-parent</artifactId>
+    <version>1.0.8-SNAPSHOT</version>
+    <relativePath>../</relativePath>
+  </parent>
 
-    <artifactId>arcade-connectors-orientdb3</artifactId>
+  <artifactId>arcade-connectors-orientdb3</artifactId>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-            </plugin>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+      </plugin>
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
 
-            <plugin>
-                <groupId>org.jetbrains.dokka</groupId>
-                <artifactId>dokka-maven-plugin</artifactId>
-                <configuration>
-                    <sourceDirectories>
-                        <dir>${project.basedir}/src/main/kotlin</dir>
-                    </sourceDirectories>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-    <dependencies>
-        <dependency>
-            <groupId>com.arcadeanalytics</groupId>
-            <artifactId>arcade-connectors-base</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/com.orientechnologies/orientdb-core -->
-        <dependency>
-            <groupId>com.orientechnologies</groupId>
-            <artifactId>orientdb-core</artifactId>
-            <version>${orientdb-core.version}</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/com.orientechnologies/orientdb-graphdb -->
-        <dependency>
-            <groupId>com.orientechnologies</groupId>
-            <artifactId>orientdb-graphdb</artifactId>
-            <version>${orientdb-graphdb.version}</version>
-        </dependency>
-
-
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-text</artifactId>
-            <version>${commons-text.version}</version>
-        </dependency>
+      <plugin>
+        <groupId>org.jetbrains.dokka</groupId>
+        <artifactId>dokka-maven-plugin</artifactId>
+        <configuration>
+          <sourceDirectories>
+            <dir>${project.basedir}/src/main/kotlin</dir>
+          </sourceDirectories>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <dependencies>
+    <dependency>
+      <groupId>com.arcadeanalytics</groupId>
+      <artifactId>arcade-connectors-base</artifactId>
+      <version>${project.parent.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.orientechnologies</groupId>
+      <artifactId>orientdb-core</artifactId>
+      <version>${orientdb.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.orientechnologies</groupId>
+      <artifactId>orientdb-graphdb</artifactId>
+      <version>${orientdb.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.orientechnologies</groupId>
+      <artifactId>orientdb-gremlin</artifactId>
+      <version>${orientdb.version}</version>
+    </dependency>
 
 
-        <dependency>
-            <groupId>com.arcadeanalytics</groupId>
-            <artifactId>arcade-connectors-base</artifactId>
-            <version>${project.parent.version}</version>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-text</artifactId>
+      <version>${commons-text.version}</version>
+    </dependency>
 
-    </dependencies>
+
+    <dependency>
+      <groupId>com.arcadeanalytics</groupId>
+      <artifactId>arcade-connectors-base</artifactId>
+      <version>${project.parent.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
 
 
 </project>

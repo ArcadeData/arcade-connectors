@@ -48,7 +48,40 @@ class OrientDB3DataSourceGraphDataProviderIntTest {
         //when
 
         val query = "select from Person limit 20"
-        val data = provider.fetchData(OrientDB3Container.dataSource, query, 20)
+        val data = provider.fetchData(dataSource, query, 20)
+
+
+        //then
+        assertThat(data.nodes).hasSize(4)
+
+        //        assertThat(data.getEdges()).hasSize(1);
+
+
+        assertThat(data.nodesClasses).containsKeys("Person")
+        //        assertThat(data.getEdgesClasses()).containsKeys("FriendOf");
+
+        val cytoData = data.nodes.first()
+        assertThat(cytoData.group).isEqualTo("nodes")
+        assertThat(cytoData.data.source).isEmpty()
+
+        val record = cytoData.data.record
+        assertThat(record).isNotNull
+                .containsKeys("name", "@out", "@in", "@edgeCount")
+
+
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun shouldFetchDataWithGremlinQuery() {
+
+        //given
+
+
+        //when
+
+        val query = "gremlin: g.V().hasLabel('Person').limit(20)"
+        val data = provider.fetchData(dataSource, query, 20)
 
 
         //then
@@ -166,7 +199,7 @@ class OrientDB3DataSourceGraphDataProviderIntTest {
         orientDB.open(dataSource.database, "admin", "admin")
                 .use {
 
-                    return it.execute("sql","SELECT from Person")
+                    return it.execute("sql", "SELECT from Person")
                             .asSequence()
                             .take(count)
                             .map { doc -> doc.identity }

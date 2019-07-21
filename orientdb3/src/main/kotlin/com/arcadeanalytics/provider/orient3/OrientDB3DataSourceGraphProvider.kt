@@ -27,10 +27,9 @@ import com.arcadeanalytics.provider.IndexConstants.ARCADE_ID
 import com.arcadeanalytics.provider.IndexConstants.ARCADE_TYPE
 import com.orientechnologies.orient.core.record.OElement
 import com.orientechnologies.orient.core.record.impl.ODocument
-import com.orientechnologies.orient.core.record.impl.OEdgeDocument
-import com.orientechnologies.orient.core.record.impl.OVertexDocument
 import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
+import kotlin.math.min
 
 class OrientDB3DataSourceGraphProvider : DataSourceGraphProvider {
 
@@ -50,116 +49,55 @@ class OrientDB3DataSourceGraphProvider : DataSourceGraphProvider {
     override fun provideTo(dataSource: DataSourceInfo, player: SpritePlayer) {
 
         try {
-            provideNodes(dataSource, player)
-            provideEdges(dataSource, player)
+            provide(dataSource, player, "V")
+            provide(dataSource, player, "E")
         } finally {
             player.end()
         }
 
     }
 
-    private fun provideNodes(dataSource: DataSourceInfo, player: SpritePlayer) {
 
-        open(dataSource).use { db ->
+    private fun provide(dataSource: DataSourceInfo, player: SpritePlayer, what: String) {
 
-            val nodesCount: Long = db.query(V_COUNT).asSequence().iterator().next().getProperty("count")
-            var fetched: Long = 0
-            var skip: Long = 0
-            var limit = Math.min(nodesCount, 1000)
+        open(dataSource)
+                .use { db ->
 
-            log.info("start indexing of data-source {} - total nodes:: {} ", dataSource.id, nodesCount)
+                    val count: Long = db.query("select count(*) as count from $what").asSequence().first().getProperty("count")
+                    var fetched: Long = 0
+                    var skip: Long = 0
+                    var limit = min(count, 1000)
 
-            while (fetched < nodesCount) {
+                    log.info("start indexing of '$what' from data-source {} - total '$what':: {} ", dataSource.id, count)
 
-                val resultSet = db.query("select * from V skip $skip limit $limit")
+                    while (fetched < count) {
 
-                while (resultSet.hasNext()) {
-
-                    resultSet.asSequence()
-                            .map { res ->
-                                res.element.get()
-                            }
-                            .filter { elem -> elem.propertyNames.size > 0 }
-                            .map { elem: OElement ->
-
-                                when {
-                                    elem.isVertex() -> {
-                                        elem as OVertexDocument
-                                        toSprite(elem)
-                                    }
-                                    else -> {
-                                        elem as OEdgeDocument
-                                        toSprite(elem)
-                                    }
+                        db.query("SELECT * FROM $what SKIP $skip LIMIT $limit")
+                                .use { resultSet ->
+                                    resultSet.asSequence()
+                                            .map { res -> res.element.get() }
+                                            .filter { elem -> elem.propertyNames.size > 0 }
+                                            .map { elem: OElement -> elem as ODocument }
+                                            .map { doc -> toSprite(doc) }
+                                            .forEach { doc: Sprite ->
+                                                player.play(doc)
+                                                fetched++
+                                            }
                                 }
-                            }
-                            .forEach {
-                                doc: Sprite -> player.play(doc)
-                                fetched++
-                            }
+
+                        player.end()
+
+                        skip = limit
+                        limit += 10000
+                    }
+
                 }
-                player.end()
-
-                skip = limit
-                limit += 10000
-            }
-
-        }
-    }
-
-    private fun provideEdges(dataSource: DataSourceInfo, player: SpritePlayer) {
-
-        open(dataSource).use { db ->
-
-            val edgesCount: Long = db.query(E_COUNT).asSequence().iterator().next().getProperty("count")
-            var fetched: Long = 0
-            var skip: Long = 0
-            var limit = Math.min(edgesCount, 1000)
-
-            log.info("start indexing of data-source {} - total nodes:: {} ", dataSource.id, edgesCount)
-
-            while (fetched < edgesCount) {
-
-                val resultSet = db.query("select * from E skip $skip limit $limit")
-
-                while (resultSet.hasNext()) {
-
-                    resultSet.asSequence()
-                            .map { res ->
-                                res.element.get()
-                            }
-                            .filter { elem -> elem.propertyNames.size > 0 }
-                            .map { elem: OElement ->
-
-                                when {
-                                    elem.isVertex() -> {
-                                        elem as OVertexDocument
-                                        toSprite(elem)
-                                    }
-                                    else -> {
-                                        elem as OEdgeDocument
-                                        toSprite(elem)
-                                    }
-                                }
-                            }
-                            .forEach {
-                                doc: Sprite -> player.play(doc)
-                                fetched++
-                            }
-                }
-                player.end()
-
-                skip = limit
-                limit += 10000
-            }
-
-        }
     }
 
     private fun toSprite(document: ODocument): Sprite {
         val rid = document.identity
 
-        val sprite = Sprite()
+        return Sprite()
                 .load(document.toMap())
                 .addAll("@class",
                         document.schemaClass
@@ -174,7 +112,6 @@ class OrientDB3DataSourceGraphProvider : DataSourceGraphProvider {
                 .remove("@rid")
                 .add(ARCADE_ID, "${rid.clusterId}_${rid.clusterPosition}")
                 .add(ARCADE_TYPE, document.type())
-        return sprite
     }
 
 

@@ -20,6 +20,8 @@
 package com.arcadeanalytics.provider.orient3
 
 import com.arcadeanalytics.provider.DataSourceInfo
+import com.orientechnologies.orient.core.db.ODatabaseSession
+import com.orientechnologies.orient.core.db.ODatabaseType
 import com.orientechnologies.orient.core.db.OrientDB
 import com.orientechnologies.orient.core.db.OrientDBConfig
 import com.orientechnologies.orient.core.db.document.ODatabaseDocument
@@ -27,6 +29,8 @@ import com.orientechnologies.orient.core.record.OEdge
 import com.orientechnologies.orient.core.record.OVertex
 import com.orientechnologies.orient.core.record.impl.ODocument
 import com.orientechnologies.orient.core.sql.executor.OResultSet
+import org.apache.tinkerpop.gremlin.orientdb.OrientGraph
+import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory
 import java.util.*
 
 
@@ -40,11 +44,26 @@ fun createOrientdbConnectionUrl(dataSource: DataSourceInfo): String {
             .replace("{port}", dataSource.port.toString())
 }
 
-fun open(dataSource: DataSourceInfo): ODatabaseDocument {
 
+
+
+fun open(dataSource: DataSourceInfo): ODatabaseSession {
+    val orientdbConnectionUrl = createOrientdbConnectionUrl(dataSource);
+
+    val orientDB = OrientDB(orientdbConnectionUrl, OrientDBConfig.defaultConfig())
+
+
+    return orientDB.open(dataSource.database, dataSource.username, dataSource.password)
+}
+
+fun openGremlin(dataSource: DataSourceInfo): OrientGraph {
     val orientdbConnectionUrl = createOrientdbConnectionUrl(dataSource);
     val orientDB = OrientDB(orientdbConnectionUrl, OrientDBConfig.defaultConfig())
-    return orientDB.open(dataSource.database, dataSource.username, dataSource.password)
+//    val session = orientDB.open(dataSource.database, dataSource.username, dataSource.password)
+
+    val graphFactory = OrientGraphFactory(orientDB, dataSource.database, ODatabaseType.PLOCAL, dataSource.username, dataSource.password)
+
+    return graphFactory.noTx
 }
 
 fun ODatabaseDocument.getVertex(document: ODocument): Optional<OVertex>? {
