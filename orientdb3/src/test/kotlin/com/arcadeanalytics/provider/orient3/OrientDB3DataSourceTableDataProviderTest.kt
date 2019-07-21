@@ -5,6 +5,7 @@ import com.arcadeanalytics.provider.QueryParams
 import com.arcadeanalytics.provider.TABLE_CLASS
 import com.arcadeanalytics.provider.TypeProperties
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 internal class OrientDB3DataSourceTableDataProviderTest {
@@ -57,6 +58,7 @@ internal class OrientDB3DataSourceTableDataProviderTest {
     }
     @Test
     @Throws(Exception::class)
+    @Disabled
     fun shouldFetchDataWithAggregateGremlinQuery() {
 
         //when
