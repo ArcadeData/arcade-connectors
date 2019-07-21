@@ -105,7 +105,7 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
         val element = result.element
 
         //id clean
-        val id = """${dataSource.id}_${cleanOrientId(element.id().toString())}"""
+        val id = """${dataSource.id}_${cleanOrientId(dataSource, element.id().toString())}"""
 
         val record = transformToMap(element)
 
@@ -143,10 +143,10 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
             is Edge -> {
 
                 val sourceId = element.outVertex().id().toString()
-                val source = "${dataSource.id}_${cleanOrientId(sourceId)}"
+                val source = "${dataSource.id}_${cleanOrientId(dataSource, sourceId)}"
 
                 val targetId = element.inVertex().id().toString()
-                val target = "${dataSource.id}_${cleanOrientId(targetId)}"
+                val target = "${dataSource.id}_${cleanOrientId(dataSource, targetId)}"
 
                 val data = Data(id = id, source = source, target = target, record = record)
                 CytoData(classes = element.label(), data = data, group = "edges")
@@ -160,10 +160,6 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
         return cyto
     }
 
-    private fun cleanOrientId(id: String): String {
-        return removeStart(id, "#")
-                .replace(":", "_")
-    }
 
     private fun populateClasses(classes: MutableMap<String, Map<String, Any>>, element: CytoData): CytoData {
         if (classes[element.classes] == null) {
@@ -235,6 +231,10 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
                 .joinToString(",")
 
         return "g.V($joinedIds)"
+    }
+
+    private fun cleanOrientId(dataSource: DataSourceInfo, id: String): String {
+        return if (dataSource.type == "GREMLIN_ORIENTDB") removeStart(id, "#").replace(":", "_") else id
     }
 
     private fun arcadeIdToNativeId(dataSource: DataSourceInfo, id: String): String {
