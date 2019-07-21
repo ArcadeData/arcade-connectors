@@ -112,7 +112,7 @@ class OrientDB3DataSourceGraphDataProviderIntTest {
 
         //        final String rid = getFirstPersonIdentity();
 
-        val ids = getPersonsIdentity(2)
+        val ids = getPersonsIdentity(1)
         //when
         val data = provider.expand(dataSource, ids, "out", "FriendOf", 300)
 
@@ -137,14 +137,14 @@ class OrientDB3DataSourceGraphDataProviderIntTest {
 
         //        final String rid = getFirstPersonIdentity();
 
-        val ids = getPersonsIdentity(2)
+        val ids = getPersonsIdentity(1)
         //when
         val data = provider.expand(dataSource, ids, "both", "", 300)
 
         println("data = ${data}")
         //then
-        assertThat(data.nodes).hasSize(4)
-        assertThat(data.edges).hasSize(3)
+        assertThat(data.nodes).hasSize(3)
+        assertThat(data.edges).hasSize(2)
 
         assertThat(data.nodesClasses).containsKeys("Person")
         assertThat(data.edgesClasses).containsKeys("FriendOf")
