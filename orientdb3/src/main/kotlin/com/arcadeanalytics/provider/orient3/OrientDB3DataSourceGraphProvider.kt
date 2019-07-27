@@ -60,39 +60,41 @@ class OrientDB3DataSourceGraphProvider : DataSourceGraphProvider {
 
     private fun provide(dataSource: DataSourceInfo, player: SpritePlayer, what: String) {
 
-        open(dataSource)
-                .use { db ->
+        val count: Long = open(dataSource).use { db ->
+            db.query("select count(*) as count from $what").use { result ->
+                result.asSequence().first().getProperty("count")
+            }
+        }
 
-                    val count: Long = db.query("select count(*) as count from $what").asSequence().first().getProperty("count")
-                    var fetched: Long = 0
-                    var skip: Long = 0
-                    var limit = min(count, 1000)
+        var fetched: Long = 0
+        var skip: Long = 0
+        var limit = min(count, 1000)
 
-                    log.info("start indexing of '$what' from data-source {} - total '$what':: {} ", dataSource.id, count)
+        log.info("start indexing of '{}' from data-source {} - total :: {} ", what, dataSource.id, count)
 
-                    while (fetched < count) {
+        while (fetched < count) {
 
-                        db.query("SELECT * FROM $what SKIP $skip LIMIT $limit")
-                                .use { resultSet ->
-                                    resultSet.asSequence()
-                                            .map { res -> res.element.get() }
-                                            .filter { elem -> elem.propertyNames.size > 0 }
-                                            .map { elem: OElement -> elem as ODocument }
-                                            .map { doc -> toSprite(doc) }
-                                            .forEach { doc: Sprite ->
-                                                player.play(doc)
-                                                fetched++
-                                            }
-                                }
-
-                        player.end()
-
-                        skip = limit
-                        limit += 10000
-                    }
-
+            open(dataSource).use { db ->
+                db.query("SELECT * FROM $what SKIP $skip LIMIT $limit").use { resultSet ->
+                    resultSet.asSequence()
+                            .map { res -> res.element.get() }
+                            .filter { elem -> elem.propertyNames.size > 0 }
+                            .map { elem: OElement -> elem as ODocument }
+                            .map { doc -> toSprite(doc) }
+                            .forEach { doc: Sprite ->
+                                player.play(doc)
+                                fetched++
+                            }
                 }
+            }
+            player.end()
+
+            skip = limit
+            limit += 10000
+        }
+
     }
+
 
     private fun toSprite(document: ODocument): Sprite {
         val rid = document.identity
