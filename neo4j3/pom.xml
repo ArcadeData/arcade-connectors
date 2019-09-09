@@ -21,7 +21,7 @@
     <modelVersion>4.0.0</modelVersion>
     <properties>
         <neo4j-java-driver.version>1.7.0</neo4j-java-driver.version>
-        <commons-text.version>1.7</commons-text.version>
+        <commons-text.version>1.8</commons-text.version>
     </properties>
 
     <parent>
