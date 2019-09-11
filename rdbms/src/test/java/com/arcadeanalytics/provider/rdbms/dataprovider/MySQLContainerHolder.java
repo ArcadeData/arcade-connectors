@@ -34,8 +34,5 @@ public abstract class MySQLContainerHolder {
 
         container.start();
 
-        container.withDatabaseName("sakila");
-
-
     }
 }

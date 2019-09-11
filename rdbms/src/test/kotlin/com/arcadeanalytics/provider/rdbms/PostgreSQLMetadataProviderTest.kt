@@ -29,7 +29,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.testcontainers.containers.PostgreSQLContainer
 
-//@Testcontainers
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PostgreSQLMetadataProviderTest {
 
