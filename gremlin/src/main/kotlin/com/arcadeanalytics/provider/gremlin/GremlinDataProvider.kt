@@ -105,7 +105,7 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
         val element = result.element
 
         //id clean
-        val id = """${dataSource.id}_${cleanOrientId(dataSource, element.id().toString())}"""
+        val id = nativeIdToArcadeId(dataSource, element.id().toString())
 
         val record = transformToMap(element)
 
@@ -143,10 +143,10 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
             is Edge -> {
 
                 val sourceId = element.outVertex().id().toString()
-                val source = "${dataSource.id}_${cleanOrientId(dataSource, sourceId)}"
+                val source = nativeIdToArcadeId(dataSource, sourceId)
 
                 val targetId = element.inVertex().id().toString()
-                val target = "${dataSource.id}_${cleanOrientId(dataSource, targetId)}"
+                val target = nativeIdToArcadeId(dataSource, targetId)
 
                 val data = Data(id = id, source = source, target = target, record = record)
                 CytoData(classes = element.label(), data = data, group = "edges")
@@ -224,8 +224,8 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
         check(ids.isNotEmpty())
         log.debug("load ids {} ", *ids)
 
+
         val joinedIds = ids.asSequence()
-                .map { id -> removeStart(id, "${dataSource.id}_") }
                 .map { id -> arcadeIdToNativeId(dataSource, id) }
                 .map { id -> """ '$id' """ }
                 .joinToString(",")
@@ -233,12 +233,18 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
         return "g.V($joinedIds)"
     }
 
-    private fun cleanOrientId(dataSource: DataSourceInfo, id: String): String {
-        return if (dataSource.type == "GREMLIN_ORIENTDB") removeStart(id, "#").replace(":", "_") else id
+    private fun nativeIdToArcadeId(dataSource: DataSourceInfo, id: String): String {
+        return when (dataSource.type) {
+            "GREMLIN_ORIENTDB" -> "${dataSource.id}_${id.removePrefix("#").replace(":", "_")}"
+            else -> "${dataSource.id}_$id"
+        }
     }
 
     private fun arcadeIdToNativeId(dataSource: DataSourceInfo, id: String): String {
-        return if (dataSource.type == "GREMLIN_ORIENTDB") StringUtils.prependIfMissing(id, "#").replace("_", ":") else id
+        return when (dataSource.type) {
+            "GREMLIN_ORIENTDB" -> id.removePrefix("${dataSource.id}_").prefixIfAbsent("#").replace("_", ":")
+            else -> id.removePrefix("${dataSource.id}_")
+        }
     }
 
     override fun expand(dataSource: DataSourceInfo,
