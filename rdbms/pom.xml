@@ -21,13 +21,14 @@
     <modelVersion>4.0.0</modelVersion>
     <properties>
         <commons-lang3.version>3.9</commons-lang3.version>
-        <orientdb-core.version>3.0.21</orientdb-core.version>
-        <orientdb-graphdb.version>2.2.37</orientdb-graphdb.version>
+        <orientdb-core.version>3.0.23</orientdb-core.version>
+        <orientdb-graphdb.version>3.0.23</orientdb-graphdb.version>
         <mysql-connector-java.version>8.0.17</mysql-connector-java.version>
         <postgresql.version>42.2.8</postgresql.version>
         <hsqldb.version>2.5.0</hsqldb.version>
         <dw-jdbc.version>0.4.4</dw-jdbc.version>
-        <jackson-databind.version>2.9.9.1</jackson-databind.version>
+        <jackson-databind.version>2.9.10</jackson-databind.version>
+        <jsqlparser.version>3.0</jsqlparser.version>
     </properties>
 
     <parent>
@@ -53,7 +54,7 @@
         <dependency>
             <groupId>com.github.jsqlparser</groupId>
             <artifactId>jsqlparser</artifactId>
-            <version>3.0</version>
+            <version>${jsqlparser.version}</version>
         </dependency>
 
         <dependency>
