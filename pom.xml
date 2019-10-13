@@ -47,7 +47,7 @@
         <docker-maven-plugin.version>1.2.1</docker-maven-plugin.version>
         <dokka.version>0.9.18</dokka.version>
 
-        <arcade-data.version>1.0.5</arcade-data.version>
+        <arcade-data.version>1.0.6</arcade-data.version>
         <junit.jupiter.version>5.5.2</junit.jupiter.version>
         <junit.platform.version>1.2.0</junit.platform.version>
         <slf4j-api.version>1.7.28</slf4j-api.version>
