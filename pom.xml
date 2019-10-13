@@ -43,9 +43,9 @@
         <maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version>
         <maven-jar-plugin.version>3.1.2</maven-jar-plugin.version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
-        <jacoco-maven-plugin.version>0.8.4</jacoco-maven-plugin.version>
+        <jacoco-maven-plugin.version>0.8.5</jacoco-maven-plugin.version>
         <docker-maven-plugin.version>1.2.1</docker-maven-plugin.version>
-        <dokka.version>0.9.18</dokka.version>
+        <dokka.version>0.10.0</dokka.version>
 
         <arcade-data.version>1.0.6</arcade-data.version>
         <junit.jupiter.version>5.5.2</junit.jupiter.version>
