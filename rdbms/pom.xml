@@ -23,7 +23,7 @@
         <commons-lang3.version>3.9</commons-lang3.version>
         <orientdb-core.version>3.0.23</orientdb-core.version>
         <orientdb-graphdb.version>3.0.23</orientdb-graphdb.version>
-        <mysql-connector-java.version>8.0.17</mysql-connector-java.version>
+        <mysql-connector-java.version>8.0.18</mysql-connector-java.version>
         <postgresql.version>42.2.8</postgresql.version>
         <hsqldb.version>2.5.0</hsqldb.version>
         <dw-jdbc.version>0.4.4</dw-jdbc.version>
