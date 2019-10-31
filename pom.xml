@@ -53,7 +53,7 @@
         <slf4j-api.version>1.7.28</slf4j-api.version>
         <logback-classic.version>1.2.3</logback-classic.version>
         <guava.version>28.1-jre</guava.version>
-        <assertj-core.version>3.13.2</assertj-core.version>
+        <assertj-core.version>3.14.0</assertj-core.version>
         <testcontainers.version>1.12.3</testcontainers.version>
 
 
