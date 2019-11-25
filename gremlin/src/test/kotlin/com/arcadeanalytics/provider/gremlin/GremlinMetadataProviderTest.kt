@@ -20,6 +20,7 @@
 package com.arcadeanalytics.provider.gremlin
 
 import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -41,19 +42,19 @@ class GremlinMetadataProviderTest {
 
         println("metadata = ${metadata}")
 
-        Assertions.assertThat(metadata.nodesClasses)
+        assertThat(metadata.nodesClasses)
                 .hasSize(11)
                 .containsKeys("Countries")
 
-        Assertions.assertThat(metadata.nodesClasses["Countries"]!!.cardinality).isEqualTo(249)
+        assertThat(metadata.nodesClasses["Countries"]!!.cardinality).isEqualTo(249)
 
-        Assertions.assertThat(metadata.nodesClasses["Countries"]?.properties).containsKeys("Id", "Code", "Name")
+        assertThat(metadata.nodesClasses["Countries"]?.properties).containsKeys("Id", "Code", "Name")
 
-        Assertions.assertThat(metadata.edgesClasses)
+        assertThat(metadata.edgesClasses)
                 .hasSize(9)
                 .containsKeys("HasFriend")
 
-        Assertions.assertThat(metadata.edgesClasses["HasFriend"]!!.cardinality).isEqualTo(1617)
+        assertThat(metadata.edgesClasses["HasFriend"]!!.cardinality).isEqualTo(1617)
     }
 
 }

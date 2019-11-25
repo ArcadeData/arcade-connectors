@@ -21,6 +21,7 @@ package com.arcadeanalytics.provider.gremlin
 
 import com.arcadeanalytics.provider.gremlin.janusgraph.JanusgraphContainer
 import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -36,19 +37,19 @@ class JanusgraphGremlinMetadataProviderTest {
     fun fetchMetadata() {
         val metadata = provider.fetchMetadata(JanusgraphContainer.dataSource)
 
-        Assertions.assertThat(metadata.nodesClasses)
+        assertThat(metadata.nodesClasses)
                 .hasSize(2)
                 .containsKeys("artist")
 
-        Assertions.assertThat(metadata.nodesClasses["artist"]!!.cardinality).isEqualTo(224)
+        assertThat(metadata.nodesClasses["artist"]!!.cardinality).isEqualTo(224)
 
-        Assertions.assertThat(metadata.nodesClasses["artist"]?.properties).containsKeys("name")
+        assertThat(metadata.nodesClasses["artist"]?.properties).containsKeys("name")
 
-        Assertions.assertThat(metadata.edgesClasses)
+        assertThat(metadata.edgesClasses)
                 .hasSize(3)
                 .containsKeys("followedBy")
 
-        Assertions.assertThat(metadata.edgesClasses["followedBy"]!!.cardinality).isEqualTo(7047)
+        assertThat(metadata.edgesClasses["followedBy"]!!.cardinality).isEqualTo(7047)
     }
 
 }

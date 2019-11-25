@@ -26,6 +26,7 @@ import com.arcadeanalytics.provider.IndexConstants.ARCADE_EDGE_TYPE
 import com.arcadeanalytics.provider.IndexConstants.ARCADE_NODE_TYPE
 import com.arcadeanalytics.provider.IndexConstants.ARCADE_TYPE
 import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.util.*
@@ -67,7 +68,7 @@ class GremlinGraphProviderTest {
                     ARCADE_NODE_TYPE -> nodes.add(document)
                     ARCADE_EDGE_TYPE -> edges.add(document)
                 }
-                Assertions.assertThat(document.valueOf("@class")).isNotBlank()
+                assertThat(document.valueOf("@class")).isNotBlank()
 
 
             }
@@ -78,9 +79,9 @@ class GremlinGraphProviderTest {
         }
 
         provider.provideTo(OrientDBGremlinContainer.dataSource, indexer)
-        Assertions.assertThat(nodes).hasSize(7275)
+        assertThat(nodes).hasSize(7275)
         //14872 edges but only 3290 with properties are indexed
-        Assertions.assertThat(edges).hasSize(3290)
+        assertThat(edges).hasSize(3290)
 
     }
 

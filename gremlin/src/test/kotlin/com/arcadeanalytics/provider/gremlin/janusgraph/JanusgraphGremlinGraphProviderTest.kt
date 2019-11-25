@@ -26,6 +26,7 @@ import com.arcadeanalytics.provider.IndexConstants.ARCADE_NODE_TYPE
 import com.arcadeanalytics.provider.IndexConstants.ARCADE_TYPE
 import com.arcadeanalytics.provider.gremlin.janusgraph.JanusgraphContainer
 import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.util.*
@@ -60,10 +61,10 @@ class JanusgraphGremlinGraphProviderTest {
                     ARCADE_NODE_TYPE -> nodes.add(document)
                     ARCADE_EDGE_TYPE -> edges.add(document)
                 }
-                Assertions.assertThat(document.valueOf("@class")).isNotBlank()
-                Assertions.assertThat(document.hasField("_a_id")).isTrue()
-                Assertions.assertThat(document.hasField("_a_type")).isTrue()
-                Assertions.assertThat(document.hasField("_a_type")).isTrue()
+                assertThat(document.valueOf("@class")).isNotBlank()
+                assertThat(document.hasField("_a_id")).isTrue()
+                assertThat(document.hasField("_a_type")).isTrue()
+                assertThat(document.hasField("_a_type")).isTrue()
 
 
             }
@@ -74,8 +75,8 @@ class JanusgraphGremlinGraphProviderTest {
         }
 
         provider.provideTo(JanusgraphContainer.dataSource, indexer)
-        Assertions.assertThat(nodes).hasSize(808)
-        Assertions.assertThat(edges).hasSize(7047)
+        assertThat(nodes).hasSize(808)
+        assertThat(edges).hasSize(7047)
 
     }
 

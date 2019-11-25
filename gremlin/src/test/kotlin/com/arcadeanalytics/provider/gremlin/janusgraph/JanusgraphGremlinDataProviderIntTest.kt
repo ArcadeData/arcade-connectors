@@ -33,7 +33,6 @@ class JanusgraphGremlinDataProviderIntTest {
     @Test
     fun shouldFetchVertices() {
 
-
         val query = "g.V().limit(50) "
 
         val data = provider.fetchData(JanusgraphContainer.dataSource, query, 50)
