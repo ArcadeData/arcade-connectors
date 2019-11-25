@@ -25,6 +25,8 @@ import com.arcadeanalytics.provider.DataSourceGraphProvider
 import com.arcadeanalytics.provider.DataSourceInfo
 import com.arcadeanalytics.provider.IndexConstants.ARCADE_ID
 import com.arcadeanalytics.provider.IndexConstants.ARCADE_TYPE
+import com.orientechnologies.orient.core.id.ORID
+import com.orientechnologies.orient.core.id.ORecordId
 import com.orientechnologies.orient.core.record.OElement
 import com.orientechnologies.orient.core.record.impl.ODocument
 import org.slf4j.LoggerFactory
@@ -67,18 +69,19 @@ class OrientDB3DataSourceGraphProvider : DataSourceGraphProvider {
         }
 
         var fetched: Long = 0
-        var skip: Long = 0
-        var limit = min(count, 1000)
+        var skip: ORID = ORecordId("#-1:-1")
+        var lastORID: ORID = skip
 
         log.info("start indexing of '{}' from data-source {} - total :: {} ", what, dataSource.id, count)
 
         while (fetched < count) {
 
             open(dataSource).use { db ->
-                db.query("SELECT * FROM $what SKIP $skip LIMIT $limit").use { resultSet ->
+                db.query("SELECT * FROM $what WHERE @rid > $skip LIMIT 1000").use { resultSet ->
                     resultSet.asSequence()
                             .map { res -> res.element.get() }
                             .filter { elem -> elem.propertyNames.size > 0 }
+                            .onEach { elem: OElement -> lastORID = elem.identity }
                             .map { elem: OElement -> elem as ODocument }
                             .map { doc -> toSprite(doc) }
                             .forEach { doc: Sprite ->
@@ -89,8 +92,7 @@ class OrientDB3DataSourceGraphProvider : DataSourceGraphProvider {
             }
             player.end()
 
-            skip = limit
-            limit += 10000
+            skip = lastORID
         }
 
     }
