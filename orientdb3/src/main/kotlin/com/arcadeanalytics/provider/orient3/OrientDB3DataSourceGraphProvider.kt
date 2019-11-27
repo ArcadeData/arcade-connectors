@@ -31,7 +31,6 @@ import com.orientechnologies.orient.core.record.OElement
 import com.orientechnologies.orient.core.record.impl.ODocument
 import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
-import kotlin.math.min
 
 class OrientDB3DataSourceGraphProvider : DataSourceGraphProvider {
 

@@ -20,22 +20,21 @@
 package com.arcadeanalytics.provider.orient3
 
 import com.arcadeanalytics.provider.*
-import com.orientechnologies.orient.core.db.document.ODatabaseDocument
+import com.orientechnologies.orient.core.db.ODatabaseSession
+import com.orientechnologies.orient.core.metadata.schema.OClass
 import com.orientechnologies.orient.core.metadata.schema.OSchema
 import org.slf4j.LoggerFactory
 
 class OrientDB3DataSourceMetadataProvider() : DataSourceMetadataProvider {
 
-
     private val log = LoggerFactory.getLogger(OrientDB3DataSourceMetadataProvider::class.java)
-
 
     override fun fetchMetadata(dataSource: DataSourceInfo): DataSourceMetadata {
 
         log.info("fetching metadata for dataSource {} ", dataSource.id)
 
         open(dataSource).use {
-            val schema = it.metadata.getSchema()
+            val schema = it.metadata.schema
 
             val nodesClasses = nodeClasses(schema, it)
 
@@ -45,41 +44,34 @@ class OrientDB3DataSourceMetadataProvider() : DataSourceMetadataProvider {
         }
     }
 
-    private fun edgeClasses(schema: OSchema, db: ODatabaseDocument): EdgesClasses {
+    private fun edgeClasses(schema: OSchema, db: ODatabaseSession): EdgesClasses {
         return schema.classes
                 .asSequence()
-                .filter { it.isEdgeType }
-                .filter { it.name != "E" }
-                .map {
-
-                    val props = it.properties()
-                            .map { prop -> prop.name to TypeProperty(prop.name, prop.type.name) }
-                            .toMap()
-
-                    TypeClass(it.name, db.countClass(it.name, true), props)
-
-                }.map {
-                    it.name to it
-                }.toMap()
+                .filter { isEdgeType(it) }
+                .map { mapToType(it, db) }
+                .map { it.name to it }
+                .toMap()
     }
 
-    private fun nodeClasses(schema: OSchema, db: ODatabaseDocument): NodesClasses {
+    private fun nodeClasses(schema: OSchema, db: ODatabaseSession): NodesClasses {
         return schema.classes
                 .asSequence()
-                .filter { it.isVertexType }
-                .filter { it.name != "V" }
-                .map {
-
-                    val props = it.properties()
-                            .map { prop -> prop.name to TypeProperty(prop.name, prop.type.name) }
-                            .toMap()
-
-                    TypeClass(it.name, db.countClass(it.name, true), props)
-
-                }.map {
-                    it.name to it
-                }.toMap()
+                .filter { isVertexType(it) }
+                .map { mapToType(it, db) }
+                .map { it.name to it }.toMap()
     }
+
+    private fun mapToType(oClass: OClass, db: ODatabaseSession): TypeClass {
+        val props: TypeProperties = oClass.properties()
+                .map { prop -> prop.name to TypeProperty(prop.name, prop.type.name) }
+                .toMap()
+
+        return TypeClass(oClass.name, db.countClass(oClass.name, true), props)
+    }
+
+    private fun isEdgeType(it: OClass) = it.isEdgeType && it.name != "E"
+
+    private fun isVertexType(it: OClass) = it.isVertexType && it.name != "V"
 
 
     override fun supportedDataSourceTypes(): Set<String> = setOf("ORIENTDB3")

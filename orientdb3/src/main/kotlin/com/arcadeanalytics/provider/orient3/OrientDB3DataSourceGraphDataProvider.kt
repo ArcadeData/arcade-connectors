@@ -40,8 +40,7 @@ import java.util.*
 import kotlin.collections.HashSet
 
 /**
- * Specialized provider for OrientDB2
- * @author Roberto Franchini
+ * Specialized provider for OrientDB 3.0.x
  */
 class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
@@ -79,12 +78,8 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
                     db.execute(lang, query.removePrefix("gremlin:"))
                             .use { resultSet ->
-
-                                log.info("Query executed")
-
                                 val data = mapResultSet(resultSet)
                                 log.info("Fetched {} nodes and {} edges ", data.nodes.size, data.edges.size)
-
                                 return data
                             }
                 }
@@ -215,13 +210,12 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
         resultSet.asSequence()
                 .map { res -> res.element.get() }
                 .forEach { element ->
-                    if (element.isVertex()) {
-                        val vertex: OVertexDocument = element as OVertexDocument
+                    if (element.isVertex) {
+                        val vertex: OVertex = element as OVertex
                         vertex.setProperty("@edgeCount", vertex.getEdges(ODirection.BOTH).asSequence().count())
                         nodes.add(vertex)
-                    } else if (element.isEdge()) {
-
-                        val edge: OEdgeDocument = element as OEdgeDocument
+                    } else if (element.isEdge) {
+                        val edge: OEdge = element as OEdge
                         edges.add(edge)
                         nodes.add(edge.from)
                         nodes.add(edge.to)
@@ -308,15 +302,12 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
         classes.putIfAbsent(element.schemaType.get().toString(), Maps.newHashMap())
 
-        if (element.isVertex) {
-            populateProperties(classes, element as OVertexDocument)
-        } else if (element.isEdge) {
-            populateProperties(classes, element as OEdgeDocument)
-        }
+        populateProperties(classes, element as ODocument)
+
         return element
     }
 
-    private fun populateProperties(classes: Map<String, Map<String, Any>>, vertex: OVertexDocument) {
+    private fun populateProperties(classes: Map<String, Map<String, Any>>, vertex: ODocument) {
 
         val properties = classes[vertex.schemaType.get().toString()]
 
@@ -341,31 +332,6 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
     }
 
-    private fun populateProperties(classes: Map<String, Map<String, Any>>, edge: OEdgeDocument) {
-
-        val properties = classes[edge.schemaType.get().toString()]
-
-        edge.propertyNames
-                .asSequence()
-                .filter { p -> !p.startsWith("@") }
-                .filter { p -> !p.startsWith("in_") }
-                .filter { p -> !p.startsWith("out_") }
-                .filter { p ->
-                    val propertyType = edge.fieldType(p)
-                    propertyType != OType.LINK &&
-                            propertyType != OType.LINKMAP &&
-                            propertyType != OType.LINKSET &&
-                            propertyType != OType.LINKLIST &&
-                            propertyType != OType.LINKBAG
-                }
-                .forEach { f ->
-                    val type = edge.fieldType(f)
-                    if (type != null)
-                        (properties as MutableMap<String, Any>).putIfAbsent(f, mapType(type.name))
-                }
-
-    }
-
 
     override fun expand(dataSource: DataSourceInfo,
                         ids: Array<String>,
@@ -373,7 +339,7 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
                         edgeLabel: String,
                         maxTraversal: Int): GraphData {
 
-        val cleanedEdgeLabel = wrap(trimToEmpty(edgeLabel), "'")
+        val cleanedEdgeLabel = wrap(trimToEmpty(edgeLabel), "`")
 
         var query = "SELECT FROM (TRAVERSE "
 
@@ -413,12 +379,12 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
 
     override fun loadFromClass(dataSource: DataSourceInfo, className: String, limit: Int): GraphData {
-        val query = "select * from $className limit $limit"
+        val query = "select * from `$className` limit $limit"
         return fetchData(dataSource, query, limit)
     }
 
     override fun loadFromClass(dataSource: DataSourceInfo, className: String, propName: String, propValue: String, limit: Int): GraphData {
-        val query = "select * from $className where $propName = '$propValue' limit $limit"
+        val query = "select * from `$className` where `$propName` = '$propValue' limit $limit"
         return fetchData(dataSource, query, limit)
     }
 

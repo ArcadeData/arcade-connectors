@@ -31,7 +31,6 @@ import java.util.*
 
 /**
  * Specialized provider for OrientDB 3.0.x
- * @author Roberto Franchini
  */
 class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
 
@@ -66,11 +65,58 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
                                 return data
 
                             }
-
-
                 }
 
     }
+
+    fun mapResultSet(resultSet: OResultSet): GraphData {
+
+        val nodesProperties = mutableMapOf<String, TypeProperty>()
+
+        var count: Long = 0
+        val cytoNodes = resultSet.asSequence()
+                .map { v -> populateProperties(nodesProperties, v) }
+                .map { v -> toCytoData(v, count++) }
+                .toSet()
+
+        log.debug("properties:: {} ", nodesProperties)
+        val tableClass = mutableMapOf<String, Any>()
+        tableClass.put("name", TABLE_CLASS)
+        tableClass.put("cardinality", count)
+        tableClass.put("properties", nodesProperties)
+
+        val nodeClasses = mutableMapOf<String, MutableMap<String, Any>>()
+        nodeClasses.put(TABLE_CLASS, tableClass);
+
+        val edgeClasses = mutableMapOf<String, MutableMap<String, Any>>()
+        val cytoEdges = emptySet<CytoData>()
+
+        return GraphData(nodeClasses, edgeClasses, cytoNodes, cytoEdges)
+    }
+
+
+    private fun populateProperties(properties: MutableMap<String, TypeProperty>, element: OResult): OResult {
+
+        val props = element.propertyNames
+                .asSequence()
+                .filter { name -> !properties.containsKey(name) }
+                .filter { p -> !p.startsWith("@") }
+                .filter { p -> !p.startsWith("in_") }
+                .filter { p -> !p.startsWith("out_") }
+                .map { name ->
+
+                    val property = element.getProperty<Any>(name)
+
+                    val type = property.javaClass.simpleName
+
+                    name to TypeProperty(name, type)
+                }.toMap()
+
+        properties.putAll(props)
+
+        return element
+    }
+
 
     private fun toCytoData(element: OResult, index: Long): CytoData {
 
@@ -80,7 +126,6 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
 
         val data = Data(id = index.toString(), record = record)
         return CytoData(group = "nodes", data = data, classes = TABLE_CLASS)
-
 
     }
 
@@ -114,72 +159,17 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
                 .forEach { property ->
 
                     var value = doc.getProperty<Any>(property)
-//
-//                    if (value is ORID)
-//                        value = value.toString()
 
                     record[property] = value
                 }
 
-        doc.identity.filter { id -> id.isValid }
-                .map { id ->
-                    record[ODocumentHelper.ATTRIBUTE_RID] = id.toString()
-                }
+        record[ODocumentHelper.ATTRIBUTE_RID] = doc.identity
+                .filter { id -> id.isValid }
+                .map { id -> id.toString() }
 
         record[ODocumentHelper.ATTRIBUTE_CLASS] = TABLE_CLASS
 
         return record
-    }
-
-
-    fun mapResultSet(resultSet: OResultSet): GraphData {
-
-        val nodesProperties = mutableMapOf<String, TypeProperty>()
-
-        var count: Long = 0
-        val cytoNodes = resultSet.asSequence()
-                .map { v -> populateProperties(nodesProperties, v) }
-                .map { v -> toCytoData(v, count++) }
-                .toSet()
-
-        log.debug("properties:: {} ", nodesProperties)
-        val tableClass = mutableMapOf<String, Any>()
-        tableClass.put("name", TABLE_CLASS)
-        tableClass.put("cardinality", count)
-        tableClass.put("properties", nodesProperties)
-
-        val nodeClasses = mutableMapOf<String, MutableMap<String, Any>>()
-        nodeClasses.put(TABLE_CLASS, tableClass);
-
-        val edgeClasses = mutableMapOf<String, MutableMap<String, Any>>()
-        val cytoEdges = emptySet<CytoData>()
-
-        return GraphData(nodeClasses, edgeClasses, cytoNodes, cytoEdges)
-    }
-
-
-    private fun populateProperties(properties: MutableMap<String, TypeProperty>, element: OResult): OResult {
-
-
-        val props = element.propertyNames
-                .asSequence()
-                .filter { name -> !properties.containsKey(name) }
-                .filter { p -> !p.startsWith("@") }
-                .filter { p -> !p.startsWith("in_") }
-                .filter { p -> !p.startsWith("out_") }
-                .map { name ->
-
-                    val property = element.getProperty<Any>(name)
-
-                    val type = property.javaClass.simpleName
-
-                    name to TypeProperty(name, type)
-                }
-                .toMap()
-
-        properties.putAll(props)
-
-        return element
     }
 
 
