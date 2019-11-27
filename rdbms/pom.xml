@@ -21,8 +21,8 @@
     <modelVersion>4.0.0</modelVersion>
     <properties>
         <commons-lang3.version>3.9</commons-lang3.version>
-        <orientdb-core.version>3.0.23</orientdb-core.version>
-        <orientdb-graphdb.version>3.0.23</orientdb-graphdb.version>
+        <orientdb.version>3.0.25</orientdb.version>
+        <orientdb.version>3.0.25</orientdb.version>
         <mysql-connector-java.version>8.0.18</mysql-connector-java.version>
         <postgresql.version>42.2.8</postgresql.version>
         <hsqldb.version>2.5.0</hsqldb.version>
@@ -66,12 +66,12 @@
         <dependency>
             <groupId>com.orientechnologies</groupId>
             <artifactId>orientdb-core</artifactId>
-            <version>${orientdb-core.version}</version>
+            <version>${orientdb.version}</version>
         </dependency>
         <dependency>
             <groupId>com.orientechnologies</groupId>
             <artifactId>orientdb-graphdb</artifactId>
-            <version>${orientdb-graphdb.version}</version>
+            <version>${orientdb.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>javax.mail</groupId>
