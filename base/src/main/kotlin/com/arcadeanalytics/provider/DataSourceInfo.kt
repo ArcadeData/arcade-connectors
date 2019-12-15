@@ -34,7 +34,8 @@ data class DataSourceInfo(
         val remote: Boolean = false,
         val gateway: String = "",
         val sshPort: Int = 22,
-        val sshUser: String = ""
+        val sshUser: String = "",
+        val skipCertValidation: Boolean = false
 ) {
     fun isAggregationEnabled(): Boolean = aggregationEnabled
 }
