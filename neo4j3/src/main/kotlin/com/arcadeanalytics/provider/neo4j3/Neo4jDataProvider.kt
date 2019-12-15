@@ -155,6 +155,8 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
                 }
             } catch (e: Exception) {
                 throw RuntimeException(e)
+            } finally {
+                driver.closeAsync()
             }
         }
 
@@ -210,13 +212,13 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
                 .forEach { data ->
                     val id = toNeo4jId(dataSource, data.data.id)
 
-                    val inQury = """MATCH (a)<-[r]-(o)
+                    val inQuery = """MATCH (a)<-[r]-(o)
                                         WHERE id(a) IN [$id]
                                         WITH a, o, type(r) as type
                                         RETURN type, count(type) as in"""
 
                     val record = data.data.record
-                    session.run(inQury).forEach { res ->
+                    session.run(inQuery).forEach { res ->
 
                         val type = res["type"].asString()
                         val count = res["in"].asInt()
@@ -227,12 +229,12 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
 
                         record["@edgeCount"] = record["@edgeCount"] as Int + count
                     }
-                    val outQury = """MATCH (a)-[r]->(o)
+                    val outQuery = """MATCH (a)-[r]->(o)
                                         WHERE id(a) IN [$id]
                                         WITH a, o, type(r) as type
                                         RETURN type, count(type) as out"""
 
-                    session.run(outQury).forEach { res ->
+                    session.run(outQuery).forEach { res ->
 
                         val type = res["type"].asString()
                         val count = res["out"].asInt()

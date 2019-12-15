@@ -17,12 +17,9 @@
   limitations under the License.
   #L%
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <properties>
-        <neo4j-java-driver.version>1.7.5</neo4j-java-driver.version>
-        <commons-text.version>1.8</commons-text.version>
-    </properties>
 
     <parent>
         <groupId>com.arcadeanalytics</groupId>
@@ -32,6 +29,11 @@
     </parent>
 
     <artifactId>arcade-connectors-neo4j3</artifactId>
+
+    <properties>
+        <neo4j-java-driver.version>1.7.5</neo4j-java-driver.version>
+        <commons-text.version>1.8</commons-text.version>
+    </properties>
 
     <build>
         <plugins>

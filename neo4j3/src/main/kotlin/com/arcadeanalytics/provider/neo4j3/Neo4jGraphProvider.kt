@@ -78,8 +78,6 @@ class Neo4jGraphProvider : DataSourceGraphProvider {
                 .map { res -> res.get("label").asString() }
                 .forEach { label -> indexLabel(dataSource, processor, session, label) }
 
-//        indexGame(dataSource, processor, session, "Game")
-
     }
 
     private fun indexRelationships(dataSource: DataSourceInfo,
