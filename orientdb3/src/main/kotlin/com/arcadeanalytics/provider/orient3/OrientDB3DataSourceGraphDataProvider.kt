@@ -56,6 +56,7 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
             open(dataSource)
                     .use {
 
+                        fetchData(dataSource, "SELECT FROM V LIMIT 1", 1)
                         log.info("connection works fine:: '{}' ", it.url)
 
                     }
