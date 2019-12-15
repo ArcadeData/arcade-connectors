@@ -58,7 +58,8 @@ public class MysqlSQLDataProviderWithAggregationTest extends AbstractRDBMSProvid
                 false,
                 "",
                 22,
-                ""
+                "",
+                false
         );
 
 

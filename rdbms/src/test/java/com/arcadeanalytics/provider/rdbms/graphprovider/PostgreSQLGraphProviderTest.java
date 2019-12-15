@@ -51,7 +51,8 @@ public class PostgreSQLGraphProviderTest extends AbstractRDBMSGraphProvider {
                 false,
                 "",
                 22,
-                ""
+                "",
+                false
         );
 
         provider = new RDBMSGraphProvider();
@@ -83,7 +84,8 @@ public class PostgreSQLGraphProviderTest extends AbstractRDBMSGraphProvider {
                 false,
                 "",
                 22,
-                ""
+                "",
+                false
         );
 
         provider = new RDBMSGraphProvider();

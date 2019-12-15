@@ -68,7 +68,8 @@ public class MysqlSQLDataProviderTest extends AbstractRDBMSProviderTest {
                 false,
                 "",
                 22,
-                ""
+                "",
+                false
         );
 
         provider = new RDBMSDataProvider();

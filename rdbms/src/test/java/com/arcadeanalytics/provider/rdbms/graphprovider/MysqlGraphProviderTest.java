@@ -71,7 +71,8 @@ public class MysqlGraphProviderTest extends AbstractRDBMSGraphProvider {
                 false,
                 "",
                 22,
-                ""
+                "",
+                false
         );
         provider = new RDBMSGraphProvider();
 
@@ -104,7 +105,8 @@ public class MysqlGraphProviderTest extends AbstractRDBMSGraphProvider {
                 false,
                 "",
                 22,
-                ""
+                "",
+                false
         );
 
         provider = new RDBMSGraphProvider();

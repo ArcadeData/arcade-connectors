@@ -100,7 +100,8 @@ public class HibernateMapperTest {
                 false,
                 "",
                 22,
-                ""
+                "",
+                false
         );
 
         dbQueryEngine = new DBQueryEngine(dataSource, 300);

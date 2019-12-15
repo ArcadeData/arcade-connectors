@@ -54,17 +54,15 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
         try {
             open(dataSource)
-                    .use {
+                    .use { db ->
 
-                        fetchData(dataSource, "SELECT FROM V LIMIT 1", 1)
-                        log.info("connection works fine:: '{}' ", it.url)
-
+                        val count = db.query("SELECT FROM V LIMIT 1").asSequence().count()
+                        log.info("connection works fine:: '{}' ", dataSource.id)
+                        return count == 1
                     }
         } catch (e: Exception) {
             throw RuntimeException(e)
         }
-
-        return true
     }
 
 

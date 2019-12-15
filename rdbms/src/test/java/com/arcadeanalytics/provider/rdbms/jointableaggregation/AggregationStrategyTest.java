@@ -100,7 +100,8 @@ public class AggregationStrategyTest {
                 false,
                 "",
                 22,
-                ""
+                "",
+                false
         );
         dbQueryEngine = new DBQueryEngine(dataSource, 300);
         executionStrategy = "not_specified";

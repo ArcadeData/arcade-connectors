@@ -63,7 +63,8 @@ public class PostgreSQLDataProviderTest extends AbstractRDBMSProviderTest {
                 false,
                 "",
                 22,
-                ""
+                "",
+                false
         );
 
 

@@ -109,7 +109,8 @@ public class FilterTableMappingTest {
                 false,
                 "",
                 22,
-                ""
+                "",
+                false
         );
 
         dbQueryEngine = new DBQueryEngine(dataSource, 300);

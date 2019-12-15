@@ -98,7 +98,8 @@ public class GraphModelBuildingTest {
                 false,
                 "",
                 22,
-                ""
+                "",
+                false
         );
 
         statistics = new Statistics();
