@@ -27,6 +27,7 @@ fun getCluster(dataSource: DataSourceInfo): Cluster {
             .port(dataSource.port)
             .serializer(GremlinSerializerFactory.createSerializer(dataSource))
             .enableSsl(dataSource.type == "GREMLIN_COSMOSDB")
+            .sslSkipCertValidation(dataSource.skipCertValidation)
             .credentials(dataSource.username, dataSource.password)
             .maxWaitForConnection(20000)
             .create()

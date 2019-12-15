@@ -173,7 +173,7 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
 
         val properties = classes[element.classes]
 
-        element.data.record.keys.stream()
+        element.data.record.keys.asSequence()
                 .filter { f -> !f.startsWith("@") }
                 .filter { f -> !f.startsWith("in_") }
                 .filter { f -> !f.startsWith("out_") }
@@ -184,8 +184,11 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
 
     private fun transformToMap(doc: Element): MutableMap<String, Any> {
         val record = Maps.newHashMap<String, Any>()
-        doc.keys().stream()
-                .forEach { k -> record[k] = doc.property<Any>(k).value() }
+        doc.keys().asSequence()
+                .forEach { k ->
+                    //take single value
+                    record[k] = doc.properties<Any>(k).next().value()
+                }
 
 
         return record

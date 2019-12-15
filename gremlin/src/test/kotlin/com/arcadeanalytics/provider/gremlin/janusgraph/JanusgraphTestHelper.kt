@@ -34,21 +34,17 @@ object JanusgraphContainer {
                 start()
             }
 
-
     val dataSource: DataSourceInfo
 
-
     init {
-
-
         dataSource = DataSourceInfo(id = 1L,
                 type = "GREMLIN_JANUSGRAPH",
                 name = "testDataSource",
                 server = container.containerIpAddress,
                 port = container.firstMappedPort,
-                username = "na",
-                password = "na",
-                database = "na"
+                username = "",
+                password = "",
+                database = ""
         )
 
         val cluster = getCluster(dataSource)
