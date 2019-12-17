@@ -21,7 +21,7 @@
     <modelVersion>4.0.0</modelVersion>
     <properties>
         <gremlin-driver.version>3.4.4</gremlin-driver.version>
-        <orientdb-gremlin.version>3.0.25</orientdb-gremlin.version>
+        <orientdb-gremlin.version>3.0.26</orientdb-gremlin.version>
         <commons-lang3.version>3.9</commons-lang3.version>
         <janusgraph.version>0.4.0</janusgraph.version>
     </properties>
