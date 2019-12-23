@@ -55,7 +55,7 @@
         <arcade-data.version>1.0.7</arcade-data.version>
         <junit.jupiter.version>5.5.2</junit.jupiter.version>
         <junit.platform.version>1.2.0</junit.platform.version>
-        <slf4j-api.version>1.7.29</slf4j-api.version>
+        <slf4j-api.version>1.7.30</slf4j-api.version>
         <logback-classic.version>1.2.3</logback-classic.version>
         <guava.version>28.1-jre</guava.version>
         <assertj-core.version>3.14.0</assertj-core.version>
