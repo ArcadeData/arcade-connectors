@@ -3,7 +3,7 @@
   #%L
   Arcade Connectors
   %%
-  Copyright (C) 2018 - 2019 ArcadeAnalytics
+  Copyright (C) 2018 - 2020 ArcadeData
   %%
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -52,14 +52,14 @@
         <dokka.version>0.10.1</dokka.version>
 
         <kotlin.version>1.3.61</kotlin.version>
-        <arcade-data.version>1.0.7</arcade-data.version>
+        <arcade-data.version>1.0.8</arcade-data.version>
         <junit.jupiter.version>5.6.0</junit.jupiter.version>
         <junit.platform.version>1.2.0</junit.platform.version>
         <slf4j-api.version>1.7.30</slf4j-api.version>
         <logback-classic.version>1.2.3</logback-classic.version>
         <guava.version>28.2-jre</guava.version>
         <assertj-core.version>3.15.0</assertj-core.version>
-        <testcontainers.version>1.12.5</testcontainers.version>
+        <testcontainers.version>1.13.0</testcontainers.version>
 
 
     </properties>
@@ -69,7 +69,6 @@
             <id>player</id>
             <name>Arcade Team</name>
             <email>info@arcadeanalytics.com</email>
-            <timezone>+1</timezone>
         </developer>
     </developers>
 
@@ -82,10 +81,20 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:https://github.com/ArcadeAnalytics/arcade-connectors.git</connection>
-        <url>https://github.com/ArcadeAnalytics/arcade-connectors</url>
+        <connection>scm:git:https://github.com/ArcadeData/arcade-connectors.git</connection>
+        <url>https://github.com/ArcadeData/arcade-connectors</url>
         <tag>HEAD</tag>
     </scm>
+
+    <modules>
+        <module>base</module>
+        <module>gremlin</module>
+        <module>neo4j3</module>
+        <module>orientdb2</module>
+        <module>orientdb3</module>
+        <module>rdbms</module>
+        <module>integration</module>
+    </modules>
 
     <distributionManagement>
         <snapshotRepository>
@@ -97,7 +106,6 @@
             <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
-
 
     <pluginRepositories>
         <pluginRepository>
@@ -244,10 +252,13 @@
                 <version>${license-maven-plugin.version}</version>
                 <configuration>
                     <verbose />
+                    <organizationName>ArcadeData</organizationName>
                     <projectName>Arcade Connectors</projectName>
                     <inceptionYear>2018</inceptionYear>
-                    <organizationName>ArcadeAnalytics</organizationName>
                     <licenseName>apache_v2</licenseName>
+                    <canUpdateCopyright>true</canUpdateCopyright>
+                    <canUpdateDescription>true</canUpdateDescription>
+                    <canUpdateLicense>true</canUpdateLicense>
                     <roots>${project.basedir}</roots>
                 </configuration>
             </plugin>
@@ -422,15 +433,6 @@
         </profile>
 
     </profiles>
-    <modules>
-        <module>base</module>
-        <module>gremlin</module>
-        <module>neo4j3</module>
-        <module>orientdb2</module>
-        <module>orientdb3</module>
-        <module>rdbms</module>
-        <module>integration</module>
-    </modules>
     <dependencies>
 
         <dependency>
