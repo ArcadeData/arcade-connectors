@@ -1,0 +1,30 @@
+name: Maven Deploy
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Cache
+        uses: actions/cache@preview
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Set up JDK 111
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: Deploy
+        run: mvn deploy -fae ---file pom.xml  --settings .ci/settings.xml
+
+
