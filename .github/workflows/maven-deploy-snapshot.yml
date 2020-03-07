@@ -25,6 +25,6 @@ jobs:
           java-version: 11
 
       - name: Deploy
-        run: mvn deploy -fae ---file pom.xml  --settings .ci/settings.xml
+        run: mvn deploy -fae --file pom.xml  --settings .ci/settings.xml
 
 
