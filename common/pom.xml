@@ -31,7 +31,7 @@
         <relativePath>../</relativePath>
     </parent>
 
-    <artifactId>arcade-connectors-base</artifactId>
+    <artifactId>arcade-connectors-common</artifactId>
 
     <build>
         <plugins>
@@ -97,7 +97,7 @@
         <dependency>
             <groupId>com.arcadeanalytics</groupId>
             <artifactId>arcade-data</artifactId>
-            <version>1.0.1</version>
+            <version>${arcade-data.version}</version>
             <scope>provided</scope>
         </dependency>
 
