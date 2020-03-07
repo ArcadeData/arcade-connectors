@@ -4,6 +4,8 @@
 [![security status](https://www.meterian.com/badge/gh/ArcadeAnalytics/arcade-connectors/security)](https://www.meterian.com/report/gh/ArcadeAnalytics/arcade-connectors)
 [![stability status](https://www.meterian.com/badge/gh/ArcadeAnalytics/arcade-connectors/stability)](https://www.meterian.com/report/gh/ArcadeAnalytics/arcade-connectors)
 [![Javadocs](https://javadoc.io/badge/com.arcadeanalytics/arcade-connectors-base.svg)](https://javadoc.io/doc/com.arcadeanalytics/arcade-connectors-base)
+[![codecov](https://codecov.io/gh/ArcadeData/arcade-connectors/branch/master/graph/badge.svg)](https://codecov.io/gh/ArcadeData/arcade-connectors)
+
 
 [WIP]
 
