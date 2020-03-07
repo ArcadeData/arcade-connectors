@@ -19,7 +19,8 @@
   #L%
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.arcadeanalytics</groupId>
@@ -51,7 +52,7 @@
         <build-helper-maven-plugin.version>3.0.0</build-helper-maven-plugin.version>
         <dokka.version>0.10.1</dokka.version>
 
-        <kotlin.version>1.3.61</kotlin.version>
+        <kotlin.version>1.3.70</kotlin.version>
         <arcade-data.version>1.0.8</arcade-data.version>
         <junit.jupiter.version>5.6.0</junit.jupiter.version>
         <junit.platform.version>1.2.0</junit.platform.version>
@@ -59,6 +60,7 @@
         <logback-classic.version>1.2.3</logback-classic.version>
         <guava.version>28.2-jre</guava.version>
         <assertj-core.version>3.15.0</assertj-core.version>
+        <assertj-guava.version>3.3.0</assertj-guava.version>
         <testcontainers.version>1.13.0</testcontainers.version>
 
 
@@ -87,7 +89,8 @@
     </scm>
 
     <modules>
-        <module>base</module>
+        <module>data</module>
+        <module>common</module>
         <module>gremlin</module>
         <module>neo4j3</module>
         <module>orientdb2</module>
@@ -251,7 +254,7 @@
                 <artifactId>license-maven-plugin</artifactId>
                 <version>${license-maven-plugin.version}</version>
                 <configuration>
-                    <verbose />
+                    <verbose/>
                     <organizationName>ArcadeData</organizationName>
                     <projectName>Arcade Connectors</projectName>
                     <inceptionYear>2018</inceptionYear>
@@ -289,7 +292,8 @@
                             </goals>
                             <configuration>
                                 <transformers>
-                                    <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                                    <transformer
+                                            implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 </transformers>
                                 <filters>
                                     <filter>
@@ -445,13 +449,6 @@
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-reflect</artifactId>
             <version>${kotlin.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.arcadeanalytics</groupId>
-            <artifactId>arcade-data</artifactId>
-            <version>${arcade-data.version}</version>
             <scope>provided</scope>
         </dependency>
 

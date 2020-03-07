@@ -94,41 +94,16 @@
 
         <dependency>
             <groupId>com.arcadeanalytics</groupId>
-            <artifactId>arcade-connectors-base</artifactId>
+            <artifactId>arcade-connectors-common</artifactId>
             <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.arcadeanalytics</groupId>-->
-<!--            <artifactId>arcade-connectors-orientdb2</artifactId>-->
-<!--            <version>${project.parent.version}</version>-->
-<!--            <scope>provided</scope>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.arcadeanalytics</groupId>-->
-<!--            <artifactId>arcade-connectors-orientdb3</artifactId>-->
-<!--            <version>${project.parent.version}</version>-->
-<!--            <scope>provided</scope>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.arcadeanalytics</groupId>-->
-<!--            <artifactId>arcade-connectors-neo4j3</artifactId>-->
-<!--            <version>${project.parent.version}</version>-->
-<!--            <scope>provided</scope>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.arcadeanalytics</groupId>-->
-<!--            <artifactId>arcade-connectors-gremlin</artifactId>-->
-<!--            <version>${project.parent.version}</version>-->
-<!--            <scope>provided</scope>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.arcadeanalytics</groupId>-->
-<!--            <artifactId>arcade-connectors-rdbms</artifactId>-->
-<!--            <version>${project.parent.version}</version>-->
-<!--            <scope>provided</scope>-->
-<!--        </dependency>-->
-
+        <dependency>
+            <groupId>com.arcadeanalytics</groupId>
+            <artifactId>arcade-connectors-data</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
 

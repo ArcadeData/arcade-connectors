@@ -60,7 +60,13 @@
         </dependency>
         <dependency>
             <groupId>com.arcadeanalytics</groupId>
-            <artifactId>arcade-connectors-base</artifactId>
+            <artifactId>arcade-connectors-common</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.arcadeanalytics</groupId>
+            <artifactId>arcade-connectors-data</artifactId>
             <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
@@ -71,7 +77,7 @@
         </dependency>
         <dependency>
             <groupId>com.arcadeanalytics</groupId>
-            <artifactId>arcade-connectors-base</artifactId>
+            <artifactId>arcade-connectors-common</artifactId>
             <version>${project.parent.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
