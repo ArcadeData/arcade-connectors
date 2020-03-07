@@ -35,7 +35,7 @@ class Neo4jConnectionTest {
 
     private val LOGGER = LoggerFactory.getLogger(Neo4jDataProviderIntTest::class.java)
 
-    private val container: KGenericContainer = KGenericContainer("neo4j:latest")
+    private val container: KGenericContainer = KGenericContainer("neo4j:3.5")
             .apply {
                 withExposedPorts(7687, 7474)
                 withEnv("NEO4J_AUTH", "neo4j/arcade")
