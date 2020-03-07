@@ -25,6 +25,9 @@ jobs:
           java-version: 11
 
       - name: Deploy
+        env:
+          MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
         run: mvn deploy -fae --file pom.xml  --settings ./.ci/settings.xml
 
 
