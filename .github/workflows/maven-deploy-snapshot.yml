@@ -30,4 +30,6 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
         run: mvn deploy -fae --file pom.xml  --settings settings.xml
 
+      - name: Publish Test Reports
+        uses: codecov/codecov-action@v1
 
