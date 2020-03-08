@@ -23,21 +23,18 @@ import com.arcadeanalytics.provider.DataSourceInfo
 import com.arcadeanalytics.test.KGenericContainer
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
+import org.testcontainers.containers.OrientDBContainer
 import org.testcontainers.containers.wait.strategy.Wait
 
 class OrientDB3ConnectionTest {
 
-    private val container: KGenericContainer = KGenericContainer(ORIENTDB_DOCKER_IMAGE)
+    private val container = OrientDBContainer(ORIENTDB_DOCKER_IMAGE)
+            .withServerPassword(ORIENTDB_ROOT_PASSWORD)
             .apply {
-                withExposedPorts(2424)
-                withEnv("ORIENTDB_ROOT_PASSWORD", ORIENTDB_ROOT_PASSWORD)
-                waitingFor(Wait.forListeningPort())
                 start()
-
             }
 
     private val provider: OrientDB3DataSourceGraphDataProvider
-
 
     private var dataSource: DataSourceInfo
 
@@ -54,10 +51,7 @@ class OrientDB3ConnectionTest {
         )
 
 
-        val serverUrl = getServerUrl(container)
-
-
-        val dbUrl = createTestDatabase(serverUrl, dataSource.database)
+        val dbUrl = createTestDatabase(container.serverUrl, dataSource.database)
 
         createPersonSchema(dbUrl, dataSource)
 

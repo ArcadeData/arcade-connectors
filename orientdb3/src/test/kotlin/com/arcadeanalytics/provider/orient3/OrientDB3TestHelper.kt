@@ -26,21 +26,20 @@ import com.orientechnologies.orient.core.db.ODatabaseType
 import com.orientechnologies.orient.core.db.OrientDB
 import com.orientechnologies.orient.core.db.OrientDBConfig
 import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.OrientDBContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import java.io.IOException
 
 
-const val ORIENTDB_DOCKER_IMAGE = "orientdb:3.0.23-tp3"
+const val ORIENTDB_DOCKER_IMAGE = "orientdb:3.0.27-tp3"
 
 const val ORIENTDB_ROOT_PASSWORD = "arcade"
 
 object OrientDB3Container {
 
-    private val container: KGenericContainer = KGenericContainer(ORIENTDB_DOCKER_IMAGE)
+    private val container = OrientDBContainer(ORIENTDB_DOCKER_IMAGE)
+            .withServerPassword(ORIENTDB_ROOT_PASSWORD)
             .apply {
-                withExposedPorts(2424)
-                withEnv("ORIENTDB_ROOT_PASSWORD", ORIENTDB_ROOT_PASSWORD)
-                waitingFor(Wait.forListeningPort())
                 start()
             }
 
@@ -60,15 +59,13 @@ object OrientDB3Container {
                 database = "testDatabase"
         )
 
-        val serverUrl = getServerUrl(container)
-
-        dbUrl = createTestDatabase(serverUrl, dataSource.database)
+        dbUrl = createTestDatabase(container.serverUrl, dataSource.database)
 
         createPersonSchema(dbUrl, dataSource)
 
     }
 
-    fun getContainer(): KGenericContainer {
+    fun getContainer(): OrientDBContainer {
         return container
     }
 
