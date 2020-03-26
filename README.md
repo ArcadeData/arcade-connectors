@@ -34,7 +34,7 @@ To build and test just run:
 
 ## Modules
 
-The base module contains the definitions of the interfaces each connector should implements, the ssh-tunnel support and factories.
+The _common_ module contains the definitions of the interfaces each connector should implements, the ssh-tunnel support and factories.
 
 ## Interfaces
 
@@ -50,5 +50,5 @@ To instantiate the factory for one of the provided interface:
 
     factory = DataSourceProviderFactory(DataSourceGraphDataProvider::class.java)
 
-The factory will scan the `pluginsa` directory and loads each implementation on a different classloader.
+The factory will scan the `plugins` directory and loads each implementation on a different classloader.
 

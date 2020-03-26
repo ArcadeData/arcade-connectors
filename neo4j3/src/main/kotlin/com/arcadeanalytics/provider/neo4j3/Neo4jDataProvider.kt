@@ -65,7 +65,6 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
                         edgeLabel: String,
                         maxTraversal: Int): GraphData {
 
-
         val label: String = if (edgeLabel.isEmpty()) "[rel]" else "[rel:$edgeLabel]"
 
         val rel = when (direction) {
@@ -76,9 +75,7 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
 
         val cleanedIds = cleanIds(ids, dataSource)
 
-
         val query = "MATCH (node)$rel(target) WHERE id(node) IN [$cleanedIds] return node, rel, target"
-
 
         getDriver(dataSource).use { driver ->
             driver.session(AccessMode.READ).use { session ->
@@ -92,9 +89,11 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
             }
         }
 
-
     }
 
+    override fun relations(dataSource: DataSourceInfo, fromIds: Array<String>, edgesLabel: Array<String>, toIds: Array<String>, maxTraversal: Int): GraphData {
+        TODO("Not yet implemented")
+    }
 
     override fun load(dataSource: DataSourceInfo, ids: Array<String>): GraphData {
 
@@ -103,7 +102,6 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
         val query = """MATCH (n)
             WHERE id(n) IN [${cleanedIds}]
             RETURN n"""
-
 
         getDriver(dataSource).use { driver ->
 
@@ -117,7 +115,6 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
             }
 
         }
-
 
     }
 
@@ -160,9 +157,7 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
             }
         }
 
-
     }
-
 
     private fun fetchData(session: Session,
                           dataSource: DataSourceInfo,
@@ -170,28 +165,16 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
                           limit: Int,
                           mapper: Neo4jStatementResultMapper): GraphData {
 
+        val graphData = runQueryAndMapResult(session, query, mapper)
 
-        val (nodesClasses,
-                edgesClasses,
-                nodes,
-                edges,
-                truncated)
-                = runQueryAndMapResult(session, query, mapper)
+        countInAndOutOnNode(session, dataSource, graphData.nodes)
 
-        countInAndOutOnNode(session, dataSource, nodes)
-
-        val graphData = GraphData(nodesClasses,
-                edgesClasses,
-                nodes,
-                edges,
-                truncated)
         return graphData
     }
 
     private fun runQueryAndMapResult(session: Session,
                                      query: String,
                                      mapper: Neo4jStatementResultMapper): GraphData {
-
 
         log.debug("run query and map:: '{}' ", query)
 
@@ -207,17 +190,16 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
 
     private fun countInAndOutOnNode(session: Session, dataSource: DataSourceInfo, nodes: Set<CytoData>): Set<CytoData> {
 
-
         nodes.asSequence()
                 .forEach { data ->
                     val id = toNeo4jId(dataSource, data.data.id)
+                    val record = data.data.record
 
                     val inQuery = """MATCH (a)<-[r]-(o)
                                         WHERE id(a) IN [$id]
                                         WITH a, o, type(r) as type
                                         RETURN type, count(type) as in"""
 
-                    val record = data.data.record
                     session.run(inQuery).forEach { res ->
 
                         val type = res["type"].asString()
@@ -246,12 +228,10 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
 
                     }
 
-
                 }
 
         return nodes
     }
-
 
     override fun supportedDataSourceTypes(): Set<String> {
         return setOf(NEO4J.name, NEO4J_MEMGRAPH.name)

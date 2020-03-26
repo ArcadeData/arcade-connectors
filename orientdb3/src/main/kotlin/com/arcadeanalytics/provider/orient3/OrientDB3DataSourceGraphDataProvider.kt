@@ -361,6 +361,10 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
     }
 
+    override fun relations(dataSource: DataSourceInfo, fromIds: Array<String>, edgesLabel: Array<String>, toIds: Array<String>, maxTraversal: Int): GraphData {
+        TODO("Not yet implemented")
+    }
+
     override fun load(dataSource: DataSourceInfo, ids: Array<String>): GraphData {
 
         var query = "SELECT FROM ["

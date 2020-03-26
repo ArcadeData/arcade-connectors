@@ -32,8 +32,8 @@ class Neo4jStatementResultMapper(private val dataSource: DataSourceInfo, private
     private fun countInOut(cyto: CytoData): CytoData {
 
         val inAndOutCountByEdgeType: MutableMap<String, Map<String, Int>> = mutableMapOf()
-        inAndOutCountByEdgeType.putIfAbsent("@in", mutableMapOf<String, Int>())
-        inAndOutCountByEdgeType.putIfAbsent("@out", mutableMapOf<String, Int>())
+        inAndOutCountByEdgeType.putIfAbsent("@in", mutableMapOf())
+        inAndOutCountByEdgeType.putIfAbsent("@out", mutableMapOf())
 
         cyto.data.record.putAll(inAndOutCountByEdgeType)
         cyto.data.record["@edgeCount"] = 0
@@ -58,7 +58,6 @@ class Neo4jStatementResultMapper(private val dataSource: DataSourceInfo, private
 
     private fun toCytoData(rel: Relationship): CytoData {
 
-
         val id = toArcadeId(dataSource, Neo4jType.EDGE, rel.id())
         val source = toArcadeId(dataSource, Neo4jType.NODE, rel.startNodeId())
         val target = toArcadeId(dataSource, Neo4jType.NODE, rel.endNodeId())
@@ -69,7 +68,6 @@ class Neo4jStatementResultMapper(private val dataSource: DataSourceInfo, private
         val data = Data(id = id, record = record.asMap() as MutableMap<String, Any>, source = source, target = target)
 
         val cytoData = CytoData(data = data, classes = rel.type(), group = "edges")
-
 
         return cytoData
     }
@@ -93,7 +91,6 @@ class Neo4jStatementResultMapper(private val dataSource: DataSourceInfo, private
                         when (f.type().name()) {
                             "NODE" -> {
                                 val node = f.asNode()
-
                                 nodes.add(node)
                             }
                             "RELATIONSHIP" -> {
@@ -109,15 +106,14 @@ class Neo4jStatementResultMapper(private val dataSource: DataSourceInfo, private
                     }
 
             if (fetched++ % 1000 == 0) {
-                log.info("fethced:: {} ", fetched)
-                log.info(" sizes {} . {} ", nodes.size, rels.size)
+                log.info("fethced:: {} - nodes:: {} -  rels:: {} ", fetched, nodes.size, rels.size)
             }
 
             fetchMore = nodes.size < maxTraversal || rels.size < maxTraversal
         }
 
 
-        log.info("nodes:: {} - rels:: {}", nodes.size, rels.size)
+        log.info("fethced:: {} - nodes:: {} -  rels:: {} ", fetched, nodes.size, rels.size)
         val relsWithEachEnds = rels.asSequence()
                 .filter { rel ->
 
@@ -145,7 +141,7 @@ class Neo4jStatementResultMapper(private val dataSource: DataSourceInfo, private
                 .map { c -> countInOut(c) }
                 .toSet()
 
-        val edges = relsWithEachEnds.asSequence()
+        val edges = rels.asSequence()
                 .map { c -> mapProperties(edgeClasses, c) }
                 .map { r -> toCytoData(r) }
                 .toSet()

@@ -64,6 +64,23 @@ interface DataSourceGraphDataProvider : DataSourceProvider {
                maxTraversal: Int): GraphData
 
     /**
+     * Given a list of starting nodes ids, a list of edge labels and a list of other nodes ids, load the edges between the two set of nodes.
+     * A max number of traversal step could be passed and it is usually implemented in approximate way.
+     *
+     * @param dataSource the data spurce
+     * @param fromIds starting nodes identifiers
+     * @param edgesLabel edges labels to load
+     * @param toIds destination nodes identifiers
+     * @param maxTraversal max number of traversal step
+     * @return the {@link GraphData} representation of the result set
+     */
+    fun relations(dataSource: DataSourceInfo,
+                  fromIds: Array<String>,
+                  edgesLabel: Array<String>,
+                  toIds: Array<String>,
+                  maxTraversal: Int): GraphData
+
+    /**
      * Load elements by ids
      * @param dataSource the data source
      * @param ids list of identifiers to be loaded

@@ -751,4 +751,9 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
                 "RDBMS_DATA_WORLD");
     }
 
+    @NotNull
+    @Override
+    public GraphData relations(@NotNull DataSourceInfo dataSource, @NotNull String[] fromIds, @NotNull String[] edgesLabel, @NotNull String[] toIds, int maxTraversal) {
+        return null;
+    }
 }
