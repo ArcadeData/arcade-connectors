@@ -20,6 +20,7 @@
 
 package com.arcadeanalytics.provider.neo
 
+import com.arcadeanalytics.provider.neo.Neo4jContainer.dataSource
 import com.arcadeanalytics.provider.neo4j3.Neo4jDataProvider
 import com.arcadeanalytics.provider.neo4j3.getDriver
 import org.assertj.core.api.Assertions.assertThat
@@ -32,14 +33,12 @@ import org.neo4j.driver.v1.AccessMode
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class Neo4jDataProviderIntTest {
 
-
     private val provider: Neo4jDataProvider = Neo4jDataProvider()
-
 
     @Test
     @Disabled
     internal fun `should execute query`() {
-        getDriver(Neo4jContainer.dataSource).use {
+        getDriver(dataSource).use {
             it.session(AccessMode.READ).use { session ->
 
                 val query = """MATCH (a)-[r]->(o)
@@ -66,7 +65,7 @@ class Neo4jDataProviderIntTest {
 
         //when
         val query = "MATCH (people:Person)-[fof:FriendOf]-(friends) RETURN people, fof, friends"
-        val data = provider.fetchData(Neo4jContainer.dataSource, query, 100)
+        val data = provider.fetchData(dataSource, query, 100)
 
         //then
         assertThat(data.nodes).hasSize(4)
@@ -99,7 +98,7 @@ class Neo4jDataProviderIntTest {
 
         //when
         val query = "MATCH (n) RETURN n;"
-        val data = provider.fetchData(Neo4jContainer.dataSource, query, 100)
+        val data = provider.fetchData(dataSource, query, 100)
 
         //then
         assertThat(data.nodes).hasSize(8)
@@ -129,7 +128,7 @@ class Neo4jDataProviderIntTest {
 
 
         //when
-        val data = provider.expand(Neo4jContainer.dataSource, arrayOf("0,1"), "out", "FriendOf", 300)
+        val data = provider.expand(dataSource, arrayOf("0,1"), "out", "FriendOf", 300)
 
 
         //then
@@ -160,7 +159,7 @@ class Neo4jDataProviderIntTest {
 
     @Test
     fun shouldLoadFromClass() {
-        val data = provider.loadFromClass(Neo4jContainer.dataSource, "Person", 1)
+        val data = provider.loadFromClass(dataSource, "Person", 1)
 
         assertThat(data.nodes).hasSize(1)
         val cytoData = data.nodes.first()
@@ -182,8 +181,37 @@ class Neo4jDataProviderIntTest {
     }
 
     @Test
+    fun shouldLoadEdgesOfExistingNodes() {
+        val firstDataSet = provider.loadFromClass(dataSource, "Person", "name", "frank", 1)
+        val secondDataSet = provider.loadFromClass(dataSource, "Person", "name", "john", 1)
+
+        assertThat(firstDataSet.nodes).hasSize(1)
+        assertThat(secondDataSet.nodes).hasSize(1)
+
+        val firstNode = firstDataSet.nodes.first().data
+        val secondNode = secondDataSet.nodes.first().data
+
+        val edgeClasses = (firstNode.record["@in"] as Map<String, Int>).keys
+                .union((firstNode.record["@out"] as Map<String, Int>).keys)
+                .union((secondNode.record["@in"] as Map<String, Int>).keys)
+                .union((secondNode.record["@out"] as Map<String, Int>).keys)
+
+        val data = provider.edges(dataSource, arrayOf(firstNode.id), edgeClasses.toTypedArray(), arrayOf(secondNode.id))
+
+        val cytoData = data.edges.first()
+
+        assertThat(cytoData.data.record).isNotNull
+        assertThat(cytoData.data.source).isNotBlank()
+        assertThat(cytoData.data.target).isNotBlank()
+
+        assertThat(data.nodes).isEmpty()
+
+    }
+
+
+    @Test
     fun shouldLoadFromClassWherePropertyHasValue() {
-        val data = provider.loadFromClass(Neo4jContainer.dataSource, "Person", "name", "frank", 10)
+        val data = provider.loadFromClass(dataSource, "Person", "name", "frank", 10)
 
         assertThat(data.nodes).hasSize(1)
 
@@ -212,7 +240,7 @@ class Neo4jDataProviderIntTest {
 
 
         //when
-        val data = provider.expand(Neo4jContainer.dataSource, arrayOf("0,1"), "both", "", 300)
+        val data = provider.expand(dataSource, arrayOf("0,1"), "both", "", 300)
 
         //then
         assertThat(data.nodes).hasSize(3)

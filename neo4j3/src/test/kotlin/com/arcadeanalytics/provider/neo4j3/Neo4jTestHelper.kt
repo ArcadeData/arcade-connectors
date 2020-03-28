@@ -68,7 +68,6 @@ fun fillDatabase(session: Session) {
 
     session.run("CREATE (a:Person {name: 'jane'})")
 
-
     session.run("""MATCH (a:Person),(b:Person)
                 WHERE a.name = 'rob' AND b.name = 'frank'
                 CREATE (a)-[r:FriendOf { kind: 'fraternal' }]->(b)
@@ -86,7 +85,6 @@ fun fillDatabase(session: Session) {
                 WHERE a.name = 'frank' AND b.name = 'john'
                 CREATE (a)-[r:HaterOf { kind: 'killer' }]->(b)
                 RETURN r""")
-
 
     session.run("CREATE (a:Car {name: 'gt40'})")
     session.run("CREATE (a:Car {name: 'laferrari'})")

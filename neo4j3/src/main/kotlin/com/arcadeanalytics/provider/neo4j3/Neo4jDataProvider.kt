@@ -92,7 +92,27 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
     }
 
     override fun edges(dataSource: DataSourceInfo, fromIds: Array<String>, edgesLabel: Array<String>, toIds: Array<String>): GraphData {
-        TODO("Not yet implemented")
+
+        val cleanedFromIds = cleanIds(fromIds, dataSource)
+        val cleanedToIds = cleanIds(toIds, dataSource)
+
+        val query = """MATCH (node)<-[rel:${edgesLabel.joinToString("|")}]->(target) 
+                        WHERE id(node) IN [$cleanedFromIds] 
+                        AND id(target) IN [$cleanedToIds]
+                        RETURN rel"""
+
+        getDriver(dataSource).use { driver ->
+            driver.session(AccessMode.READ).use { session ->
+
+                val graphData = fetchData(session, dataSource, query, 10000, Neo4jStatementResultMapper(dataSource, 10000))
+                session.closeAsync()
+                driver.closeAsync()
+
+                log.info("totals expanded: nodes {} - edges {} - truncated {} ", graphData.nodes.size, graphData.edges.size, graphData.truncated)
+                return graphData
+            }
+        }
+
     }
 
     override fun load(dataSource: DataSourceInfo, ids: Array<String>): GraphData {
