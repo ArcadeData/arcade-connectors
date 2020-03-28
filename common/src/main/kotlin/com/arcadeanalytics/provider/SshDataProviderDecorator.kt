@@ -60,10 +60,10 @@ class SshDataProviderDecorator(private val provider: DataSourceGraphDataProvider
         return graphData
     }
 
-    override fun relations(dataSource: DataSourceInfo, fromIds: Array<String>, edgesLabel: Array<String>, toIds: Array<String>, maxTraversal: Int): GraphData {
+    override fun edges(dataSource: DataSourceInfo, fromIds: Array<String>, edgesLabel: Array<String>, toIds: Array<String>): GraphData {
         val (session, wrapper) = buildTunnel(dataSource)
 
-        val graphData = provider.relations(wrapper, fromIds, edgesLabel, toIds, maxTraversal)
+        val graphData = provider.edges(wrapper, fromIds, edgesLabel, toIds)
 
         session.disconnect()
 

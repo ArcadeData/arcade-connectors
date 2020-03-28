@@ -74,11 +74,10 @@ interface DataSourceGraphDataProvider : DataSourceProvider {
      * @param maxTraversal max number of traversal step
      * @return the {@link GraphData} representation of the result set
      */
-    fun relations(dataSource: DataSourceInfo,
-                  fromIds: Array<String>,
-                  edgesLabel: Array<String>,
-                  toIds: Array<String>,
-                  maxTraversal: Int): GraphData
+    fun edges(dataSource: DataSourceInfo,
+              fromIds: Array<String>,
+              edgesLabel: Array<String>,
+              toIds: Array<String>): GraphData
 
     /**
      * Load elements by ids

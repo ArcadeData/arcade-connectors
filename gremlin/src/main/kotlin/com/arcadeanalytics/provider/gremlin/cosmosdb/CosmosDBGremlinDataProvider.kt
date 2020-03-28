@@ -306,7 +306,7 @@ class CosmosDBGremlinDataProvider : DataSourceGraphDataProvider {
 
     }
 
-    override fun relations(dataSource: DataSourceInfo, fromIds: Array<String>, edgesLabel: Array<String>, toIds: Array<String>, maxTraversal: Int): GraphData {
+    override fun edges(dataSource: DataSourceInfo, fromIds: Array<String>, edgesLabel: Array<String>, toIds: Array<String>): GraphData {
         TODO("Not yet implemented")
     }
 
