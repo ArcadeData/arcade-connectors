@@ -46,7 +46,9 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
 
                 log.info("fetching data from datasource {} with query '{}' with limit {}  ", dataSource.id, query, limit)
 
-                val graphData = fetchData(session, dataSource, query, limit, Neo4jStatementResultMapper(dataSource, limit))
+                val graphData = runQueryAndMapResult(session, query, Neo4jStatementResultMapper(dataSource, limit))
+
+                countInAndOutOnNode(session, dataSource, graphData.nodes)
 
                 session.closeAsync()
                 driver.closeAsync()
@@ -57,7 +59,6 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
             }
         }
     }
-
 
     override fun expand(dataSource: DataSourceInfo,
                         ids: Array<String>,
@@ -77,17 +78,7 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
 
         val query = "MATCH (node)$rel(target) WHERE id(node) IN [$cleanedIds] return node, rel, target"
 
-        getDriver(dataSource).use { driver ->
-            driver.session(AccessMode.READ).use { session ->
-
-                val graphData = fetchData(session, dataSource, query, maxTraversal, Neo4jStatementResultMapper(dataSource, maxTraversal))
-                session.closeAsync()
-                driver.closeAsync()
-
-                log.info("totals expanded: nodes {} - edges {} - truncated {} ", graphData.nodes.size, graphData.edges.size, graphData.truncated)
-                return graphData
-            }
-        }
+        return fetchData(dataSource, query, maxTraversal)
 
     }
 
@@ -99,19 +90,9 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
         val query = """MATCH (node)<-[rel:${edgesLabel.joinToString("|")}]->(target) 
                         WHERE id(node) IN [$cleanedFromIds] 
                         AND id(target) IN [$cleanedToIds]
-                        RETURN rel"""
+                        RETURN node, rel,target"""
 
-        getDriver(dataSource).use { driver ->
-            driver.session(AccessMode.READ).use { session ->
-
-                val graphData = fetchData(session, dataSource, query, 10000, Neo4jStatementResultMapper(dataSource, 10000))
-                session.closeAsync()
-                driver.closeAsync()
-
-                log.info("totals expanded: nodes {} - edges {} - truncated {} ", graphData.nodes.size, graphData.edges.size, graphData.truncated)
-                return graphData
-            }
-        }
+        return fetchData(dataSource, query, 10000)
 
     }
 
@@ -123,20 +104,13 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
             WHERE id(n) IN [${cleanedIds}]
             RETURN n"""
 
-        getDriver(dataSource).use { driver ->
 
-            driver.session(AccessMode.READ).use { session ->
+        val graphData = fetchData(dataSource, query, ids.size)
 
-                val graphData = fetchData(session, dataSource, query, ids.size, Neo4jStatementResultMapper(dataSource, ids.size))
-                session.closeAsync()
-                driver.closeAsync()
-
-                return graphData
-            }
-
-        }
+        return graphData
 
     }
+
 
     private fun cleanIds(ids: Array<String>, dataSource: DataSourceInfo): String {
         return ids.asSequence()
@@ -179,18 +153,6 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
 
     }
 
-    private fun fetchData(session: Session,
-                          dataSource: DataSourceInfo,
-                          query: String,
-                          limit: Int,
-                          mapper: Neo4jStatementResultMapper): GraphData {
-
-        val graphData = runQueryAndMapResult(session, query, mapper)
-
-        countInAndOutOnNode(session, dataSource, graphData.nodes)
-
-        return graphData
-    }
 
     private fun runQueryAndMapResult(session: Session,
                                      query: String,

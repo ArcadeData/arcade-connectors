@@ -204,7 +204,7 @@ class Neo4jDataProviderIntTest {
         assertThat(cytoData.data.source).isNotBlank()
         assertThat(cytoData.data.target).isNotBlank()
 
-        assertThat(data.nodes).isEmpty()
+        assertThat(data.nodes).hasSize(2)
 
     }
 
