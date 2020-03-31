@@ -19,14 +19,13 @@
   #L%
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.arcadeanalytics</groupId>
     <artifactId>arcade-connectors-parent</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.10-SNAPSHOT</version>
+    <version>1.0.10</version>
 
     <name>Arcade Connectors</name>
     <url>https://arcadeanalytics.com/</url>
@@ -85,7 +84,7 @@
     <scm>
         <connection>scm:git:https://github.com/ArcadeData/arcade-connectors.git</connection>
         <url>https://github.com/ArcadeData/arcade-connectors</url>
-        <tag>HEAD</tag>
+        <tag>v1.0.10</tag>
     </scm>
 
     <modules>
@@ -254,7 +253,7 @@
                 <artifactId>license-maven-plugin</artifactId>
                 <version>${license-maven-plugin.version}</version>
                 <configuration>
-                    <verbose/>
+                    <verbose />
                     <organizationName>ArcadeData</organizationName>
                     <projectName>Arcade Connectors</projectName>
                     <inceptionYear>2018</inceptionYear>
@@ -292,8 +291,7 @@
                             </goals>
                             <configuration>
                                 <transformers>
-                                    <transformer
-                                            implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                    <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                                 </transformers>
                                 <filters>
                                     <filter>
