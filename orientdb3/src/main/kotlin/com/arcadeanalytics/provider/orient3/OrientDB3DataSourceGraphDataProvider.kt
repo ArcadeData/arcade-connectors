@@ -34,6 +34,7 @@ import com.orientechnologies.orient.core.record.impl.ODocumentHelper
 import com.orientechnologies.orient.core.record.impl.OEdgeDocument
 import com.orientechnologies.orient.core.record.impl.OVertexDocument
 import com.orientechnologies.orient.core.sql.executor.OResultSet
+import org.apache.commons.lang3.RegExUtils.removeFirst
 import org.apache.commons.lang3.StringUtils.*
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -77,7 +78,7 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
                     db.execute(lang, query.removePrefix("gremlin:"))
                             .use { resultSet ->
-                                val data = mapResultSet(resultSet)
+                                val data = mapResultSet(dataSource, resultSet)
                                 log.info("Fetched {} nodes and {} edges ", data.nodes.size, data.edges.size)
                                 return data
                             }
@@ -121,7 +122,7 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
                     e.key
                 }.toSet())
 
-        keys.stream()
+        keys.asSequence()
                 .forEach { k -> record.remove(k) }
 
         cleanRecord(record)
@@ -201,7 +202,7 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
         return doc.field(fieldName)
     }
 
-    fun mapResultSet(resultSet: OResultSet): GraphData {
+    fun mapResultSet(dataSource: DataSourceInfo, resultSet: OResultSet): GraphData {
 
         // DIVIDE VERTICES FROM EDGES
         val nodes = HashSet<OVertex>()
@@ -226,8 +227,8 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
         val edgeClasses = HashMap<String, Map<String, Any>>()
         val cytoEdges = edges.asSequence()
                 .map { e -> populateClasses(edgeClasses, e) }
-                .map { e -> mapRid(e) }
-                .map { e -> mapInAndOut(e) }
+                .map { e -> mapRid(dataSource, e) }
+                .map { e -> mapInAndOut(dataSource, e) }
                 .map { e -> countInAndOut(e) }
                 .map { e -> toCytoData(e) }
                 .toSet()
@@ -237,7 +238,7 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
         val nodeClasses = HashMap<String, Map<String, Any>>()
         val cytoNodes = nodes.asSequence()
                 .map { v -> populateClasses(nodeClasses, v) }
-                .map { v -> mapRid(v) }
+                .map { v -> mapRid(dataSource, v) }
                 .map { v -> countInAndOut(v) }
                 .map { v -> toCytoData(v) }
                 .toSet()
@@ -272,27 +273,27 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
         return element
     }
 
-    private fun mapInAndOut(element: OElement): OElement {
+    private fun mapInAndOut(dataSource: DataSourceInfo, element: OElement): OElement {
         element as OEdgeDocument
-        var rid: ORID
 
         if (!element.containsField("out"))
             return element
 
-        rid = (element.rawField<Any>("out") as OIdentifiable).identity
-        element.field("@outId", rid.clusterId.toString() + "_" + rid.clusterPosition)
+        val outRid = (element.rawField<Any>("out") as OIdentifiable).identity
+        element.field("@outId", "${dataSource.id}_${outRid.clusterId}_${outRid.clusterPosition}")
         element.removeField("out")
 
-        rid = (element.rawField<Any>("in") as OIdentifiable).identity
-        element.field("@inId", rid.clusterId.toString() + "_" + rid.clusterPosition)
+        val inRid = (element.rawField<Any>("in") as OIdentifiable).identity
+        element.field("@inId", "${dataSource.id}_${inRid.clusterId}_${inRid.clusterPosition}")
         element.removeField("in")
+
         return element
     }
 
-    private fun mapRid(doc: OElement): OElement {
+    private fun mapRid(dataSource: DataSourceInfo, doc: OElement): OElement {
         val rid = doc.identity
 
-        doc.setProperty("@id", rid.clusterId.toString() + "_" + rid.clusterPosition)
+        doc.setProperty("@id", "${dataSource.id}_${rid.clusterId}_${rid.clusterPosition}")
 
         return doc
     }
@@ -350,10 +351,7 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
         query += " FROM ["
 
-        query += ids
-                .asSequence()
-                .map { r -> "#" + r.replace('_', ':') }
-                .joinToString { it }
+        query += cleanIds(dataSource, ids)
 
         query += "] MAXDEPTH 2) LIMIT $maxTraversal"
 
@@ -361,23 +359,41 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
     }
 
-    override fun edges(dataSource: DataSourceInfo, fromIds: Array<String>, edgesLabel: Array<String>, toIds: Array<String>): GraphData {
-        TODO("Not yet implemented")
+    override fun edges(dataSource: DataSourceInfo,
+                       fromIds: Array<String>,
+                       edgesLabel: Array<String>,
+                       toIds: Array<String>): GraphData {
+        val cleanedFromIds = cleanIds(dataSource, fromIds)
+        val cleanedToIds = cleanIds(dataSource, toIds)
+        val cleanLabels = edgesLabel.joinToString("','", "'", "'")
+
+        val query = """MATCH {class: V, AS:node, WHERE: ( @rid IN [$cleanedFromIds] ) } 
+                    .bothE($cleanLabels ) { AS: rel } 
+                    .bothV() { AS: target, WHERE: ( @rid IN [$cleanedToIds] ) } 
+                     RETURN ${'$'}elements 
+                    """.trimMargin()
+
+        return fetchData(dataSource, query, 10000)
     }
 
     override fun load(dataSource: DataSourceInfo, ids: Array<String>): GraphData {
 
         var query = "SELECT FROM ["
 
-        query += ids
-                .asSequence()
-                .map { r -> "#" + r.replace('_', ':') }
-                .joinToString { it }
+        query += cleanIds(dataSource, ids)
 
         query += "] "
 
         return fetchData(dataSource, query, ids.size)
 
+    }
+
+    private fun cleanIds(dataSource: DataSourceInfo, ids: Array<String>): String {
+        return ids
+                .asSequence()
+                .map { r -> r.removePrefix("${dataSource.id}_") }
+                .map { r -> "#" + r.replace('_', ':') }
+                .joinToString { it }
     }
 
 

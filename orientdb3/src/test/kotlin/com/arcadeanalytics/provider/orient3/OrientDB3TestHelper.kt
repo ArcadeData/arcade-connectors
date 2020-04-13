@@ -31,7 +31,8 @@ import org.testcontainers.containers.wait.strategy.Wait
 import java.io.IOException
 
 
-const val ORIENTDB_DOCKER_IMAGE = "orientdb:3.0.27-tp3"
+
+const val ORIENTDB_DOCKER_IMAGE = "arcadeanalytics/orientdb3:latest"
 
 const val ORIENTDB_ROOT_PASSWORD = "arcade"
 

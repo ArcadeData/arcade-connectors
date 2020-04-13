@@ -365,8 +365,21 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
     }
 
-    override fun edges(dataSource: DataSourceInfo, fromIds: Array<String>, edgesLabel: Array<String>, toIds: Array<String>): GraphData {
-        TODO("Not yet implemented")
+    override fun edges(dataSource: DataSourceInfo,
+                       fromIds: Array<String>,
+                       edgesLabel: Array<String>,
+                       toIds: Array<String>): GraphData {
+        val cleanedFromIds = cleanIds(dataSource, fromIds)
+        val cleanedToIds = cleanIds(dataSource, toIds)
+        val cleanLabels = edgesLabel.joinToString("','", "'", "'")
+
+        val query = """MATCH {class: V, AS:node, WHERE: ( @rid IN [$cleanedFromIds] ) } 
+                    .bothE($cleanLabels ) { AS: rel } 
+                    .bothV() { AS: target, WHERE: ( @rid IN [$cleanedToIds] ) } 
+                     RETURN ${'$'}elements 
+                    """.trimMargin()
+
+        return fetchData(dataSource, query, 10000)
     }
 
     override fun load(dataSource: DataSourceInfo, ids: Array<String>): GraphData {
@@ -385,7 +398,6 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
     }
 
-
     override fun loadFromClass(dataSource: DataSourceInfo, className: String, limit: Int): GraphData {
         val query = "select * from $className limit $limit"
         return fetchData(dataSource, query, limit)
@@ -394,6 +406,15 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
     override fun loadFromClass(dataSource: DataSourceInfo, className: String, propName: String, propValue: String, limit: Int): GraphData {
         val query = "select * from $className where $propName = '$propValue' limit $limit"
         return fetchData(dataSource, query, limit)
+    }
+
+
+    private fun cleanIds(dataSource: DataSourceInfo, ids: Array<String>): String {
+        return ids
+                .asSequence()
+                .map { r -> r.removePrefix("${dataSource.id}_") }
+                .map { r -> "#" + r.replace('_', ':') }
+                .joinToString { it }
     }
 
 

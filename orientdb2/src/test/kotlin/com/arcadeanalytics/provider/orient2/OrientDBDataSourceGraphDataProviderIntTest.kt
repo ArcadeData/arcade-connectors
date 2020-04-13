@@ -147,6 +147,35 @@ class OrientDBDataSourceGraphDataProviderIntTest {
 
     }
 
+    @Test
+    fun shouldLoadEdgesOfExistingNodes() {
+        val firstDataSet = provider.loadFromClass(dataSource, "Person", "name", "frank", 1)
+        val secondDataSet = provider.loadFromClass(dataSource, "Person", "name", "john", 1)
+
+        assertThat(firstDataSet.nodes).hasSize(1)
+        assertThat(secondDataSet.nodes).hasSize(1)
+
+        val firstNode = firstDataSet.nodes.first().data
+        val secondNode = secondDataSet.nodes.first().data
+
+        val edgeClasses = (firstNode.record["@in"] as Map<String, Int>).keys
+                .union((firstNode.record["@out"] as Map<String, Int>).keys)
+                .union((secondNode.record["@in"] as Map<String, Int>).keys)
+                .union((secondNode.record["@out"] as Map<String, Int>).keys)
+
+        val data = provider.edges(dataSource, arrayOf(firstNode.id), edgeClasses.toTypedArray(), arrayOf(secondNode.id))
+
+        val cytoData = data.edges.first()
+
+        assertThat(cytoData.data.record).isNotNull
+        assertThat(cytoData.data.source).isNotBlank()
+        assertThat(cytoData.data.target).isNotBlank()
+
+        assertThat(data.nodes).hasSize(2)
+
+    }
+
+
     private fun getPersonsIdentity(limit: Int): Array<String> {
         ODatabaseDocumentTx(dbUrl).open<ODatabaseDocumentTx>("admin", "admin")
                 .use {
