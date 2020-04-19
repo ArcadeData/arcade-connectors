@@ -23,7 +23,6 @@ import com.arcadeanalytics.provider.*
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
 import org.apache.commons.lang3.StringUtils
-import org.apache.commons.lang3.StringUtils.removeStart
 import org.apache.commons.lang3.StringUtils.wrap
 import org.apache.tinkerpop.gremlin.driver.Client
 import org.apache.tinkerpop.gremlin.driver.Result
@@ -34,8 +33,8 @@ import org.slf4j.LoggerFactory
 import java.util.*
 
 class GremlinDataProvider : DataSourceGraphDataProvider {
-    private val log = LoggerFactory.getLogger(GremlinDataProvider::class.java)
 
+    private val log = LoggerFactory.getLogger(GremlinDataProvider::class.java)
 
     override fun fetchData(dataSource: DataSourceInfo, query: String, limit: Int): GraphData {
 
@@ -50,9 +49,7 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
             client.close()
             cluster.close()
         }
-
     }
-
 
     private fun getGraphData(dataSource: DataSourceInfo, query: String, limit: Int, client: Client): GraphData {
 
@@ -227,27 +224,33 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
         check(ids.isNotEmpty())
         log.debug("load ids {} ", *ids)
 
-
-        val joinedIds = ids.asSequence()
-                .map { id -> arcadeIdToNativeId(dataSource, id) }
-                .map { id -> """ '$id' """ }
-                .joinToString(",")
+        val joinedIds = cleanIds(dataSource, ids)
 
         return "g.V($joinedIds)"
     }
 
-    private fun nativeIdToArcadeId(dataSource: DataSourceInfo, id: String): String {
-        return when (dataSource.type) {
-            "GREMLIN_ORIENTDB" -> "${dataSource.id}_${id.removePrefix("#").replace(":", "_")}"
-            else -> "${dataSource.id}_$id"
-        }
+    private fun cleanIds(
+            dataSource: DataSourceInfo,
+            ids: Array<String>
+    ): String = ids.asSequence()
+            .map { id -> arcadeIdToNativeId(dataSource, id) }
+            .map { id -> """ '$id' """ }
+            .joinToString(",")
+
+    private fun nativeIdToArcadeId(
+            dataSource: DataSourceInfo,
+            id: String
+    ): String = when (dataSource.type) {
+        "GREMLIN_ORIENTDB" -> "${dataSource.id}_${id.removePrefix("#").replace(":", "_")}"
+        else -> "${dataSource.id}_$id"
     }
 
-    private fun arcadeIdToNativeId(dataSource: DataSourceInfo, id: String): String {
-        return when (dataSource.type) {
-            "GREMLIN_ORIENTDB" -> id.removePrefix("${dataSource.id}_").prefixIfAbsent("#").replace("_", ":")
-            else -> id.removePrefix("${dataSource.id}_")
-        }
+    private fun arcadeIdToNativeId(
+            dataSource: DataSourceInfo,
+            id: String
+    ): String = when (dataSource.type) {
+        "GREMLIN_ORIENTDB" -> id.removePrefix("${dataSource.id}_").prefixIfAbsent("#").replace("_", ":")
+        else -> id.removePrefix("${dataSource.id}_")
     }
 
     override fun expand(dataSource: DataSourceInfo,
@@ -267,15 +270,29 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
             else -> """.bothE($edgeLabel)"""
         }
 
-
         return fetchData(dataSource, query, maxTraversal)
 
     }
 
-    override fun edges(dataSource: DataSourceInfo, fromIds: Array<String>, edgesLabel: Array<String>, toIds: Array<String>): GraphData {
-        TODO("Not yet implemented")
-    }
+    override fun edges(
+            dataSource: DataSourceInfo,
+            fromIds: Array<String>,
+            edgesLabel: Array<String>,
+            toIds: Array<String>
+    ): GraphData {
 
+        val cleanLabels = edgesLabel.joinToString("','", "'", "'")
+
+        val query = """
+            g.V(${cleanIds(dataSource, fromIds)})
+                .bothE()
+                .where(inV().has(id, within(${cleanIds(dataSource, toIds)} )))
+                .hasLabel($cleanLabels)
+        """.trimIndent()
+
+        return fetchData(dataSource, query, 10000)
+
+    }
 
     override fun testConnection(dataSource: DataSourceInfo): Boolean {
         try {
@@ -286,7 +303,6 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
             cluster.availableHosts().stream().forEach { h -> println("h = $h") }
 
             val client = cluster.connect<Client>().init()
-
 
             client.submit("g.V().count()")
 
@@ -300,7 +316,6 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
         } catch (e: Exception) {
             throw RuntimeException(e)
         }
-
 
     }
 

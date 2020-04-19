@@ -20,7 +20,7 @@ package com.arcadeanalytics.provider.gremlin.cosmosdb
  */
 
 import com.arcadeanalytics.provider.*
-import com.arcadeanalytics.provider.gremlin.GremlinSerializerFactory
+import com.arcadeanalytics.provider.gremlin.createSerializer
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
 import org.apache.commons.lang3.StringUtils
@@ -63,7 +63,7 @@ class CosmosDBGremlinDataProvider : DataSourceGraphDataProvider {
     private fun getCluster(dataSource: DataSourceInfo): Cluster {
 
 
-        val serializer = GremlinSerializerFactory.createSerializer(dataSource)
+        val serializer = createSerializer(dataSource)
 
 
         return Cluster.build(dataSource.server)
@@ -317,7 +317,7 @@ class CosmosDBGremlinDataProvider : DataSourceGraphDataProvider {
             val cluster = Cluster.build(dataSource.server)
                     .port(dataSource.port)
                     .enableSsl(true)
-                    .serializer(GremlinSerializerFactory.createSerializer(dataSource))
+                    .serializer(createSerializer(dataSource))
                     .credentials(dataSource.username, dataSource.password)
                     .maxWaitForConnection(10000)
                     .create()

@@ -32,15 +32,12 @@ import org.junit.jupiter.api.TestInstance
 import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class JanusgraphGremlinGraphProviderTest {
-
+internal class JanusgraphGremlinGraphProviderTest {
 
     private val provider: GremlinGraphProvider = GremlinGraphProvider()
 
-
     @Test
     fun shouldFetchAllVertexesAndEdges() {
-
 
         val nodes = ArrayList<Sprite>()
         val edges = ArrayList<Sprite>()
@@ -54,7 +51,6 @@ class JanusgraphGremlinGraphProviderTest {
                 return 0
             }
 
-
             override fun play(document: Sprite) {
 
                 when (document.valueOf(ARCADE_TYPE)) {
@@ -65,7 +61,6 @@ class JanusgraphGremlinGraphProviderTest {
                 assertThat(document.hasField("_a_id")).isTrue()
                 assertThat(document.hasField("_a_type")).isTrue()
                 assertThat(document.hasField("_a_type")).isTrue()
-
 
             }
 
@@ -79,6 +74,5 @@ class JanusgraphGremlinGraphProviderTest {
         assertThat(edges).hasSize(7047)
 
     }
-
 
 }

@@ -20,6 +20,7 @@
 package com.arcadeanalytics.provider.gremlin
 
 import com.arcadeanalytics.provider.DataSourceGraphDataProvider
+import com.arcadeanalytics.provider.gremlin.OrientDBGremlinContainer.dataSource
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -29,20 +30,17 @@ class GremlinDataProviderIntTest {
 
     private val provider: DataSourceGraphDataProvider
 
-
     init {
         provider = GremlinDataProvider()
 
     }
 
-
     @Test
     fun shouldFetchVertices() {
 
-
         val query = "g.V().limit(50) "
 
-        val data = provider.fetchData(OrientDBGremlinContainer.dataSource, query, 50)
+        val data = provider.fetchData(dataSource, query, 50)
 
         assertThat(data.nodes).hasSize(50)
         val cytoData = data.nodes.asSequence().first()
@@ -61,8 +59,7 @@ class GremlinDataProviderIntTest {
     internal fun shouldFetchWithQuery() {
         val query = "g.V().hasLabel('Countries').has('Name', 'Italy').inE()"
 
-        val data = provider.fetchData(OrientDBGremlinContainer.dataSource, query, 50)
-
+        val data = provider.fetchData(dataSource, query, 50)
 
         assertThat(data.nodes).hasSize(5)
         assertThat(data.edges).hasSize(4)
@@ -81,17 +78,17 @@ class GremlinDataProviderIntTest {
     @Test
     fun shouldLoadVerticesByIds() {
 
-        assertThat(provider.testConnection(OrientDBGremlinContainer.dataSource)).isTrue()
+        assertThat(provider.testConnection(dataSource)).isTrue()
 
         val query = "g.V().limit(10) "
 
-        val data = provider.fetchData(OrientDBGremlinContainer.dataSource, query, 10)
+        val data = provider.fetchData(dataSource, query, 10)
 
         val ids = data.nodes.asSequence()
                 .map { data -> data.data.id }
                 .toList()
 
-        val load = provider.load(OrientDBGremlinContainer.dataSource, ids.toTypedArray())
+        val load = provider.load(dataSource, ids.toTypedArray())
 
         assertThat(load.nodes).hasSize(10)
 
@@ -102,7 +99,7 @@ class GremlinDataProviderIntTest {
 
         val query = "g.V().limit(10) "
 
-        val data = provider.fetchData(OrientDBGremlinContainer.dataSource, query, 10)
+        val data = provider.fetchData(dataSource, query, 10)
 
         val ids = data.nodes.asSequence()
                 .map { data -> data.data.id }
@@ -115,7 +112,7 @@ class GremlinDataProviderIntTest {
                 .first()
 
 
-        val load = provider.expand(OrientDBGremlinContainer.dataSource, ids.toTypedArray(), "in", label, 300)
+        val load = provider.expand(dataSource, ids.toTypedArray(), "in", label, 300)
 
         assertThat(load.nodes).hasSize(17)
         assertThat(load.edges).hasSize(11)
@@ -132,13 +129,13 @@ class GremlinDataProviderIntTest {
 
         val query = "g.V().limit(10) "
 
-        val data = provider.fetchData(OrientDBGremlinContainer.dataSource, query, 10)
+        val data = provider.fetchData(dataSource, query, 10)
 
         val ids = data.nodes.asSequence()
                 .map { data -> data.data.id }
                 .toList()
 
-        val load = provider.expand(OrientDBGremlinContainer.dataSource, ids.toTypedArray(), "both", "", 300)
+        val load = provider.expand(dataSource, ids.toTypedArray(), "both", "", 300)
 
         assertThat(load.nodes).hasSize(17)
         assertThat(load.edges).hasSize(11)
@@ -157,7 +154,7 @@ class GremlinDataProviderIntTest {
 
         val query = "g.V().bothE()limit(10)"
 
-        val data = provider.fetchData(OrientDBGremlinContainer.dataSource, query, 10)
+        val data = provider.fetchData(dataSource, query, 10)
 
         val cytoData = data.edges.asSequence().first()
 
@@ -172,10 +169,41 @@ class GremlinDataProviderIntTest {
         assertThat(data.nodes).isNotEmpty
     }
 
+    @Test
+    fun shouldLoadEdgesOfExistingNodes() {
+        val firstDataSet = provider.loadFromClass(dataSource, "Profiles", "Name", "Luca", 1)
+        val secondDataSet = provider.loadFromClass(dataSource, "Profiles", "Name", "Colin", 1)
+
+        assertThat(firstDataSet.nodes).hasSize(1)
+        assertThat(secondDataSet.nodes).hasSize(1)
+
+        val firstNode = firstDataSet.nodes.first().data
+        val secondNode = secondDataSet.nodes.first().data
+
+        val edgeClasses = (firstNode.record["@in"] as Map<String, Int>).keys
+                .union((firstNode.record["@out"] as Map<String, Int>).keys)
+                .union((secondNode.record["@in"] as Map<String, Int>).keys)
+                .union((secondNode.record["@out"] as Map<String, Int>).keys)
+
+        val data = provider.edges(dataSource, arrayOf(firstNode.id), edgeClasses.toTypedArray(), arrayOf(secondNode.id))
+
+
+        println("data = ${data}")
+
+        val cytoData = data.edges.first()
+
+        assertThat(cytoData.data.record).isNotNull
+        assertThat(cytoData.data.source).isNotBlank()
+        assertThat(cytoData.data.target).isNotBlank()
+
+        assertThat(data.nodes).hasSize(2)
+
+    }
+
 
     @Test
     fun shouldLoadFromClass() {
-        val graphData = provider.loadFromClass(OrientDBGremlinContainer.dataSource, "Countries", 10)
+        val graphData = provider.loadFromClass(dataSource, "Countries", 10)
 
         assertThat(graphData.nodes).hasSize(10)
 
@@ -184,13 +212,11 @@ class GremlinDataProviderIntTest {
 
     @Test
     fun shouldLoadFromClassWherePropertyHasValue() {
-        val data = provider.loadFromClass(OrientDBGremlinContainer.dataSource, "Countries", "Code", "AD", 10)
+        val data = provider.loadFromClass(dataSource, "Countries", "Code", "AD", 10)
 
         assertThat(data.nodes).hasSize(1)
 
-
     }
-
 
 }
 

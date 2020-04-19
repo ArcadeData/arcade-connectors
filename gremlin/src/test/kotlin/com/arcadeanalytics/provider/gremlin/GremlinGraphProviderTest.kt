@@ -34,20 +34,14 @@ import java.util.*
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GremlinGraphProviderTest {
 
-
     private val provider: DataSourceGraphProvider
 
-
     init {
-
         provider = GremlinGraphProvider()
-
     }
-
 
     @Test
     fun shouldFetchAllVertexesAndEdges() {
-
 
         val nodes = ArrayList<Sprite>()
         val edges = ArrayList<Sprite>()
@@ -61,7 +55,6 @@ class GremlinGraphProviderTest {
                 return 0
             }
 
-
             override fun play(document: Sprite) {
 
                 when (document.valueOf(ARCADE_TYPE)) {
@@ -69,7 +62,6 @@ class GremlinGraphProviderTest {
                     ARCADE_EDGE_TYPE -> edges.add(document)
                 }
                 assertThat(document.valueOf("@class")).isNotBlank()
-
 
             }
 
@@ -84,6 +76,5 @@ class GremlinGraphProviderTest {
         assertThat(edges).hasSize(3290)
 
     }
-
 
 }

@@ -20,7 +20,7 @@
 package com.arcadeanalytics.provider.gremlin.cosmosdb
 
 import com.arcadeanalytics.provider.*
-import com.arcadeanalytics.provider.gremlin.GremlinSerializerFactory.createSerializer
+import com.arcadeanalytics.provider.gremlin.createSerializer
 import org.apache.tinkerpop.gremlin.driver.Client
 import org.apache.tinkerpop.gremlin.driver.Cluster
 import org.slf4j.LoggerFactory

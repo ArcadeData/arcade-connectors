@@ -31,9 +31,7 @@ class GremlinMetadataProviderTest {
     private val provider: GremlinMetadataProvider
 
     init {
-
         provider = GremlinMetadataProvider()
-
     }
 
     @Test

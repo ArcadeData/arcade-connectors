@@ -46,6 +46,5 @@ object OrientDBGremlinContainer {
                 password = "arcade",
                 database = "demodb"
         )
-
     }
 }

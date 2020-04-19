@@ -27,10 +27,9 @@ class GremlinMetadataProvider : DataSourceMetadataProvider {
 
     private val log = LoggerFactory.getLogger(GremlinMetadataProvider::class.java)
 
-    override fun supportedDataSourceTypes(): Set<String> = setOf("GREMLIN_ORIENTDB", "GREMLIN_NEPTUNE", "GREMLIN_JANUSGRAPH")
+    override fun supportedDataSourceTypes() = setOf("GREMLIN_ORIENTDB", "GREMLIN_NEPTUNE", "GREMLIN_JANUSGRAPH")
 
     override fun fetchMetadata(dataSource: DataSourceInfo): DataSourceMetadata {
-
 
         log.info("fetching metadata for dataSource {} ", dataSource.id)
 
@@ -77,7 +76,7 @@ class GremlinMetadataProvider : DataSourceMetadataProvider {
     }
 
 
-    fun mapEdgesClasses(client: Client): EdgesClasses {
+    private fun mapEdgesClasses(client: Client): EdgesClasses {
         return client.submit("g.E().label().dedup()").asSequence()
                 .map { r -> r.`object`.toString() }
                 .map { TypeClass(it, countEdgeLabel(it, client), mapEdgeProperties(it, client)) }

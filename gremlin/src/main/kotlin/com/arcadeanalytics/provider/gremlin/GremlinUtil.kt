@@ -21,19 +21,40 @@ package com.arcadeanalytics.provider.gremlin
 
 import com.arcadeanalytics.provider.DataSourceInfo
 import org.apache.tinkerpop.gremlin.driver.Cluster
+import org.apache.tinkerpop.gremlin.driver.MessageSerializer
+import org.apache.tinkerpop.gremlin.driver.ser.GraphSONMessageSerializerV1d0
+import org.apache.tinkerpop.gremlin.driver.ser.GryoMessageSerializerV3d0
+import org.apache.tinkerpop.gremlin.orientdb.io.OrientIoRegistry
+import org.apache.tinkerpop.gremlin.structure.io.gryo.GryoMapper
+import org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry
 
-fun getCluster(dataSource: DataSourceInfo): Cluster {
-    val cluster = Cluster.build(dataSource.server)
-            .port(dataSource.port)
-            .serializer(GremlinSerializerFactory.createSerializer(dataSource))
-            .enableSsl(dataSource.type == "GREMLIN_COSMOSDB")
-            .sslSkipCertValidation(dataSource.skipCertValidation)
-            .credentials(dataSource.username, dataSource.password)
-            .maxWaitForConnection(20000)
-            .create()
-    return cluster
+fun getCluster(dataSource: DataSourceInfo): Cluster =
+        Cluster.build(dataSource.server)
+                .port(dataSource.port)
+                .serializer(createSerializer(dataSource))
+                .enableSsl(dataSource.type == "GREMLIN_COSMOSDB")
+                .sslSkipCertValidation(dataSource.skipCertValidation)
+                .credentials(dataSource.username, dataSource.password)
+                .maxWaitForConnection(20000)
+                .create()
+
+
+fun splitMultilabel(label: String): String =
+        label.split("::")
+                .joinToString("','", "'", "'")
+
+fun createSerializer(dataSource: DataSourceInfo): MessageSerializer {
+    return when (dataSource.type) {
+        "GREMLIN_ORIENTDB" -> GryoMessageSerializerV3d0(GryoMapper.build()
+                .addRegistry(OrientIoRegistry.getInstance()))
+        "GREMLIN_NEPTUNE" -> GryoMessageSerializerV3d0()
+        "GREMLIN_JANUSGRAPH" -> GryoMessageSerializerV3d0(GryoMapper.build()
+                .addRegistry(JanusGraphIoRegistry.getInstance()))
+        "GREMLIN_COSMOSDB" -> {
+            val serializer = GraphSONMessageSerializerV1d0()
+            serializer.configure(mapOf("serializeResultToString" to true), null)
+            serializer
+        }
+        else -> throw RuntimeException("requested type not implemented yet:: ${dataSource.type}")
+    }
 }
-
-
-fun splitMultilabel(label: String) = label.split("::")
-        .joinToString("','", "'", "'")

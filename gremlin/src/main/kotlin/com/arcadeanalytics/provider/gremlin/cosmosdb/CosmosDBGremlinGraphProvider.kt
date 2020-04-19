@@ -27,7 +27,7 @@ import com.arcadeanalytics.provider.IndexConstants.ARCADE_EDGE_TYPE
 import com.arcadeanalytics.provider.IndexConstants.ARCADE_ID
 import com.arcadeanalytics.provider.IndexConstants.ARCADE_NODE_TYPE
 import com.arcadeanalytics.provider.IndexConstants.ARCADE_TYPE
-import com.arcadeanalytics.provider.gremlin.GremlinSerializerFactory
+import com.arcadeanalytics.provider.gremlin.createSerializer
 import com.google.common.collect.Sets
 import org.apache.tinkerpop.gremlin.driver.Client
 import org.apache.tinkerpop.gremlin.driver.Cluster
@@ -52,7 +52,7 @@ class CosmosDBGremlinGraphProvider : DataSourceGraphProvider {
 
         val cluster = Cluster.build(dataSource.server)
                 .port(dataSource.port)
-                .serializer(GremlinSerializerFactory.createSerializer(dataSource))
+                .serializer(createSerializer(dataSource))
                 .enableSsl(dataSource.type == "GREMLIN_COSMOSDB")
                 .credentials(dataSource.username, dataSource.password)
                 .create()
