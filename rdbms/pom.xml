@@ -27,7 +27,7 @@
         <postgresql.version>42.2.14</postgresql.version>
         <hsqldb.version>2.5.0</hsqldb.version>
         <dw-jdbc.version>0.4.4</dw-jdbc.version>
-        <jackson-databind.version>2.9.10.4</jackson-databind.version>
+        <jackson-databind.version>2.10.0.pr1</jackson-databind.version>
         <jsqlparser.version>3.1</jsqlparser.version>
     </properties>
 
