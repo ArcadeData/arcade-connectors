@@ -124,8 +124,8 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
         return this.fetchData(dataSource, query, limit)
     }
 
-    override fun loadFromClass(dataSource: DataSourceInfo, className: String, propName: String, propValue: String, limit: Int): GraphData {
-        val query = "MATCH (element:$className) WHERE element.$propName = '$propValue' RETURN element LIMIT $limit"
+    override fun loadFromClass(dataSource: DataSourceInfo, className: String, propName: String, propertyValue: String, limit: Int): GraphData {
+        val query = "MATCH (element:$className) WHERE element.$propName = '$propertyValue' RETURN element LIMIT $limit"
         return this.fetchData(dataSource, query, limit)
     }
 

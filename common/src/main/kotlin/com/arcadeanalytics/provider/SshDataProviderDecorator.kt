@@ -29,7 +29,6 @@ class SshDataProviderDecorator(private val provider: DataSourceGraphDataProvider
     override fun testConnection(dataSource: DataSourceInfo): Boolean {
         val (session, wrapper) = buildTunnel(dataSource)
 
-
         val testConnection = provider.testConnection(wrapper)
 
         session.disconnect()
@@ -91,10 +90,10 @@ class SshDataProviderDecorator(private val provider: DataSourceGraphDataProvider
         return graphData
     }
 
-    override fun loadFromClass(dataSource: DataSourceInfo, className: String, propName: String, propValue: String, limit: Int): GraphData {
+    override fun loadFromClass(dataSource: DataSourceInfo, className: String, propName: String, propertyValue: String, limit: Int): GraphData {
         val (session, wrapper) = buildTunnel(dataSource)
 
-        val graphData = provider.loadFromClass(wrapper, className, propName, propValue, limit)
+        val graphData = provider.loadFromClass(wrapper, className, propName, propertyValue, limit)
 
         session.disconnect()
 

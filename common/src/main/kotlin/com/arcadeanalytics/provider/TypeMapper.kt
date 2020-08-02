@@ -26,32 +26,32 @@ import java.util.*
 val log: Logger = LoggerFactory.getLogger("com.arcadeanalytics.provider.TypeMapper")
 
 fun mapType(type: String): String = when (type.trim()
-        .toLowerCase(Locale.ENGLISH)
-        .removePrefix("http://www.w3.org/2001/xmlschema#")) {
-    "string", "varchar", "text", "char",
-    "varchar2", "nvarchar2", "clob", "nclob",
-    "char varying", "character varying", "ntext", "nchar",
-    "national char", "national character", "nvarchar", "national char varying",
-    "national character varying", "longvarchar", "character large object",
-    "mediumtext", "longtext", "tinytext"
-    -> "String"
+            .toLowerCase(Locale.ENGLISH)
+            .removePrefix("http://www.w3.org/2001/xmlschema#")) {
+        "string", "varchar", "text", "char",
+        "varchar2", "nvarchar2", "clob", "nclob",
+        "char varying", "character varying", "ntext", "nchar",
+        "national char", "national character", "nvarchar", "national char varying",
+        "national character varying", "longvarchar", "character large object",
+        "mediumtext", "longtext", "tinytext"
+        -> "String"
 
-    "decimal", "dec", "numeric", "real", "integer",
-    "int", "int2", "int4", "tinyint",
-    "smallint unsigned", "tinyint unsigned", "mediumint unsigned",
-    "float", "double precision",
-    "long", "smallint", "money", "smallmoney", "double"
-    -> "Numeric"
+        "decimal", "dec", "numeric", "real", "integer",
+        "int", "int2", "int4", "tinyint",
+        "smallint unsigned", "tinyint unsigned", "mediumint unsigned",
+        "float", "double precision",
+        "long", "smallint", "money", "smallmoney", "double"
+        -> "Numeric"
 
-    "date", "datetime", "datetime2", "timestamp", "year",
-    "smalldatetime", "datetimeoffset", "time with time zone"
-    -> "Date"
+        "date", "datetime", "datetime2", "timestamp", "year",
+        "smalldatetime", "datetimeoffset", "time with time zone"
+        -> "Date"
 
-    "bool", "boolean"
-    -> "Boolean"
-    else -> {
-        if (log.isDebugEnabled) log.debug("type not mapped:: {} ", type)
-        type
+        "bool", "boolean"
+        -> "Boolean"
+        else -> {
+            if (log.isDebugEnabled) log.debug("type not mapped:: {} ", type)
+            type
+        }
+
     }
-
-}

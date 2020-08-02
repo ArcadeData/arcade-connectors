@@ -214,8 +214,8 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
         return fetchData(dataSource, query, limit)
     }
 
-    override fun loadFromClass(dataSource: DataSourceInfo, className: String, propName: String, propValue: String, limit: Int): GraphData {
-        val query = "g.V().hasLabel(${splitMultilabel(className)}).has('$propName', eq('$propValue')).limit($limit)"
+    override fun loadFromClass(dataSource: DataSourceInfo, className: String, propName: String, propertyValue: String, limit: Int): GraphData {
+        val query = "g.V().hasLabel(${splitMultilabel(className)}).has('$propName', eq('$propertyValue')).limit($limit)"
 
         return fetchData(dataSource, query, limit)
     }

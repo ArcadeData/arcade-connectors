@@ -26,7 +26,10 @@ import java.nio.file.Paths
 import java.util.*
 import kotlin.streams.asSequence
 
-class DataSourceProviderFactory<T : DataSourceProvider>(private val clazz: Class<T>, pluginPath: String = "./plugins") {
+class DataSourceProviderFactory<T : DataSourceProvider>(
+        private val clazz: Class<T>,
+        pluginPath: String = "./plugins"
+) {
 
     private val log = LoggerFactory.getLogger(this::class.java)
 

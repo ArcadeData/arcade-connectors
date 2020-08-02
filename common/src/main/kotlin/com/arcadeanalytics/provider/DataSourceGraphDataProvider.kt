@@ -71,7 +71,6 @@ interface DataSourceGraphDataProvider : DataSourceProvider {
      * @param fromIds starting nodes identifiers
      * @param edgesLabel edges labels to load
      * @param toIds destination nodes identifiers
-     * @param maxTraversal max number of traversal step
      * @return the {@link GraphData} representation of the result set
      */
     fun edges(dataSource: DataSourceInfo,
@@ -105,15 +104,15 @@ interface DataSourceGraphDataProvider : DataSourceProvider {
      * A class is a different concept in  different data stores: type, table, label, class.
      * @param dataSource the data source
      * @param className the class name
-     * @param propName the property to use in filter
-     * @param propValue the property value
+     * @param propertyName the property to use in filter
+     * @param propertyValue the property value
      * @param limit max number of element to load
      * @return the {@link GraphData} representation of the result set
      */
 
     fun loadFromClass(dataSource: DataSourceInfo,
                       className: String,
-                      propName: String,
-                      propValue: String,
+                      propertyName: String,
+                      propertyValue: String,
                       limit: Int): GraphData
 }

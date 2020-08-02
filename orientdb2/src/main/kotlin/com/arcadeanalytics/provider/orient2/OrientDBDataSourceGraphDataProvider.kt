@@ -403,8 +403,8 @@ class OrientDBDataSourceGraphDataProvider : DataSourceGraphDataProvider {
         return fetchData(dataSource, query, limit)
     }
 
-    override fun loadFromClass(dataSource: DataSourceInfo, className: String, propName: String, propValue: String, limit: Int): GraphData {
-        val query = "select * from $className where $propName = '$propValue' limit $limit"
+    override fun loadFromClass(dataSource: DataSourceInfo, className: String, propName: String, propertyValue: String, limit: Int): GraphData {
+        val query = "select * from $className where $propName = '$propertyValue' limit $limit"
         return fetchData(dataSource, query, limit)
     }
 

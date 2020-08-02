@@ -69,7 +69,7 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
     override fun fetchData(dataSource: DataSourceInfo, query: String, limit: Int): GraphData {
 
-        log.info("fetching data from '{}' with query '{}' ", dataSource.id, truncate(query, 256))
+        log.info("fetching data from '{}' with query '{}' ", dataSource.id, query)
 
         open(dataSource)
                 .use { db ->
@@ -88,15 +88,9 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
     private fun toCytoData(element: OElement): CytoData {
 
-        var record: MutableMap<String, Any>
-
-        when {
-            element.isVertex() -> {
-                record = transformToMap(element as OVertexDocument)
-            }
-            else -> {
-                record = transformToMap(element as OEdgeDocument)
-            }
+        var record: MutableMap<String, Any> = when {
+            element.isVertex -> transformToMap(element as OVertexDocument)
+            else -> transformToMap(element as OEdgeDocument)
         }
 
 
@@ -127,18 +121,18 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
         cleanRecord(record)
 
-        when {
+        return when {
             element.isEdge() -> {
                 val source = element.getProperty<String>("@outId")
                 val target = element.getProperty<String>("@inId")
                 val id = element.getProperty<String>("@id")
                 val data = Data(id = id, record = record, source = source, target = target)
-                return CytoData(group = "edge", data = data, classes = element.getProperty("@class"))
+                CytoData(group = "edge", data = data, classes = element.getProperty("@class"))
             }
             else -> {
                 val id = element.getProperty<String>("@id")
                 val data = Data(id = id, record = record)
-                return CytoData(group = "nodes", data = data, classes = element.getProperty("@class"))
+                CytoData(group = "nodes", data = data, classes = element.getProperty("@class"))
             }
         }
 
@@ -205,9 +199,10 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
     fun mapResultSet(dataSource: DataSourceInfo, resultSet: OResultSet): GraphData {
 
         // DIVIDE VERTICES FROM EDGES
-        val nodes = HashSet<OVertex>()
-        val edges = HashSet<OEdge>()
+        val nodes = mutableSetOf<OVertex>()
+        val edges = mutableSetOf<OEdge>()
         resultSet.asSequence()
+                .onEach { res -> log.info(res.toJSON())}
                 .map { res -> res.element.get() }
                 .forEach { element ->
                     if (element.isVertex) {
@@ -217,8 +212,8 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
                     } else if (element.isEdge) {
                         val edge: OEdge = element as OEdge
                         edges.add(edge)
-                        nodes.add(edge.from)
-                        nodes.add(edge.to)
+//                        nodes.add(edge.from)
+//                        nodes.add(edge.to)
                     }
                 }
 
@@ -226,6 +221,7 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
         val edgeClasses = HashMap<String, Map<String, Any>>()
         val cytoEdges = edges.asSequence()
+                .filter { e-> nodes.contains(e.from) && nodes.contains(e.to) }
                 .map { e -> populateClasses(edgeClasses, e) }
                 .map { e -> mapRid(dataSource, e) }
                 .map { e -> mapInAndOut(dataSource, e) }
@@ -368,9 +364,9 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
         val cleanLabels = edgesLabel.joinToString("','", "'", "'")
 
         val query = """MATCH {class: V, AS:node, WHERE: ( @rid IN [$cleanedFromIds] ) } 
-                    .bothE($cleanLabels ) { AS: rel } 
-                    .bothV() { AS: target, WHERE: ( @rid IN [$cleanedToIds] ) } 
-                     RETURN ${'$'}elements 
+                    |.bothE($cleanLabels ) { AS: rel } 
+                    |.bothV() { AS: target, WHERE: ( @rid IN [$cleanedToIds] ) } 
+                    | RETURN ${'$'}pathElements 
                     """.trimMargin()
 
         return fetchData(dataSource, query, 10000)
@@ -402,8 +398,8 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
         return fetchData(dataSource, query, limit)
     }
 
-    override fun loadFromClass(dataSource: DataSourceInfo, className: String, propName: String, propValue: String, limit: Int): GraphData {
-        val query = "select * from `$className` where `$propName` = '$propValue' limit $limit"
+    override fun loadFromClass(dataSource: DataSourceInfo, className: String, propName: String, propertyValue: String, limit: Int): GraphData {
+        val query = "select * from `$className` where `$propName` = '$propertyValue' limit $limit"
         return fetchData(dataSource, query, limit)
     }
 

@@ -28,15 +28,7 @@ import org.junit.jupiter.api.Test
 
 class OrientDB3DataSourceGraphDataProviderIntTest {
 
-
-    private val provider: OrientDB3DataSourceGraphDataProvider
-
-
-    init {
-
-        provider = OrientDB3DataSourceGraphDataProvider()
-    }
-
+    private val provider: OrientDB3DataSourceGraphDataProvider = OrientDB3DataSourceGraphDataProvider()
 
     @Test
     @Throws(Exception::class)

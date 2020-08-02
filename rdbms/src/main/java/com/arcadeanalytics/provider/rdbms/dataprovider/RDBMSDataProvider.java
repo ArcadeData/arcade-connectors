@@ -511,8 +511,8 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
     }
 
     @Override
-    public GraphData loadFromClass(DataSourceInfo datasource, String className, String propName, String propValue, int limit) {
-        String query = "select " + className + ".* from " + className + " where " + propName + " = '" + propValue + "' limit " + limit;
+    public GraphData loadFromClass(DataSourceInfo datasource, String className, String propName, String propertyValue, int limit) {
+        String query = "select " + className + ".* from " + className + " where " + propName + " = '" + propertyValue + "' limit " + limit;
 
         return fetchData(datasource, query, limit);
     }
