@@ -30,7 +30,7 @@
     <artifactId>arcade-connectors-neo4j3</artifactId>
 
     <properties>
-        <neo4j-java-driver.version>1.7.5</neo4j-java-driver.version>
+        <neo4j-java-driver.version>4.1.1</neo4j-java-driver.version>
         <commons-text.version>1.9</commons-text.version>
     </properties>
 
