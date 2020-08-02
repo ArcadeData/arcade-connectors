@@ -82,7 +82,7 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:https://github.com/ArcadeData/arcade-connectors.git</connection>
+        <connection>scm:git:git@github.com:ArcadeData/arcade-connectors.git</connection>
         <url>https://github.com/ArcadeData/arcade-connectors</url>
         <tag>HEAD</tag>
     </scm>
