@@ -114,8 +114,8 @@ class GremlinDataProviderIntTest {
 
         val load = provider.expand(dataSource, ids.toTypedArray(), "in", label, 300)
 
-        assertThat(load.nodes).hasSize(17)
-        assertThat(load.edges).hasSize(11)
+        assertThat(load.nodes).hasSize(11)
+        assertThat(load.edges).hasSize(6)
 
         load.edges.forEach {
             assertThat(ids).contains(it.data.target)
@@ -137,8 +137,8 @@ class GremlinDataProviderIntTest {
 
         val load = provider.expand(dataSource, ids.toTypedArray(), "both", "", 300)
 
-        assertThat(load.nodes).hasSize(17)
-        assertThat(load.edges).hasSize(11)
+        assertThat(load.nodes).hasSize(11)
+        assertThat(load.edges).hasSize(6)
 
         load.edges.forEach {
             assertThat(ids).contains(it.data.target)
