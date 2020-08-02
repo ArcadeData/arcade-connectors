@@ -28,7 +28,7 @@ jobs:
         env:
           MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-        run: mvn deploy -fae --file pom.xml  --settings settings.xml
+        run: mvn deploy -ntp -fae --file pom.xml  --settings settings.xml
 
       - name: Publish Test Reports
         uses: codecov/codecov-action@v1
