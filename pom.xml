@@ -49,7 +49,7 @@
         <nexus-staging-maven-plugin.version>1.6.8</nexus-staging-maven-plugin.version>
         <license-maven-plugin.version>2.0.0</license-maven-plugin.version>
         <build-helper-maven-plugin.version>3.2.0</build-helper-maven-plugin.version>
-        <dokka.version>0.10.1</dokka.version>
+        <dokka.version>1.4.0</dokka.version>
 
         <kotlin.version>1.4.0</kotlin.version>
         <arcade-data.version>1.0.8</arcade-data.version>
