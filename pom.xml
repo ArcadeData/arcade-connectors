@@ -97,7 +97,7 @@
         <module>orientdb3</module>
         <module>rdbms</module>
         <module>integration</module>
-        <module>test-coverage-aggregator</module>
+<!--        <module>test-coverage-aggregator</module>-->
     </modules>
 
     <distributionManagement>
@@ -219,6 +219,14 @@
                             <goal>prepare-agent</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>report-aggregate</goal>
+                        </goals>
+                    </execution>
+
                 </executions>
             </plugin>
 
