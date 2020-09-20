@@ -37,4 +37,4 @@ jobs:
         uses: codacy/codacy-coverage-reporter-action@master
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: jacoco*.xml
+          coverage-reports: test-coverage-aggregator/target/site/jacoco-aggregate/jacoco.xml
