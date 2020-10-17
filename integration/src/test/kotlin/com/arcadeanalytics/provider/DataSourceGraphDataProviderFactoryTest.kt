@@ -97,10 +97,34 @@ internal class DataSourceGraphDataProviderFactoryTest {
                 database = "testDb")
 
         val provider = factory.create(dataSource)
-        Assertions.assertThat(provider).isNotNull
+        assertThat(provider).isNotNull
 
-        Assertions.assertThat(provider::class.java.simpleName).isEqualTo(impl)
+        assertThat(provider::class.java.simpleName).isEqualTo(impl)
     }
 
+    @ParameterizedTest
+    @MethodSource("types2implementation")
+    internal fun `should decorate with ssh tunnel when remote`(
+            type: String,
+            impl: String) {
 
+        val dataSource = DataSourceInfo(id = 1L,
+                type = type,
+                name = "testDataSource",
+                server = "1.2.3.4",
+                port = 1234,
+                username = "admin",
+                password = "admin",
+                database = "testDb",
+                remote = true,
+                gateway = "192.168.1.12",
+                sshPort = 22,
+                sshUser = "sshUser")
+
+        val provider = factory.create(dataSource)
+        assertThat(provider).isNotNull
+
+        assertThat(provider::class.java.simpleName).isEqualTo(SshDataProviderDecorator::class.java.simpleName)
+
+    }
 }

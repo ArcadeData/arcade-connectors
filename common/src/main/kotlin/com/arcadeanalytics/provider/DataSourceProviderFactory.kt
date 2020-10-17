@@ -76,7 +76,7 @@ class DataSourceProviderFactory<T : DataSourceProvider>(
 
 
     private fun decorate(provider: T): T {
-        return when (provider::class.java) {
+        return when (provider) {
             is DataSourceMetadataProvider -> SshMetadataProviderDecorator(provider as DataSourceMetadataProvider) as T
             is DataSourceGraphDataProvider -> SshDataProviderDecorator(provider as DataSourceGraphDataProvider) as T
             is DataSourceGraphProvider -> SshGraphProviderDecorator(provider as DataSourceGraphProvider) as T
