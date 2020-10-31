@@ -1,3 +1,4 @@
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/f04d5574622145c8ab6b78733084d1d8)](https://app.codacy.com/gh/ArcadeData/arcade-connectors?utm_source=github.com&utm_medium=referral&utm_content=ArcadeData/arcade-connectors&utm_campaign=Badge_Grade)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/ArcadeData/arcade-connectors/workflows/Maven%20Deploy/badge.svg)](https://github.com/ArcadeData/arcade-connectors/actions)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.arcadeanalytics/arcade-connectors-parent/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.arcadeanalytics/arcade-connectors-parent)
