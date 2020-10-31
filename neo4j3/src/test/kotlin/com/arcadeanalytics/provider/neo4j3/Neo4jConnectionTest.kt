@@ -29,12 +29,13 @@ import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.Wait
+import org.testcontainers.utility.DockerImageName
 
 class Neo4jConnectionTest {
 
     private val LOGGER = LoggerFactory.getLogger(Neo4jDataProviderIntTest::class.java)
 
-    private val container: KGenericContainer = KGenericContainer("neo4j:3.5")
+    private val container: KGenericContainer = KGenericContainer(DockerImageName.parse("neo4j:3.5"))
         .apply {
             withExposedPorts(7687, 7474)
             withEnv("NEO4J_AUTH", "neo4j/arcade")

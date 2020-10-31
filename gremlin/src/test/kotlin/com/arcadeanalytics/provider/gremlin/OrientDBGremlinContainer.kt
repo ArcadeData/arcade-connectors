@@ -22,10 +22,11 @@ package com.arcadeanalytics.provider.gremlin
 import com.arcadeanalytics.provider.DataSourceInfo
 import com.arcadeanalytics.test.KGenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
+import org.testcontainers.utility.DockerImageName
 
 object OrientDBGremlinContainer {
 
-    private val container: KGenericContainer = KGenericContainer("arcadeanalytics/orientdb3")
+    private val container: KGenericContainer = KGenericContainer(DockerImageName.parse("arcadeanalytics/orientdb3"))
         .apply {
 
             withExposedPorts(8182, 2424)

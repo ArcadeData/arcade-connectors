@@ -24,10 +24,11 @@ import com.arcadeanalytics.provider.gremlin.getCluster
 import com.arcadeanalytics.test.KGenericContainer
 import org.apache.tinkerpop.gremlin.driver.Client
 import org.testcontainers.containers.wait.strategy.Wait
+import org.testcontainers.utility.DockerImageName
 
 object JanusgraphContainer {
 
-    private val container: KGenericContainer = KGenericContainer("janusgraph/janusgraph:0.5.2")
+    private val container: KGenericContainer = KGenericContainer(DockerImageName.parse("janusgraph/janusgraph:0.5.2"))
         .apply {
             withExposedPorts(8182)
             waitingFor(Wait.defaultWaitStrategy())

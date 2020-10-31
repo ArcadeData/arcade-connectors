@@ -24,10 +24,11 @@ import com.arcadeanalytics.provider.neo4j3.getDriver
 import com.arcadeanalytics.test.KGenericContainer
 import org.neo4j.driver.v1.Session
 import org.testcontainers.containers.wait.strategy.Wait
+import org.testcontainers.utility.DockerImageName
 
 object Neo4jContainer {
 
-    private val container: KGenericContainer = KGenericContainer("neo4j:3.5")
+    private val container: KGenericContainer = KGenericContainer(DockerImageName.parse("neo4j:3.5"))
         .apply {
             withExposedPorts(7687, 7474)
             withEnv("NEO4J_AUTH", "neo4j/arcade")
