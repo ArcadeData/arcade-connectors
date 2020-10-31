@@ -55,6 +55,7 @@ public class PostgreSQLDataProviderWithAggregationTest extends AbstractRDBMSProv
                 true,
                 "{}",
                 false,
+                false,
                 "",
                 22,
                 "",

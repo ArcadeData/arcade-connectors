@@ -31,6 +31,7 @@ data class DataSourceInfo(
         val password: String,
         val aggregationEnabled: Boolean = false,
         val connectionProperties: String = "{}",
+        val enableSsl: Boolean = false,
         val remote: Boolean = false,
         val gateway: String = "",
         val sshPort: Int = 22,

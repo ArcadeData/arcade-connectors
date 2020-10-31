@@ -19,7 +19,6 @@
  */
 package com.arcadeanalytics.provider.gremlin
 
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -28,11 +27,7 @@ import org.junit.jupiter.api.TestInstance
 
 class GremlinMetadataProviderTest {
 
-    private val provider: GremlinMetadataProvider
-
-    init {
-        provider = GremlinMetadataProvider()
-    }
+    private val provider: GremlinMetadataProvider = GremlinMetadataProvider()
 
     @Test
     fun fetchMetadata() {

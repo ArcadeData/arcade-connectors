@@ -112,6 +112,7 @@ abstract class SshTunnelTemplate : DataSourceProvider {
                 dataSourceInfo.password,
                 dataSourceInfo.aggregationEnabled,
                 dataSourceInfo.connectionProperties,
+                dataSourceInfo.enableSsl,
                 false,
                 "localhost",
                 localPort,

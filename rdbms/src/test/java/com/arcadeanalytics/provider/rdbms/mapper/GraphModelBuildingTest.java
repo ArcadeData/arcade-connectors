@@ -96,6 +96,7 @@ public class GraphModelBuildingTest {
                 false,
                 "{}",
                 false,
+                false,
                 "",
                 22,
                 "",

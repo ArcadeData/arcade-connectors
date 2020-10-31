@@ -98,6 +98,7 @@ public class AggregationStrategyTest {
                 false,
                 "{}",
                 false,
+                false,
                 "",
                 22,
                 "",

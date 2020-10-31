@@ -9,9 +9,9 @@ package com.arcadeanalytics.provider.rdbms.graphprovider;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.utility.DockerImageName;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -40,7 +41,7 @@ public class MysqlGraphProviderTest extends AbstractRDBMSGraphProvider {
     private static final String driver = "com.mysql.cj.jdbc.Driver";
     private static final String username = "test";
     private static final String password = "test";
-    public static MySQLContainer container = new MySQLContainer("arcadeanalytics/mysql-sakila")
+    public static MySQLContainer container = new MySQLContainer(DockerImageName.parse("arcadeanalytics/mysql-sakila").asCompatibleSubstituteFor("mysql"))
             .withUsername(username)
             .withPassword(password)
             .withDatabaseName("sakila");
@@ -68,6 +69,7 @@ public class MysqlGraphProviderTest extends AbstractRDBMSGraphProvider {
                 password,
                 false,
                 "{}",
+                false,
                 false,
                 "",
                 22,
@@ -102,6 +104,7 @@ public class MysqlGraphProviderTest extends AbstractRDBMSGraphProvider {
                 password,
                 true,
                 "{}",
+                false,
                 false,
                 "",
                 22,

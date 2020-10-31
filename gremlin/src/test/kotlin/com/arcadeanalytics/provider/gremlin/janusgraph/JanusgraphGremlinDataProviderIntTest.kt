@@ -19,7 +19,6 @@
  */
 package com.arcadeanalytics.provider.gremlin
 
-import com.arcadeanalytics.provider.gremlin.janusgraph.JanusgraphContainer
 import com.arcadeanalytics.provider.gremlin.janusgraph.JanusgraphContainer.dataSource
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Disabled
@@ -60,7 +59,7 @@ internal class JanusgraphGremlinDataProviderIntTest {
         val data = provider.fetchData(dataSource, query, 10)
 
         val ids = data.nodes.asSequence()
-                .map { data -> data.data.id }
+                .map { it.data.id }
                 .toList()
 
         val load = provider.load(dataSource, ids.toTypedArray())
@@ -77,11 +76,11 @@ internal class JanusgraphGremlinDataProviderIntTest {
         val data = provider.fetchData(dataSource, query, 10)
 
         val ids = data.nodes.asSequence()
-                .map { data -> data.data.id }
+                .map { it.data.id }
                 .toList()
 
         val label: String = data.nodes.asSequence()
-                .map { data -> data.data.record["@in"] as Map<String, Any> }
+                .map { it.data.record["@in"] as Map<String, Any> }
                 .map { ins -> ins.keys }
                 .flatMap { k -> k.asSequence() }
                 .first()
@@ -102,7 +101,7 @@ internal class JanusgraphGremlinDataProviderIntTest {
         val data = provider.fetchData(dataSource, query, 10)
 
         val ids = data.nodes.asSequence()
-                .map { data -> data.data.id }
+                .map { it.data.id }
                 .toList()
 
         val load = provider.expand(dataSource, ids.toTypedArray(), "both", "", 50)

@@ -17,15 +17,14 @@
  * limitations under the License.
  * #L%
  */
-package com.arcadeanalytics.provider.gremlin
+package com.arcadeanalytics.provider.gremlin.janusgraph
 
 import com.arcadeanalytics.data.Sprite
 import com.arcadeanalytics.data.SpritePlayer
 import com.arcadeanalytics.provider.IndexConstants.ARCADE_EDGE_TYPE
 import com.arcadeanalytics.provider.IndexConstants.ARCADE_NODE_TYPE
 import com.arcadeanalytics.provider.IndexConstants.ARCADE_TYPE
-import com.arcadeanalytics.provider.gremlin.janusgraph.JanusgraphContainer
-import org.assertj.core.api.Assertions
+import com.arcadeanalytics.provider.gremlin.GremlinGraphProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -51,16 +50,16 @@ internal class JanusgraphGremlinGraphProviderTest {
                 return 0
             }
 
-            override fun play(document: Sprite) {
+            override fun play(sprite: Sprite) {
 
-                when (document.valueOf(ARCADE_TYPE)) {
-                    ARCADE_NODE_TYPE -> nodes.add(document)
-                    ARCADE_EDGE_TYPE -> edges.add(document)
+                when (sprite.valueOf(ARCADE_TYPE)) {
+                    ARCADE_NODE_TYPE -> nodes.add(sprite)
+                    ARCADE_EDGE_TYPE -> edges.add(sprite)
                 }
-                assertThat(document.valueOf("@class")).isNotBlank()
-                assertThat(document.hasField("_a_id")).isTrue()
-                assertThat(document.hasField("_a_type")).isTrue()
-                assertThat(document.hasField("_a_type")).isTrue()
+                assertThat(sprite.valueOf("@class")).isNotBlank
+                assertThat(sprite.hasField("_a_id")).isTrue
+                assertThat(sprite.hasField("_a_type")).isTrue
+                assertThat(sprite.hasField("_a_type")).isTrue
 
             }
 

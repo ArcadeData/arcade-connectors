@@ -17,9 +17,9 @@
  * limitations under the License.
  * #L%
  */
-package com.arcadeanalytics.provider.gremlin
+package com.arcadeanalytics.provider.gremlin.janusgraph
 
-import com.arcadeanalytics.provider.gremlin.janusgraph.JanusgraphContainer
+import com.arcadeanalytics.provider.gremlin.GremlinMetadataProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance

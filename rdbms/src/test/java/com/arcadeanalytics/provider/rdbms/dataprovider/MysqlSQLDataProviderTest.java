@@ -66,6 +66,7 @@ public class MysqlSQLDataProviderTest extends AbstractRDBMSProviderTest {
                 false,
                 "{}",
                 false,
+                false,
                 "",
                 22,
                 "",

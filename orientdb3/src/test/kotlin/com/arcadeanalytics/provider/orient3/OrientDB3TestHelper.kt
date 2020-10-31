@@ -28,11 +28,12 @@ import com.orientechnologies.orient.core.db.OrientDBConfig
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.OrientDBContainer
 import org.testcontainers.containers.wait.strategy.Wait
+import org.testcontainers.utility.DockerImageName
 import java.io.IOException
+import java.util.logging.Level.parse
 
 
-
-const val ORIENTDB_DOCKER_IMAGE = "arcadeanalytics/orientdb3:latest"
+val ORIENTDB_DOCKER_IMAGE = DockerImageName.parse("arcadeanalytics/orientdb3:latest").asCompatibleSubstituteFor("orientdb");
 
 const val ORIENTDB_ROOT_PASSWORD = "arcade"
 

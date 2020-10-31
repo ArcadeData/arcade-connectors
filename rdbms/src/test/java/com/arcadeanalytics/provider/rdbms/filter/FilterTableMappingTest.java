@@ -107,6 +107,7 @@ public class FilterTableMappingTest {
                 false,
                 "{}",
                 false,
+                false,
                 "",
                 22,
                 "",

@@ -28,12 +28,7 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GremlinDataProviderIntTest {
 
-    private val provider: DataSourceGraphDataProvider
-
-    init {
-        provider = GremlinDataProvider()
-
-    }
+    private val provider: GremlinDataProvider = GremlinDataProvider()
 
     @Test
     fun shouldFetchVertices() {
@@ -85,7 +80,7 @@ class GremlinDataProviderIntTest {
         val data = provider.fetchData(dataSource, query, 10)
 
         val ids = data.nodes.asSequence()
-                .map { data -> data.data.id }
+                .map { it.data.id }
                 .toList()
 
         val load = provider.load(dataSource, ids.toTypedArray())
@@ -102,11 +97,11 @@ class GremlinDataProviderIntTest {
         val data = provider.fetchData(dataSource, query, 10)
 
         val ids = data.nodes.asSequence()
-                .map { data -> data.data.id }
+                .map { it.data.id }
                 .toList()
 
         val label: String = data.nodes.asSequence()
-                .map { data -> data.data.record["@in"] as Map<String, Any> }
+                .map { it.data.record["@in"] as Map<String, Any> }
                 .map { ins -> ins.keys }
                 .flatMap { k -> k.asSequence() }
                 .first()
@@ -132,7 +127,7 @@ class GremlinDataProviderIntTest {
         val data = provider.fetchData(dataSource, query, 10)
 
         val ids = data.nodes.asSequence()
-                .map { data -> data.data.id }
+                .map { it.data.id }
                 .toList()
 
         val load = provider.expand(dataSource, ids.toTypedArray(), "both", "", 300)

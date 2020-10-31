@@ -12,10 +12,9 @@ import com.google.common.collect.Sets
 import org.apache.commons.lang3.StringUtils
 import org.apache.tinkerpop.gremlin.driver.Client
 import org.apache.tinkerpop.gremlin.structure.VertexProperty
-import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils
 import org.slf4j.LoggerFactory
-import java.util.function.Consumer
 import java.util.regex.Pattern
+import kotlin.math.min
 
 /*-
  * #%L
@@ -61,7 +60,7 @@ class GremlinGraphProvider : DataSourceGraphProvider {
         val nodes = client.submit("g.V().count()").one().long
         var fetched: Long = 0
         var skip: Long = 0
-        var limit = Math.min(nodes, 1000)
+        var limit = min(nodes, 1000)
         log.info("start indexing of data-source {} - total nodes:: {} ", dataSource.id, nodes)
         while (fetched < nodes) {
             val resultSet = client.submit("g.V().range($skip , $limit)")
@@ -89,13 +88,13 @@ class GremlinGraphProvider : DataSourceGraphProvider {
         val edges = client.submit("g.E().count()").one().long
         var fetched: Long = 0
         var skip: Long = 0
-        var limit = Math.min(edges, 1000)
+        var limit = min(edges, 1000)
         log.info("start indexing of data-source {} - total edges:: {} ", dataSource.id, edges)
         while (fetched < edges) {
             val resultSet = client.submit("g.E().range($skip , $limit)")
             for (r in resultSet) {
                 val element = r.element
-                if (!element.keys().isEmpty()) {
+                if (element.keys().isNotEmpty()) {
                     val sprite = Sprite()
                     element.keys().asSequence()
                             .forEach { k: String? -> sprite.add(k!!, element.value<Any>(k).toString()) }

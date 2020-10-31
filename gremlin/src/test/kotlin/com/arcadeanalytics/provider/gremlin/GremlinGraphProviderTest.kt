@@ -25,7 +25,6 @@ import com.arcadeanalytics.provider.DataSourceGraphProvider
 import com.arcadeanalytics.provider.IndexConstants.ARCADE_EDGE_TYPE
 import com.arcadeanalytics.provider.IndexConstants.ARCADE_NODE_TYPE
 import com.arcadeanalytics.provider.IndexConstants.ARCADE_TYPE
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -34,11 +33,7 @@ import java.util.*
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GremlinGraphProviderTest {
 
-    private val provider: DataSourceGraphProvider
-
-    init {
-        provider = GremlinGraphProvider()
-    }
+    private val provider: GremlinGraphProvider = GremlinGraphProvider()
 
     @Test
     fun shouldFetchAllVertexesAndEdges() {
@@ -55,13 +50,13 @@ class GremlinGraphProviderTest {
                 return 0
             }
 
-            override fun play(document: Sprite) {
+            override fun play(sprite: Sprite) {
 
-                when (document.valueOf(ARCADE_TYPE)) {
-                    ARCADE_NODE_TYPE -> nodes.add(document)
-                    ARCADE_EDGE_TYPE -> edges.add(document)
+                when (sprite.valueOf(ARCADE_TYPE)) {
+                    ARCADE_NODE_TYPE -> nodes.add(sprite)
+                    ARCADE_EDGE_TYPE -> edges.add(sprite)
                 }
-                assertThat(document.valueOf("@class")).isNotBlank()
+                assertThat(sprite.valueOf("@class")).isNotBlank
 
             }
 
