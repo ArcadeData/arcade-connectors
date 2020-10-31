@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,6 @@
  */
 package com.arcadeanalytics.provider.gremlin
 
-import com.arcadeanalytics.provider.DataSourceGraphDataProvider
 import com.arcadeanalytics.provider.gremlin.OrientDBGremlinContainer.dataSource
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -45,9 +44,7 @@ class GremlinDataProviderIntTest {
 
         val record = cytoData.data.record
         assertThat(record).isNotNull
-                .containsKeys("@in", "@out", "Name", "@edgeCount")
-
-
+            .containsKeys("@in", "@out", "Name", "@edgeCount")
     }
 
     @Test
@@ -67,7 +64,6 @@ class GremlinDataProviderIntTest {
         val anEdge = data.edges.first()
 
         assertThat(anEdge.classes).isEqualTo("IsFromCountry")
-
     }
 
     @Test
@@ -80,13 +76,12 @@ class GremlinDataProviderIntTest {
         val data = provider.fetchData(dataSource, query, 10)
 
         val ids = data.nodes.asSequence()
-                .map { it.data.id }
-                .toList()
+            .map { it.data.id }
+            .toList()
 
         val load = provider.load(dataSource, ids.toTypedArray())
 
         assertThat(load.nodes).hasSize(10)
-
     }
 
     @Test
@@ -97,15 +92,14 @@ class GremlinDataProviderIntTest {
         val data = provider.fetchData(dataSource, query, 10)
 
         val ids = data.nodes.asSequence()
-                .map { it.data.id }
-                .toList()
+            .map { it.data.id }
+            .toList()
 
         val label: String = data.nodes.asSequence()
-                .map { it.data.record["@in"] as Map<String, Any> }
-                .map { ins -> ins.keys }
-                .flatMap { k -> k.asSequence() }
-                .first()
-
+            .map { it.data.record["@in"] as Map<String, Any> }
+            .map { ins -> ins.keys }
+            .flatMap { k -> k.asSequence() }
+            .first()
 
         val load = provider.expand(dataSource, ids.toTypedArray(), "in", label, 300)
 
@@ -114,9 +108,7 @@ class GremlinDataProviderIntTest {
 
         load.edges.forEach {
             assertThat(ids).contains(it.data.target)
-
         }
-
     }
 
     @Test
@@ -127,8 +119,8 @@ class GremlinDataProviderIntTest {
         val data = provider.fetchData(dataSource, query, 10)
 
         val ids = data.nodes.asSequence()
-                .map { it.data.id }
-                .toList()
+            .map { it.data.id }
+            .toList()
 
         val load = provider.expand(dataSource, ids.toTypedArray(), "both", "", 300)
 
@@ -137,15 +129,11 @@ class GremlinDataProviderIntTest {
 
         load.edges.forEach {
             assertThat(ids).contains(it.data.target)
-
         }
-
     }
-
 
     @Test
     fun testFetchVerticesAndEdges() {
-
 
         val query = "g.V().bothE()limit(10)"
 
@@ -158,8 +146,7 @@ class GremlinDataProviderIntTest {
 
         val record = cytoData.data.record
         assertThat(record).isNotNull
-                .containsKeys("@in", "@out")
-
+            .containsKeys("@in", "@out")
 
         assertThat(data.nodes).isNotEmpty
     }
@@ -176,14 +163,13 @@ class GremlinDataProviderIntTest {
         val secondNode = secondDataSet.nodes.first().data
 
         val edgeClasses = (firstNode.record["@in"] as Map<String, Int>).keys
-                .union((firstNode.record["@out"] as Map<String, Int>).keys)
-                .union((secondNode.record["@in"] as Map<String, Int>).keys)
-                .union((secondNode.record["@out"] as Map<String, Int>).keys)
+            .union((firstNode.record["@out"] as Map<String, Int>).keys)
+            .union((secondNode.record["@in"] as Map<String, Int>).keys)
+            .union((secondNode.record["@out"] as Map<String, Int>).keys)
 
         val data = provider.edges(dataSource, arrayOf(firstNode.id), edgeClasses.toTypedArray(), arrayOf(secondNode.id))
 
-
-        println("data = ${data}")
+        println("data = $data")
 
         val cytoData = data.edges.first()
 
@@ -192,26 +178,19 @@ class GremlinDataProviderIntTest {
         assertThat(cytoData.data.target).isNotBlank()
 
         assertThat(data.nodes).hasSize(2)
-
     }
-
 
     @Test
     fun shouldLoadFromClass() {
         val graphData = provider.loadFromClass(dataSource, "Countries", 10)
 
         assertThat(graphData.nodes).hasSize(10)
-
     }
-
 
     @Test
     fun shouldLoadFromClassWherePropertyHasValue() {
         val data = provider.loadFromClass(dataSource, "Countries", "Code", "AD", 10)
 
         assertThat(data.nodes).hasSize(1)
-
     }
-
 }
-

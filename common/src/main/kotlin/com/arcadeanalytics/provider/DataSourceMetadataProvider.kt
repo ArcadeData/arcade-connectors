@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,26 +19,29 @@
  */
 package com.arcadeanalytics.provider
 
-
 typealias NodesClasses = Map<String, TypeClass>
 
 typealias EdgesClasses = Map<String, TypeClass>
 
 typealias TypeProperties = Map<String, TypeProperty>
 
-data class TypeClass(val name: String,
-                     val cardinality: Long,
-                     val properties: TypeProperties)
+data class TypeClass(
+    val name: String,
+    val cardinality: Long,
+    val properties: TypeProperties
+)
 
-data class TypeProperty(val name: String,
-                        val type: String)
+data class TypeProperty(
+    val name: String,
+    val type: String
+)
 
-data class DataSourceMetadata(val nodesClasses: NodesClasses,
-                              val edgesClasses: EdgesClasses)
-
+data class DataSourceMetadata(
+    val nodesClasses: NodesClasses,
+    val edgesClasses: EdgesClasses
+)
 
 interface DataSourceMetadataProvider : DataSourceProvider {
 
     fun fetchMetadata(dataSource: DataSourceInfo): DataSourceMetadata
-
 }

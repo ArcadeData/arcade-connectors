@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,6 @@ package com.arcadeanalytics.data
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.ListMultimap
 import com.google.common.collect.Lists
-import java.util.*
 import java.util.regex.Pattern
 
 /**
@@ -41,8 +40,8 @@ class Sprite {
     fun add(field: String, value: Any?): Sprite {
         if (value is Collection<*>)
             value.asSequence()
-                    .filter { it != null }
-                    .forEach { v -> data.put(field, v) }
+                .filter { it != null }
+                .forEach { v -> data.put(field, v) }
         else if (value != null) data.put(field, value)
         return this
     }
@@ -52,7 +51,6 @@ class Sprite {
             data.put(field, value)
         return this
     }
-
 
     fun entries(): MutableCollection<MutableMap.MutableEntry<String, Any?>>? {
         return data.entries()
@@ -64,14 +62,14 @@ class Sprite {
 
     fun fields(pattern: Pattern): Set<String> {
         return data.keySet()
-                .filter { k -> pattern.matcher(k).matches() }
-                .toSet()
+            .filter { k -> pattern.matcher(k).matches() }
+            .toSet()
     }
 
     fun fields(pattern: Regex): Set<String> {
         return data.keySet()
-                .filter { k -> pattern.matches(k) }
-                .toSet()
+            .filter { k -> pattern.matches(k) }
+            .toSet()
     }
 
     fun rename(field: String, renamed: String): Sprite {
@@ -82,16 +80,13 @@ class Sprite {
         return this
     }
 
-
     fun copy(from: String, to: String): Sprite {
         with(data) {
             val fromValues = Lists.newArrayList(get(from))
             addAll(to, fromValues)
-
         }
         return this
     }
-
 
     fun addAll(field: String, values: Iterable<Any?>): Sprite {
         values.forEach { add(field, it) }
@@ -139,10 +134,9 @@ class Sprite {
 
     fun load(input: Map<String, Any>): Sprite {
         input.entries
-                .forEach { add(it.key, it.value) }
+            .forEach { add(it.key, it.value) }
         return this
     }
-
 
     fun remove(field: String, fieldValue: Any): Sprite {
         data.remove(field, fieldValue)
@@ -164,21 +158,18 @@ class Sprite {
         return this
     }
 
-
     fun <F : Any, T : Any> apply(pattern: Pattern, fieldModifier: (F) -> T): Sprite {
         fields(pattern)
-                .forEach { f -> apply(f, fieldModifier) }
+            .forEach { f -> apply(f, fieldModifier) }
 
         return this
-
     }
 
     fun <F : Any, T : Any> apply(pattern: Regex, fieldModifier: (F) -> T): Sprite {
         fields(pattern)
-                .forEach { f -> apply(f, fieldModifier) }
+            .forEach { f -> apply(f, fieldModifier) }
 
         return this
-
     }
 
     fun <F : Any, T : Any> apply(field: String, fieldModifier: (F) -> T): Sprite {
@@ -207,38 +198,36 @@ class Sprite {
         return originalValues.map { it -> fieldModifier(it) }.toList()
     }
 
-
     fun <T : Any> rawValuesOf(field: String): List<T> {
         return data.get(field).orEmpty() as List<T>
     }
 
-
     fun rename(field: Pattern, renamed: (v: String) -> String): Sprite {
         fields(field)
-                .forEach { f ->
-                    val cleaned = renamed(f)
-                    rename(f, cleaned)
-                }
+            .forEach { f ->
+                val cleaned = renamed(f)
+                rename(f, cleaned)
+            }
 
         return this
     }
 
-    fun joinValuesOf(field: String,
-                     separator: CharSequence = ", ",
-                     prefix: CharSequence = "",
-                     postfix: CharSequence = "",
-                     limit: Int = -1,
-                     truncated: CharSequence = "..."): Sprite {
+    fun joinValuesOf(
+        field: String,
+        separator: CharSequence = ", ",
+        prefix: CharSequence = "",
+        postfix: CharSequence = "",
+        limit: Int = -1,
+        truncated: CharSequence = "..."
+    ): Sprite {
 
         val merged = rawValuesOf<String>(field)
-                .joinToString(separator, prefix, postfix, limit, truncated)
+            .joinToString(separator, prefix, postfix, limit, truncated)
 
         remove(field)
-                .add(field, merged)
+            .add(field, merged)
         return this
-
     }
-
 
     fun valueOf(field: String): String {
         return rawValueOf<Any>(field).let(Any::toString)
@@ -252,36 +241,32 @@ class Sprite {
     fun valuesOf(regex: Regex): List<String> {
 
         return fields(regex)
-                .map { field ->
-                    rawValuesOf<Any>(field)
-                            .map { it.toString() }
-                }
-                .flatMap {
-                    it.toList()
-                }
-                .toList()
-
+            .map { field ->
+                rawValuesOf<Any>(field)
+                    .map { it.toString() }
+            }
+            .flatMap {
+                it.toList()
+            }
+            .toList()
     }
 
     fun valuesOf(regex: Pattern): List<String> {
 
         return fields(regex)
-                .map { field ->
-                    rawValuesOf<Any>(field)
-                            .map { it.toString() }
-                }
-                .flatMap {
-                    it.toList()
-                }
-                .toList()
-
+            .map { field ->
+                rawValuesOf<Any>(field)
+                    .map { it.toString() }
+            }
+            .flatMap {
+                it.toList()
+            }
+            .toList()
     }
-
 
     fun <T : Any> rawValueOf(field: String): T {
         return rawValuesOf<T>(field).first()
     }
-
 
     fun isMultiValue(field: String): Boolean {
         return data.get(field).size > 1
@@ -309,7 +294,6 @@ class Sprite {
         return map
     }
 
-
     fun asStringMap(): Map<String, String> {
         val map = HashMap<String, String>()
 
@@ -318,15 +302,14 @@ class Sprite {
         return map
     }
 
-
     fun splitValues(field: String, separator: String): Sprite {
 
         val copySuffix = copySuffix
         copy(field, "$field$copySuffix")
-                .remove(field)
-                .valuesOf("$field$copySuffix")
-                .map { value -> value.split(separator) }
-                .forEach { splitted -> add(field, splitted) }
+            .remove(field)
+            .valuesOf("$field$copySuffix")
+            .map { value -> value.split(separator) }
+            .forEach { splitted -> add(field, splitted) }
 
         apply(field, { v: String -> v.trim() })
 
@@ -339,7 +322,6 @@ class Sprite {
 
         return data.isEmpty
     }
-
 
     override fun hashCode(): Int {
         val prime = 31

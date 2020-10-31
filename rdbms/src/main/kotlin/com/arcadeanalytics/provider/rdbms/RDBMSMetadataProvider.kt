@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,12 @@
  */
 package com.arcadeanalytics.provider.rdbms
 
-import com.arcadeanalytics.provider.*
+import com.arcadeanalytics.provider.DataSourceInfo
+import com.arcadeanalytics.provider.DataSourceMetadata
+import com.arcadeanalytics.provider.DataSourceMetadataProvider
+import com.arcadeanalytics.provider.EdgesClasses
+import com.arcadeanalytics.provider.TypeClass
+import com.arcadeanalytics.provider.TypeProperty
 import com.arcadeanalytics.provider.rdbms.context.Statistics
 import com.arcadeanalytics.provider.rdbms.dbengine.DBQueryEngine
 import com.arcadeanalytics.provider.rdbms.factory.DataTypeHandlerFactory
@@ -34,12 +39,12 @@ import java.sql.ResultSet
 class RDBMSMetadataProvider : DataSourceMetadataProvider {
 
     override fun supportedDataSourceTypes(): Set<String> = setOf(
-            "RDBMS_POSTGRESQL",
-            "RDBMS_MYSQL",
-            "RDBMS_MSSQLSERVER",
-            "RDBMS_HSQL",
-            "RDBMS_ORACLE",
-            "RDBMS_DATA_WORLD"
+        "RDBMS_POSTGRESQL",
+        "RDBMS_MYSQL",
+        "RDBMS_MSSQLSERVER",
+        "RDBMS_HSQL",
+        "RDBMS_ORACLE",
+        "RDBMS_DATA_WORLD"
     )
 
     override fun fetchMetadata(dataSource: DataSourceInfo): DataSourceMetadata {
@@ -51,26 +56,16 @@ class RDBMSMetadataProvider : DataSourceMetadataProvider {
         val graphModel = mapper.graphModel
 
         val nodesClasses = graphModel.verticesType
-                .map {
-                    val props = it.allProperties
-                            .map { prop -> prop.name to TypeProperty(prop.name, prop.orientdbType) }
-                            .toMap()
+            .map {
+                val props = it.allProperties
+                    .map { prop -> prop.name to TypeProperty(prop.name, prop.orientdbType) }
+                    .toMap()
 
-                    var cardinality: Long = 0
-                    if (dataSource.aggregationEnabled) {
+                var cardinality: Long = 0
+                if (dataSource.aggregationEnabled) {
 
-                        if (!it.isFromJoinTable) {
-                            mapper.vertexType2EVClassMappers.get(it)?.get(0)?.entity?.name?.let { tableName ->
-                                val queryResult: QueryResult = dbQueryEngine.countTableRecords(tableName)
-                                val countResult: ResultSet = queryResult.result
-                                if (countResult.next()) {
-                                    cardinality = countResult.getLong(1)
-                                }
-                                queryResult.close()
-                            }
-                        }
-                    } else {
-                        mapper.vertexType2EVClassMappers.get(it)?.get(0)?.entity?.name.let { tableName ->
+                    if (!it.isFromJoinTable) {
+                        mapper.vertexType2EVClassMappers.get(it)?.get(0)?.entity?.name?.let { tableName ->
                             val queryResult: QueryResult = dbQueryEngine.countTableRecords(tableName)
                             val countResult: ResultSet = queryResult.result
                             if (countResult.next()) {
@@ -79,65 +74,72 @@ class RDBMSMetadataProvider : DataSourceMetadataProvider {
                             queryResult.close()
                         }
                     }
+                } else {
+                    mapper.vertexType2EVClassMappers.get(it)?.get(0)?.entity?.name.let { tableName ->
+                        val queryResult: QueryResult = dbQueryEngine.countTableRecords(tableName)
+                        val countResult: ResultSet = queryResult.result
+                        if (countResult.next()) {
+                            cardinality = countResult.getLong(1)
+                        }
+                        queryResult.close()
+                    }
+                }
 
-                    TypeClass(it.name, cardinality, props)
-                }.map {
-                    it.name to it
-                }.toMap()
-
+                TypeClass(it.name, cardinality, props)
+            }.map {
+                it.name to it
+            }.toMap()
 
         val edgesClasses: EdgesClasses = graphModel.edgesType
-                .map { edgeType ->
-                    val props = edgeType.allProperties
-                            .map { prop -> prop.name to TypeProperty(prop.name, prop.orientdbType) }
-                            .toMap()
+            .map { edgeType ->
+                val props = edgeType.allProperties
+                    .map { prop -> prop.name to TypeProperty(prop.name, prop.orientdbType) }
+                    .toMap()
 
-                    val edgeTypeName: String = edgeType.name
+                val edgeTypeName: String = edgeType.name
 
-                    var cardinality: Long = 0
+                var cardinality: Long = 0
 
-                    if (dataSource.aggregationEnabled) {
+                if (dataSource.aggregationEnabled) {
 
-                        if (edgeType.isAggregatorEdge) {
-                            mapper.getJoinVertexTypeByAggregatorEdgeName(edgeTypeName)?.run {
-                                val joinTable = mapper.getEntityByVertexType(this, 0) // join vertex has always 1-1 mapping with the join table, so I always get the first mapping
-                                val queryResult: QueryResult = dbQueryEngine.countTableRecords(joinTable.name)
-                                val countResult: ResultSet = queryResult.result
-                                if (countResult.next()) {
-                                    cardinality += countResult.getLong(1)
-                                }
-                                queryResult.close()
-                            }
-                        } else {
-                            val mappedRelationships = mapper.edgeType2relationships.get(edgeType)
-                            mappedRelationships?.forEach {
-                                if (!it.foreignEntity.isAggregableJoinTable) {   // excluding relationships that are aggregated in aggregator edges, then all that have a join table as parent entity
-                                    val queryResult: RelationshipQueryResult = dbQueryEngine.computeRelationshipCardinality(it, dataSource, edgeTypeName)
-                                    val countResult: ResultSet = queryResult.result
-                                    if (countResult.next()) {
-                                        cardinality += countResult.getLong(1)
-                                    }
-                                    queryResult.close()
-                                }
-                            }
-                        }
-
-                    } else {
-                        val mappedRelationships = mapper.edgeType2relationships.get(edgeType)
-                        mappedRelationships?.forEach { rel ->
-                            val queryResult: RelationshipQueryResult = dbQueryEngine.computeRelationshipCardinality(rel, dataSource, edgeTypeName)
+                    if (edgeType.isAggregatorEdge) {
+                        mapper.getJoinVertexTypeByAggregatorEdgeName(edgeTypeName)?.run {
+                            val joinTable = mapper.getEntityByVertexType(this, 0) // join vertex has always 1-1 mapping with the join table, so I always get the first mapping
+                            val queryResult: QueryResult = dbQueryEngine.countTableRecords(joinTable.name)
                             val countResult: ResultSet = queryResult.result
                             if (countResult.next()) {
                                 cardinality += countResult.getLong(1)
                             }
                             queryResult.close()
                         }
+                    } else {
+                        val mappedRelationships = mapper.edgeType2relationships.get(edgeType)
+                        mappedRelationships?.forEach {
+                            if (!it.foreignEntity.isAggregableJoinTable) { // excluding relationships that are aggregated in aggregator edges, then all that have a join table as parent entity
+                                val queryResult: RelationshipQueryResult = dbQueryEngine.computeRelationshipCardinality(it, dataSource, edgeTypeName)
+                                val countResult: ResultSet = queryResult.result
+                                if (countResult.next()) {
+                                    cardinality += countResult.getLong(1)
+                                }
+                                queryResult.close()
+                            }
+                        }
                     }
-                    TypeClass(edgeType.name, cardinality, props)
-                }.map {
-                    it.name to it
-                }.toMap()
-
+                } else {
+                    val mappedRelationships = mapper.edgeType2relationships.get(edgeType)
+                    mappedRelationships?.forEach { rel ->
+                        val queryResult: RelationshipQueryResult = dbQueryEngine.computeRelationshipCardinality(rel, dataSource, edgeTypeName)
+                        val countResult: ResultSet = queryResult.result
+                        if (countResult.next()) {
+                            cardinality += countResult.getLong(1)
+                        }
+                        queryResult.close()
+                    }
+                }
+                TypeClass(edgeType.name, cardinality, props)
+            }.map {
+                it.name to it
+            }.toMap()
 
         dbQueryEngine.close()
         return DataSourceMetadata(nodesClasses, edgesClasses)
@@ -161,20 +163,20 @@ class RDBMSMetadataProvider : DataSourceMetadataProvider {
         val strategyFactory = StrategyFactory()
 
         val mapper = (strategyFactory.buildStrategy(chosenStrategy) as AbstractDBMSModelBuildingStrategy)
-                .createSchemaMapper(dataSource,
-                        null,
-                        "basicDBMapper",
-                        null,
-                        nameResolver,
-                        handler,
-                        null,
-                        null,
-                        chosenStrategy,
-                        dbQueryEngine,
-                        statistics)
+            .createSchemaMapper(
+                dataSource,
+                null,
+                "basicDBMapper",
+                null,
+                nameResolver,
+                handler,
+                null,
+                null,
+                chosenStrategy,
+                dbQueryEngine,
+                statistics
+            )
 
         return mapper as ER2GraphMapper
-
     }
-
 }

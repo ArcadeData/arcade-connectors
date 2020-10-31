@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,21 +27,22 @@ import com.orientechnologies.orient.core.command.script.OCommandScript
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
+import org.testcontainers.utility.DockerImageName
 import java.io.IOException
 
-const val ORIENTDB_DOCKER_IMAGE = "orientdb:2.2.37-spatial"
+val ORIENTDB_DOCKER_IMAGE = DockerImageName.parse("orientdb:2.2.37-spatial")
 
 const val ORIENTDB_ROOT_PASSWORD = "arcade"
 
 object OrientDBContainer {
 
     private val container: KGenericContainer = KGenericContainer(ORIENTDB_DOCKER_IMAGE)
-            .apply {
-                withExposedPorts(2424)
-                withEnv("ORIENTDB_ROOT_PASSWORD", ORIENTDB_ROOT_PASSWORD)
-                waitingFor(Wait.forListeningPort())
-                start()
-            }
+        .apply {
+            withExposedPorts(2424)
+            withEnv("ORIENTDB_ROOT_PASSWORD", ORIENTDB_ROOT_PASSWORD)
+            waitingFor(Wait.forListeningPort())
+            start()
+        }
 
     val dataSource: DataSourceInfo
 
@@ -49,14 +50,15 @@ object OrientDBContainer {
 
     init {
 
-        dataSource = DataSourceInfo(id = 1L,
-                type = "ORIENTDB",
-                name = "testDataSource",
-                server = container.containerIpAddress,
-                port = container.firstMappedPort,
-                username = "admin",
-                password = "admin",
-                database = "testDatabase"
+        dataSource = DataSourceInfo(
+            id = 1L,
+            type = "ORIENTDB",
+            name = "testDataSource",
+            server = container.containerIpAddress,
+            port = container.firstMappedPort,
+            username = "admin",
+            password = "admin",
+            database = "testDatabase"
         )
 
         val serverUrl = getServerUrl(container)
@@ -64,12 +66,8 @@ object OrientDBContainer {
         dbUrl = createTestDatabase(serverUrl, dataSource.database)
 
         createPersonSchema(dbUrl)
-
     }
-
-
 }
-
 
 /**
  * Given an OrientDB container instance, returns the remote url
@@ -89,9 +87,12 @@ fun getServerUrl(container: GenericContainer<*>): String {
  */
 fun createPersonSchema(dbUrl: String) {
     ODatabaseDocumentTx(dbUrl)
-            .open<ODatabaseDocumentTx>("admin", "admin")
-            .use {
-                it.command(OCommandScript("sql", """
+        .open<ODatabaseDocumentTx>("admin", "admin")
+        .use {
+            it.command(
+                OCommandScript(
+                    "sql",
+                    """
 
                     CREATE CLASS Person EXTENDS V;
 
@@ -115,9 +116,9 @@ fun createPersonSchema(dbUrl: String) {
                     CREATE EDGE HaterOf FROM (SELECT FROM Person WHERE name = 'jane') TO (SELECT FROM Person WHERE name = 'rob') set kind='killer';
                     CREATE EDGE HaterOf FROM (SELECT FROM Person WHERE name = 'frank') TO (SELECT FROM Person WHERE name = 'john') set kind='killer';
                     """.trimIndent()
-                )).execute<Any>()
-            }
-
+                )
+            ).execute<Any>()
+        }
 }
 
 /**
@@ -130,17 +131,13 @@ fun createTestDatabase(serverUrl: String, dbname: String): String {
 
     try {
         OServerAdmin(serverUrl)
-                .apply {
-                    connect("root", ORIENTDB_ROOT_PASSWORD)
-                    createDatabase(dbname, "graph", "plocal")
-                    close()
-                }
+            .apply {
+                connect("root", ORIENTDB_ROOT_PASSWORD)
+                createDatabase(dbname, "graph", "plocal")
+                close()
+            }
         return "$serverUrl/$dbname"
     } catch (e: IOException) {
         throw RuntimeException("unable to create database on " + serverUrl, e)
     }
-
-
 }
-
-

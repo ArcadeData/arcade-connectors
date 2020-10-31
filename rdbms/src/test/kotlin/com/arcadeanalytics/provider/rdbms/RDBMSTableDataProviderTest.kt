@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,31 +40,33 @@ internal class RDBMSTableDataProviderTest {
     @Throws(Exception::class)
     fun setUp() {
 
-
-        dataSourceInfo = DataSourceInfo(id = 1L,
-                type = "RDBMS_POSTGRESQL",
-                name = "testDataSource",
-                server = container.containerIpAddress,
-                port = container.firstMappedPort,
-                username = container.username,
-                password = container.password,
-                database = container.databaseName,
-                aggregationEnabled = true
+        dataSourceInfo = DataSourceInfo(
+            id = 1L,
+            type = "RDBMS_POSTGRESQL",
+            name = "testDataSource",
+            server = container.containerIpAddress,
+            port = container.firstMappedPort,
+            username = container.username,
+            password = container.password,
+            database = container.databaseName,
+            aggregationEnabled = true
         )
 
         provider = RDBMSTableDataProvider()
-
     }
 
     @Test
     fun fetchData() {
 
-
-        val data = provider.fetchData(dataSourceInfo, """SELECT customer_id, SUM (amount) total_amount
+        val data = provider.fetchData(
+            dataSourceInfo,
+            """SELECT customer_id, SUM (amount) total_amount
             | FROM  payment
             | GROUP BY customer_id
             | ORDER BY total_amount DESC
-            | """.trimMargin(), 100)
+            | """.trimMargin(),
+            100
+        )
 
         val tableClass = data.nodesClasses[TABLE_CLASS]
 
@@ -74,12 +76,11 @@ internal class RDBMSTableDataProviderTest {
 
         Assertions.assertThat(properties).containsKeys("customer_id", "total_amount")
 
-
         val cytoData = data.nodes.first()
         Assertions.assertThat(cytoData.classes).isEqualTo(TABLE_CLASS)
 
         Assertions.assertThat(cytoData.group)
-                .isEqualTo("nodes")
+            .isEqualTo("nodes")
 
         Assertions.assertThat(cytoData.data.id).isEqualTo("0")
         Assertions.assertThat(cytoData.data.source).isEmpty()
@@ -88,6 +89,5 @@ internal class RDBMSTableDataProviderTest {
         val record = cytoData.data.record
 
         Assertions.assertThat(record).containsOnlyKeys("customer_id", "total_amount")
-
     }
 }

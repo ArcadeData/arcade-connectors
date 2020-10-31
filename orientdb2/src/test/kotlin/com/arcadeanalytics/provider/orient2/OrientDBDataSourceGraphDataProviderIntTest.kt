@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,9 +19,9 @@
  */
 package com.arcadeanalytics.provider.orientdb
 
-import com.arcadeanalytics.provider.orient2.OrientDBDataSourceGraphDataProvider
 import com.arcadeanalytics.provider.orient2.OrientDBContainer.dataSource
 import com.arcadeanalytics.provider.orient2.OrientDBContainer.dbUrl
+import com.arcadeanalytics.provider.orient2.OrientDBDataSourceGraphDataProvider
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx
 import com.orientechnologies.orient.core.record.impl.ODocument
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery
@@ -39,8 +39,7 @@ class OrientDBDataSourceGraphDataProviderIntTest {
         val query = "select from Person limit 20"
         val data = provider.fetchData(dataSource, query, 20)
 
-
-        //then
+        // then
         assertThat(data.nodes).hasSize(4)
 
         assertThat(data.nodesClasses).containsKeys("Person")
@@ -52,23 +51,21 @@ class OrientDBDataSourceGraphDataProviderIntTest {
         assertThat(cytoData.data.id).startsWith("${dataSource.id}")
         val record = cytoData.data.record
         assertThat(record).isNotNull
-                .containsKeys("name", "@out", "@in", "@edgeCount")
-
+            .containsKeys("name", "@out", "@in", "@edgeCount")
     }
-
 
     @Test
     @Throws(Exception::class)
     fun shouldTraverseFromGivenNode() {
-        //given
+        // given
         val person = provider.loadFromClass(dataSource, "Person", "name", "frank", 1)
 
         val id = person.nodes.first().data.id
 
-        //when
+        // when
         val data = provider.expand(dataSource, arrayOf(id), "in", "FriendOf", 300)
 
-        //then
+        // then
         assertThat(data.nodes).hasSize(2)
         assertThat(data.edges).hasSize(1)
 
@@ -79,23 +76,22 @@ class OrientDBDataSourceGraphDataProviderIntTest {
         val record = cytoData.data.record
         assertThat(record).isNotNull
         assertThat(cytoData.data.source).isEmpty()
-
     }
 
     @Test
     @Throws(Exception::class)
     fun shouldTraverseAllEdgesNode() {
-        //given
+        // given
 
         val person = provider.loadFromClass(dataSource, "Person", "name", "frank", 1)
 
         val id = person.nodes.first().data.id
 
-        //when
+        // when
         val data = provider.expand(dataSource, arrayOf(id), "both", "", 300)
 
-        println("data = ${data}")
-        //then
+        println("data = $data")
+        // then
         assertThat(data.nodes).hasSize(3)
         assertThat(data.edges).hasSize(2)
 
@@ -106,27 +102,24 @@ class OrientDBDataSourceGraphDataProviderIntTest {
         val cytoData = data.nodes.first()
         assertThat(cytoData.data.record).isNotNull
         assertThat(cytoData.data.source).isEmpty()
-
     }
 
     @Test
     @Throws(Exception::class)
     fun shouldLoadGivenIds() {
-        //given
+        // given
         val ids = getPersonsIdentity(2)
-        //when
+        // when
 
         println("ids = " + ids)
         val data = provider.load(dataSource, ids)
 
-        //then
+        // then
         assertThat(data.nodes).hasSize(2)
-
 
         val cytoData = data.nodes.stream().findFirst().get()
         assertThat(cytoData.data.record).isNotNull
         assertThat(cytoData.data.source).isEmpty()
-
     }
 
     @Test
@@ -134,8 +127,6 @@ class OrientDBDataSourceGraphDataProviderIntTest {
         val data = provider.loadFromClass(dataSource, "Person", 1)
 
         assertThat(data.nodes).hasSize(1)
-
-
     }
 
     @Test
@@ -143,8 +134,6 @@ class OrientDBDataSourceGraphDataProviderIntTest {
         val data = provider.loadFromClass(dataSource, "Person", "name", "frank", 10)
 
         assertThat(data.nodes).hasSize(1)
-
-
     }
 
     @Test
@@ -159,9 +148,9 @@ class OrientDBDataSourceGraphDataProviderIntTest {
         val secondNode = secondDataSet.nodes.first().data
 
         val edgeClasses = (firstNode.record["@in"] as Map<String, Int>).keys
-                .union((firstNode.record["@out"] as Map<String, Int>).keys)
-                .union((secondNode.record["@in"] as Map<String, Int>).keys)
-                .union((secondNode.record["@out"] as Map<String, Int>).keys)
+            .union((firstNode.record["@out"] as Map<String, Int>).keys)
+            .union((secondNode.record["@in"] as Map<String, Int>).keys)
+            .union((secondNode.record["@out"] as Map<String, Int>).keys)
 
         val data = provider.edges(dataSource, arrayOf(firstNode.id), edgeClasses.toTypedArray(), arrayOf(secondNode.id))
 
@@ -172,23 +161,18 @@ class OrientDBDataSourceGraphDataProviderIntTest {
         assertThat(cytoData.data.target).isNotBlank()
 
         assertThat(data.nodes).hasSize(2)
-
     }
-
 
     private fun getPersonsIdentity(limit: Int): Array<String> {
         ODatabaseDocumentTx(dbUrl).open<ODatabaseDocumentTx>("admin", "admin")
-                .use {
+            .use {
 
-                    return it.query<List<ODocument>>(OSQLSynchQuery<ODocument>("""SELECT from Person limit $limit"""))
-                            .asSequence()
-                            .map { doc -> doc.identity }
-                            .map { id -> id.clusterId.toString() + "_" + id.clusterPosition }
-                            .toList()
-                            .toTypedArray()
-
-                }
-
+                return it.query<List<ODocument>>(OSQLSynchQuery<ODocument>("""SELECT from Person limit $limit"""))
+                    .asSequence()
+                    .map { doc -> doc.identity }
+                    .map { id -> id.clusterId.toString() + "_" + id.clusterPosition }
+                    .toList()
+                    .toTypedArray()
+            }
     }
-
 }

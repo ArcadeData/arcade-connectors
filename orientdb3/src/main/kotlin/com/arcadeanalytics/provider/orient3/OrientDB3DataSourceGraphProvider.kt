@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,7 +42,6 @@ class OrientDB3DataSourceGraphProvider : DataSourceGraphProvider {
 
     private val allFields: Pattern = Pattern.compile(".*")
 
-
     override fun supportedDataSourceTypes(): Set<String> {
         return setOf("ORIENTDB3")
     }
@@ -55,9 +54,7 @@ class OrientDB3DataSourceGraphProvider : DataSourceGraphProvider {
         } finally {
             player.end()
         }
-
     }
-
 
     private fun provide(dataSource: DataSourceInfo, player: SpritePlayer, what: String) {
 
@@ -78,46 +75,41 @@ class OrientDB3DataSourceGraphProvider : DataSourceGraphProvider {
             open(dataSource).use { db ->
                 db.query("SELECT * FROM $what WHERE @rid > $skip LIMIT 1000").use { resultSet ->
                     resultSet.asSequence()
-                            .map { res -> res.element.get() }
-                            .filter { elem -> elem.propertyNames.size > 0 }
-                            .onEach { elem: OElement -> lastORID = elem.identity }
-                            .map { elem: OElement -> elem as ODocument }
-                            .map { doc -> toSprite(doc) }
-                            .forEach { doc: Sprite ->
-                                player.play(doc)
-                                fetched++
-                            }
+                        .map { res -> res.element.get() }
+                        .filter { elem -> elem.propertyNames.size > 0 }
+                        .onEach { elem: OElement -> lastORID = elem.identity }
+                        .map { elem: OElement -> elem as ODocument }
+                        .map { doc -> toSprite(doc) }
+                        .forEach { doc: Sprite ->
+                            player.play(doc)
+                            fetched++
+                        }
                 }
             }
             player.end()
 
             skip = lastORID
         }
-
     }
-
 
     private fun toSprite(document: ODocument): Sprite {
         val rid = document.identity
 
         return Sprite()
-                .load(document.toMap())
-                .addAll("@class",
-                        document.schemaClass
-                                .allSuperClasses
-                                .asSequence()
-                                .map { c -> c.name }
-                                .toList()
-                )
-                .apply<Any, String>(allFields) { v -> v.toString() }
-                .remove("@class", "V")
-                .remove("@class", "E")
-                .remove("@rid")
-                .add(ARCADE_ID, "${rid.clusterId}_${rid.clusterPosition}")
-                .add(ARCADE_TYPE, document.type())
+            .load(document.toMap())
+            .addAll(
+                "@class",
+                document.schemaClass
+                    .allSuperClasses
+                    .asSequence()
+                    .map { c -> c.name }
+                    .toList()
+            )
+            .apply<Any, String>(allFields) { v -> v.toString() }
+            .remove("@class", "V")
+            .remove("@class", "E")
+            .remove("@rid")
+            .add(ARCADE_ID, "${rid.clusterId}_${rid.clusterPosition}")
+            .add(ARCADE_TYPE, document.type())
     }
-
-
 }
-
-

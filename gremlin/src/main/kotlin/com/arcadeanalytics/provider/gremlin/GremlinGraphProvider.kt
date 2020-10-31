@@ -25,9 +25,9 @@ import kotlin.math.min
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -68,13 +68,13 @@ class GremlinGraphProvider : DataSourceGraphProvider {
                 val element = r.vertex
                 val sprite = Sprite()
                 element.keys()
-                        .asSequence()
-                        .flatMap { key: String? -> element.properties<Any>(key).asSequence() }
-                        .forEach { v: VertexProperty<Any?> -> sprite.add(v.label(), v.value()) }
+                    .asSequence()
+                    .flatMap { key: String? -> element.properties<Any>(key).asSequence() }
+                    .forEach { v: VertexProperty<Any?> -> sprite.add(v.label(), v.value()) }
 
                 sprite.add(ARCADE_ID, dataSource.id.toString() + "_" + cleanOrientId(element.id().toString()))
-                        .add(ARCADE_TYPE, ARCADE_NODE_TYPE)
-                        .add("@class", element.label())
+                    .add(ARCADE_TYPE, ARCADE_NODE_TYPE)
+                    .add("@class", element.label())
 
                 processor.play(sprite)
                 fetched++
@@ -97,11 +97,11 @@ class GremlinGraphProvider : DataSourceGraphProvider {
                 if (element.keys().isNotEmpty()) {
                     val sprite = Sprite()
                     element.keys().asSequence()
-                            .forEach { k: String? -> sprite.add(k!!, element.value<Any>(k).toString()) }
+                        .forEach { k: String? -> sprite.add(k!!, element.value<Any>(k).toString()) }
 
                     sprite.add(ARCADE_ID, dataSource.id.toString() + "_" + cleanOrientId(element.id().toString()))
-                            .add(ARCADE_TYPE, ARCADE_EDGE_TYPE)
-                            .add("@class", element.label())
+                        .add(ARCADE_TYPE, ARCADE_EDGE_TYPE)
+                        .add("@class", element.label())
 
                     processor.play(sprite)
                 }
@@ -114,7 +114,7 @@ class GremlinGraphProvider : DataSourceGraphProvider {
 
     private fun cleanOrientId(id: String): String {
         return StringUtils.removeStart(id, "#")
-                .replace(":", "_")
+            .replace(":", "_")
     }
 
     override fun supportedDataSourceTypes(): Set<String> {

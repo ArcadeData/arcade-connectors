@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,7 +43,6 @@ class CosmosDBGremlinGraphProvider : DataSourceGraphProvider {
         allFields = Pattern.compile(".*")
     }
 
-
     override fun supportedDataSourceTypes(): Set<String> {
         return Sets.newHashSet("GREMLIN_COSMOSDB")
     }
@@ -51,12 +50,11 @@ class CosmosDBGremlinGraphProvider : DataSourceGraphProvider {
     override fun provideTo(dataSource: DataSourceInfo, player: SpritePlayer) {
 
         val cluster = Cluster.build(dataSource.server)
-                .port(dataSource.port)
-                .serializer(createSerializer(dataSource))
-                .enableSsl(dataSource.type == "GREMLIN_COSMOSDB")
-                .credentials(dataSource.username, dataSource.password)
-                .create()
-
+            .port(dataSource.port)
+            .serializer(createSerializer(dataSource))
+            .enableSsl(dataSource.type == "GREMLIN_COSMOSDB")
+            .credentials(dataSource.username, dataSource.password)
+            .create()
 
         val client = cluster.connect<Client>().init()
 
@@ -97,21 +95,19 @@ class CosmosDBGremlinGraphProvider : DataSourceGraphProvider {
 
                 val sprite = Sprite()
                 res.keys
-                        .forEach { k -> sprite.add(k, res[k].toString()) }
+                    .forEach { k -> sprite.add(k, res[k].toString()) }
 
                 sprite.add(ARCADE_ID, dataSource.id.toString() + "_" + res["id"])
-                        .add(ARCADE_TYPE, ARCADE_NODE_TYPE)
-                        .add("@class", res["label"])
-                        .apply<Any, String>(allFields) { v -> v.toString() }
+                    .add(ARCADE_TYPE, ARCADE_NODE_TYPE)
+                    .add("@class", res["label"])
+                    .apply<Any, String>(allFields) { v -> v.toString() }
                 processor.play(sprite)
                 fetched++
                 log.info("fetched:: {} ", fetched)
-
             }
 
             skip = limit
             limit += 10000
-
         }
     }
 
@@ -142,12 +138,12 @@ class CosmosDBGremlinGraphProvider : DataSourceGraphProvider {
 
                 val sprite = Sprite()
                 res.keys
-                        .forEach { k -> sprite.add(k, res[k].toString()) }
+                    .forEach { k -> sprite.add(k, res[k].toString()) }
 
                 sprite.add(ARCADE_ID, dataSource.id.toString() + "_" + res["id"])
-                        .add(ARCADE_TYPE, ARCADE_EDGE_TYPE)
-                        .add("@class", res["label"])
-                        .apply<Any, String>(allFields) { v -> v.toString() }
+                    .add(ARCADE_TYPE, ARCADE_EDGE_TYPE)
+                    .add("@class", res["label"])
+                    .apply<Any, String>(allFields) { v -> v.toString() }
                 processor.play(sprite)
                 fetched++
 
@@ -156,7 +152,6 @@ class CosmosDBGremlinGraphProvider : DataSourceGraphProvider {
 
             skip = limit
             limit += 10000
-
         }
     }
 }

@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,29 +21,25 @@
 package com.arcadeanalytics.provider.orient3
 
 import com.arcadeanalytics.provider.DataSourceInfo
-import com.arcadeanalytics.test.KGenericContainer
 import com.orientechnologies.orient.core.db.ODatabaseType
 import com.orientechnologies.orient.core.db.OrientDB
 import com.orientechnologies.orient.core.db.OrientDBConfig
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.OrientDBContainer
-import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.utility.DockerImageName
 import java.io.IOException
-import java.util.logging.Level.parse
 
-
-val ORIENTDB_DOCKER_IMAGE = DockerImageName.parse("arcadeanalytics/orientdb3:latest").asCompatibleSubstituteFor("orientdb");
+val ORIENTDB_DOCKER_IMAGE = DockerImageName.parse("arcadeanalytics/orientdb3:latest").asCompatibleSubstituteFor("orientdb")
 
 const val ORIENTDB_ROOT_PASSWORD = "arcade"
 
 object OrientDB3Container {
 
     private val container = OrientDBContainer(ORIENTDB_DOCKER_IMAGE)
-            .withServerPassword(ORIENTDB_ROOT_PASSWORD)
-            .apply {
-                start()
-            }
+        .withServerPassword(ORIENTDB_ROOT_PASSWORD)
+        .apply {
+            start()
+        }
 
     val dataSource: DataSourceInfo
 
@@ -51,29 +47,26 @@ object OrientDB3Container {
 
     init {
 
-        dataSource = DataSourceInfo(id = 1L,
-                type = "ORIENTDB",
-                name = "testDataSource",
-                server = container.containerIpAddress,
-                port = container.firstMappedPort,
-                username = "admin",
-                password = "admin",
-                database = "testDatabase"
+        dataSource = DataSourceInfo(
+            id = 1L,
+            type = "ORIENTDB",
+            name = "testDataSource",
+            server = container.containerIpAddress,
+            port = container.firstMappedPort,
+            username = "admin",
+            password = "admin",
+            database = "testDatabase"
         )
 
         dbUrl = createTestDatabase(container.serverUrl, dataSource.database)
 
         createPersonSchema(dbUrl, dataSource)
-
     }
 
     fun getContainer(): OrientDBContainer {
         return container
     }
-
-
 }
-
 
 /**
  * Given an OrientDB container instance, returns the remote url
@@ -93,7 +86,8 @@ fun getServerUrl(container: GenericContainer<*>): String {
  */
 fun createPersonSchema(dbUrl: String, dataSource: DataSourceInfo) {
 
-    val command: String = """
+    val command: String =
+        """
 
                     CREATE CLASS Person EXTENDS V;
 
@@ -116,16 +110,14 @@ fun createPersonSchema(dbUrl: String, dataSource: DataSourceInfo) {
                     CREATE EDGE FriendOf FROM (SELECT FROM Person WHERE name = 'john') TO (SELECT FROM Person WHERE name = 'jane') set kind='fraternal';
                     CREATE EDGE HaterOf FROM (SELECT FROM Person WHERE name = 'jane') TO (SELECT FROM Person WHERE name = 'rob') set kind='killer';
                     CREATE EDGE HaterOf FROM (SELECT FROM Person WHERE name = 'frank') TO (SELECT FROM Person WHERE name = 'john') set kind='killer';
-                    """.trimIndent()
-
+        """.trimIndent()
 
     val orientDB = OrientDB(dbUrl, OrientDBConfig.defaultConfig())
 
     orientDB.open(dataSource.database, dataSource.username, dataSource.password)
-            .use {
-                it.execute("sql", command)
-            }
-
+        .use {
+            it.execute("sql", command)
+        }
 }
 
 /**
@@ -146,8 +138,4 @@ fun createTestDatabase(serverUrl: String, dbname: String): String {
     } catch (e: IOException) {
         throw RuntimeException("unable to create database on " + serverUrl, e)
     }
-
-
 }
-
-

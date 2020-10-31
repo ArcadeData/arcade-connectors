@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,7 +29,7 @@ import java.lang.System.getProperty
 import java.net.ServerSocket
 import java.nio.file.Files
 import java.nio.file.Paths
-import java.util.*
+import java.util.Optional.ofNullable
 import java.util.function.BooleanSupplier
 import java.util.function.Consumer
 
@@ -48,10 +48,9 @@ abstract class SshTunnelTemplate : DataSourceProvider {
             val privKeyFileName = getProperty("SSH_PRIV_KEY", ".ssh/id_rsa")
             val pubKeyFileName = getProperty("SSH_PUB_KEY", ".ssh/id_rsa.pub")
 
-
             val privKey = Files.readAllBytes(Paths.get(privKeyFileName))
             val pubKey = Files.readAllBytes(Paths.get(pubKeyFileName))
-            val sshUser = Optional.ofNullable(dataSourceInfo.sshUser).orElse(DEFAULT_SSH_USER)
+            val sshUser = ofNullable(dataSourceInfo.sshUser).orElse(DEFAULT_SSH_USER)
 
             jsch.addIdentity(sshUser, privKey, pubKey, null)
 
@@ -63,14 +62,11 @@ abstract class SshTunnelTemplate : DataSourceProvider {
 
             val wrapper = createLocalhostDataSource(dataSourceInfo, localPort)
             return Pair(session, wrapper)
-
         } catch (e: IOException) {
             throw RuntimeException(e)
         } catch (e: JSchException) {
             throw RuntimeException(e)
         }
-
-
     }
 
     private fun findFreePort(): Int {
@@ -93,7 +89,6 @@ abstract class SshTunnelTemplate : DataSourceProvider {
                     socket.close()
                 } catch (e: IOException) {
                 }
-
             }
         }
         throw IllegalStateException("Could not find a free TCP/IP port to open the ssh tunnel")
@@ -101,28 +96,29 @@ abstract class SshTunnelTemplate : DataSourceProvider {
 
     private fun createLocalhostDataSource(dataSourceInfo: DataSourceInfo, localPort: Int): DataSourceInfo {
 
-        return DataSourceInfo(dataSourceInfo.id,
-                dataSourceInfo.type,
-                dataSourceInfo.name,
-                dataSourceInfo.description,
-                "localhost",
-                localPort,
-                dataSourceInfo.database,
-                dataSourceInfo.username,
-                dataSourceInfo.password,
-                dataSourceInfo.aggregationEnabled,
-                dataSourceInfo.connectionProperties,
-                dataSourceInfo.enableSsl,
-                false,
-                "localhost",
-                localPort,
-                "")
+        return DataSourceInfo(
+            dataSourceInfo.id,
+            dataSourceInfo.type,
+            dataSourceInfo.name,
+            dataSourceInfo.description,
+            "localhost",
+            localPort,
+            dataSourceInfo.database,
+            dataSourceInfo.username,
+            dataSourceInfo.password,
+            dataSourceInfo.aggregationEnabled,
+            dataSourceInfo.connectionProperties,
+            dataSourceInfo.enableSsl,
+            false,
+            "localhost",
+            localPort,
+            ""
+        )
     }
 
     override fun supportedDataSourceTypes(): Set<String> {
         return Sets.newHashSet("SSH")
     }
-
 
     class JschSlf4jLogger : com.jcraft.jsch.Logger {
         private val logMap = HashMap<Int, Consumer<String>>()
@@ -150,8 +146,6 @@ abstract class SshTunnelTemplate : DataSourceProvider {
         override fun isEnabled(level: Int): Boolean {
             return enabledMap[level]!!.getAsBoolean()
         }
-
-
     }
 
     companion object {
@@ -162,8 +156,4 @@ abstract class SshTunnelTemplate : DataSourceProvider {
 
         private val DEFAULT_SSH_PORT = 22
     }
-
-
 }
-
-

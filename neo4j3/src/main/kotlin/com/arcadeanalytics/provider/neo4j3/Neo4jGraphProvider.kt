@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,18 +42,19 @@ class Neo4jGraphProvider : DataSourceGraphProvider {
 
     private val log = LoggerFactory.getLogger(Neo4jGraphProvider::class.java)
     private val queries = mapOf(
-            "NEO4J::LABELS" to "CALL db.labels() YIELD label",
-            "NEO4J::EDGES" to "CALL db.relationshipTypes() YIELD relationshipType",
+        "NEO4J::LABELS" to "CALL db.labels() YIELD label",
+        "NEO4J::EDGES" to "CALL db.relationshipTypes() YIELD relationshipType",
 
-            "NEO4J_MEMGRAPH::LABELS" to "MATCH (n) UNWIND labels(n) AS label RETURN DISTINCT label",
-            "NEO4J_MEMGRAPH::EDGES" to "MATCH ()-[r]->() RETURN DISTINCT type(r) AS relationshipType"
+        "NEO4J_MEMGRAPH::LABELS" to "MATCH (n) UNWIND labels(n) AS label RETURN DISTINCT label",
+        "NEO4J_MEMGRAPH::EDGES" to "MATCH ()-[r]->() RETURN DISTINCT type(r) AS relationshipType"
     )
-
 
     private val allFields: Pattern = Pattern.compile(".*")
 
-    override fun provideTo(dataSource: DataSourceInfo,
-                           player: SpritePlayer) {
+    override fun provideTo(
+        dataSource: DataSourceInfo,
+        player: SpritePlayer
+    ) {
 
         getDriver(dataSource).use { driver ->
 
@@ -64,25 +65,27 @@ class Neo4jGraphProvider : DataSourceGraphProvider {
                 indexRelationships(dataSource, player, session)
             }
         }
-
     }
 
-    private fun indexNodes(dataSource: DataSourceInfo,
-                           processor: SpritePlayer,
-                           session: Session) {
+    private fun indexNodes(
+        dataSource: DataSourceInfo,
+        processor: SpritePlayer,
+        session: Session
+    ) {
 
         val labels = session.run(queries["${dataSource.type}::LABELS"])
 
         labels.list()
-                .asSequence()
-                .map { res -> res.get("label").asString() }
-                .forEach { label -> indexLabel(dataSource, processor, session, label) }
-
+            .asSequence()
+            .map { res -> res.get("label").asString() }
+            .forEach { label -> indexLabel(dataSource, processor, session, label) }
     }
 
-    private fun indexRelationships(dataSource: DataSourceInfo,
-                                   processor: SpritePlayer,
-                                   session: Session) {
+    private fun indexRelationships(
+        dataSource: DataSourceInfo,
+        processor: SpritePlayer,
+        session: Session
+    ) {
 
         val edges = countEdges(session)
 
@@ -101,33 +104,33 @@ class Neo4jGraphProvider : DataSourceGraphProvider {
                 val record = rels.next()
 
                 record.fields().asSequence()
-                        .map { p -> p.value() }
-                        .filter { v -> v.type().name() == "RELATIONSHIP" }
-                        .map { v -> v.asRelationship() }
-                        .filter { r -> r.size() > 0 }
-                        .map { n ->
-                            Sprite().load(n.asMap())
-                                    .add("@class", n.type())
-                                    .add(ARCADE_ID, toArcadeId(dataSource, Neo4jType.EDGE, n.id()))
-                                    .add(ARCADE_TYPE, "edge")
-                                    .apply<Any, String>(allFields) { v -> v.toString() }
-                        }
-                        .forEach { s -> processor.play(s) }
+                    .map { p -> p.value() }
+                    .filter { v -> v.type().name() == "RELATIONSHIP" }
+                    .map { v -> v.asRelationship() }
+                    .filter { r -> r.size() > 0 }
+                    .map { n ->
+                        Sprite().load(n.asMap())
+                            .add("@class", n.type())
+                            .add(ARCADE_ID, toArcadeId(dataSource, Neo4jType.EDGE, n.id()))
+                            .add(ARCADE_TYPE, "edge")
+                            .apply<Any, String>(allFields) { v -> v.toString() }
+                    }
+                    .forEach { s -> processor.play(s) }
                 fetched++
-
             }
             skip = limit
             limit += 10000
-
         }
 
         processor.end()
     }
 
-    private fun indexLabel(dataSource: DataSourceInfo,
-                           processor: SpritePlayer,
-                           session: Session,
-                           label: String) {
+    private fun indexLabel(
+        dataSource: DataSourceInfo,
+        processor: SpritePlayer,
+        session: Session,
+        label: String
+    ) {
         val nodes = countNodes(session, label)
         log.info("fetching data from '{}' - for label {} total nodes '{}' ", session, label, nodes)
 
@@ -145,17 +148,17 @@ class Neo4jGraphProvider : DataSourceGraphProvider {
                 val record = result.next()
 
                 record.fields().asSequence()
-                        .map { p -> p.value() }
-                        .filter { v -> v.type().name() == "NODE" }
-                        .map { v -> v.asNode() }
-                        .map { n ->
-                            Sprite().load(n.asMap())
-                                    .addAll("@class", n.labels())
-                                    .add(ARCADE_ID, toArcadeId(dataSource, Neo4jType.NODE, n.id()))
-                                    .add(ARCADE_TYPE, "node")
-                                    .apply(allFields, Any::toString)
-                        }
-                        .forEach { s -> processor.play(s) }
+                    .map { p -> p.value() }
+                    .filter { v -> v.type().name() == "NODE" }
+                    .map { v -> v.asNode() }
+                    .map { n ->
+                        Sprite().load(n.asMap())
+                            .addAll("@class", n.labels())
+                            .add(ARCADE_ID, toArcadeId(dataSource, Neo4jType.NODE, n.id()))
+                            .add(ARCADE_TYPE, "node")
+                            .apply(allFields, Any::toString)
+                    }
+                    .forEach { s -> processor.play(s) }
 
                 fetched++
             }
@@ -168,24 +171,21 @@ class Neo4jGraphProvider : DataSourceGraphProvider {
         processor.end()
     }
 
-
     private fun countNodes(session: Session, label: String): Int {
         val count = session.run("MATCH (n:$label) RETURN count(*) AS count")
-                .single().get("count").asInt()
+            .single().get("count").asInt()
         log.info("nodes for label '{}' : {}", label, count)
         return count
     }
 
     private fun countEdges(session: Session): Int {
         val count = session.run("MATCH ()-[r]->() RETURN count(*) AS count")
-                .single().get("count").asInt()
+            .single().get("count").asInt()
         log.info("edges count: {}", count)
         return count
     }
 
-
     override fun supportedDataSourceTypes(): Set<String> {
         return setOf(NEO4J.name, NEO4J_MEMGRAPH.name)
     }
-
 }

@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,14 @@
  */
 package com.arcadeanalytics.provider.gremlin.cosmosdb
 
-import com.arcadeanalytics.provider.*
+import com.arcadeanalytics.provider.DataSourceInfo
+import com.arcadeanalytics.provider.DataSourceMetadata
+import com.arcadeanalytics.provider.DataSourceMetadataProvider
+import com.arcadeanalytics.provider.EdgesClasses
+import com.arcadeanalytics.provider.NodesClasses
+import com.arcadeanalytics.provider.TypeClass
+import com.arcadeanalytics.provider.TypeProperties
+import com.arcadeanalytics.provider.TypeProperty
 import com.arcadeanalytics.provider.gremlin.createSerializer
 import org.apache.tinkerpop.gremlin.driver.Client
 import org.apache.tinkerpop.gremlin.driver.Cluster
@@ -38,12 +45,12 @@ class CosmosDBGremlinMetadataProvider() : DataSourceMetadataProvider {
         val serializer = createSerializer(datasource)
 
         val cluster = Cluster.build(datasource.server)
-                .port(datasource.port!!)
-                .serializer(serializer)
-                .enableSsl(datasource.type == "GREMLIN_COSMOSDB")
-                .credentials(datasource.username, datasource.password)
-                .maxWaitForConnection(10000)
-                .create()
+            .port(datasource.port!!)
+            .serializer(serializer)
+            .enableSsl(datasource.type == "GREMLIN_COSMOSDB")
+            .credentials(datasource.username, datasource.password)
+            .maxWaitForConnection(10000)
+            .create()
 
         val client = cluster.connect<Client>().init()
         try {
@@ -52,71 +59,62 @@ class CosmosDBGremlinMetadataProvider() : DataSourceMetadataProvider {
             val edgesClasses = mapEdgesClasses(client)
 
             return DataSourceMetadata(nodeClasses, edgesClasses)
-
         } finally {
             client.close()
             cluster.close()
-
         }
-
-
     }
 
     fun mapNodeClasses(client: Client): NodesClasses {
         return client.submit("g.V().label().dedup()").asSequence()
-                .map { r -> r.`object`.toString() }
-                .map { TypeClass(it, countNodeLabel(it, client), mapNodeProperties(it, client)) }
-                .map {
-                    it.name to it
-                }.toMap()
+            .map { r -> r.`object`.toString() }
+            .map { TypeClass(it, countNodeLabel(it, client), mapNodeProperties(it, client)) }
+            .map {
+                it.name to it
+            }.toMap()
     }
-
 
     private fun mapNodeProperties(label: String, client: Client): TypeProperties {
 
         return client.submit("g.V().hasLabel('$label').limit(1)")
-                .asSequence()
-                .map { it -> it.`object` as Map<String, Any> }
-                .map { it -> it["properties"] as Map<String, List<Map<String, Any>>> }
-                .flatMap { it -> it.asSequence() }
-                .map { it -> it.key }
-                .filter { it != "id" }
-                .map { property -> TypeProperty(property, "STRING") }
-                .map { it.name to it }
-                .toMap()
+            .asSequence()
+            .map { it -> it.`object` as Map<String, Any> }
+            .map { it -> it["properties"] as Map<String, List<Map<String, Any>>> }
+            .flatMap { it -> it.asSequence() }
+            .map { it -> it.key }
+            .filter { it != "id" }
+            .map { property -> TypeProperty(property, "STRING") }
+            .map { it.name to it }
+            .toMap()
     }
-
 
     fun mapEdgesClasses(client: Client): EdgesClasses {
         return client.submit("g.E().label().dedup()").asSequence()
-                .map { r -> r.`object`.toString() }
-                .map { TypeClass(it, countEdgeLabel(it, client), mapEdgeProperties(it, client)) }
-                .map {
-                    it.name to it
-                }.toMap()
+            .map { r -> r.`object`.toString() }
+            .map { TypeClass(it, countEdgeLabel(it, client), mapEdgeProperties(it, client)) }
+            .map {
+                it.name to it
+            }.toMap()
     }
 
     private fun mapEdgeProperties(label: String, client: Client): TypeProperties {
 
         return client.submit("g.E().hasLabel('$label').limit(1)")
-                .asSequence()
-                .map { it -> it.`object` as Map<String, Any> }
-                .flatMap { it -> it.keys.asSequence() }
-                .map { property -> TypeProperty(property, "STRING") }
-                .map { it.name to it }
-                .toMap()
+            .asSequence()
+            .map { it -> it.`object` as Map<String, Any> }
+            .flatMap { it -> it.keys.asSequence() }
+            .map { property -> TypeProperty(property, "STRING") }
+            .map { it.name to it }
+            .toMap()
     }
 
     private fun countNodeLabel(label: String, client: Client): Long {
         return client.submit("g.V().hasLabel('$label').count()")
-                .one().long
-
+            .one().long
     }
 
     private fun countEdgeLabel(label: String, client: Client): Long {
         return client.submit("g.E().hasLabel('$label').count()")
-                .one().long
-
+            .one().long
     }
-
 }

@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,16 +19,20 @@
  */
 package com.arcadeanalytics.provider.orient2
 
-import com.arcadeanalytics.provider.*
+import com.arcadeanalytics.provider.DataSourceInfo
+import com.arcadeanalytics.provider.DataSourceMetadata
+import com.arcadeanalytics.provider.DataSourceMetadataProvider
+import com.arcadeanalytics.provider.EdgesClasses
+import com.arcadeanalytics.provider.NodesClasses
+import com.arcadeanalytics.provider.TypeClass
+import com.arcadeanalytics.provider.TypeProperty
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx
 import com.orientechnologies.orient.core.metadata.schema.OImmutableSchema
 import org.slf4j.LoggerFactory
 
 class OrientDBDataSourceMetadataProvider() : DataSourceMetadataProvider {
 
-
     private val log = LoggerFactory.getLogger(OrientDBDataSourceMetadataProvider::class.java)
-
 
     override fun fetchMetadata(dataSource: DataSourceInfo): DataSourceMetadata {
 
@@ -47,41 +51,37 @@ class OrientDBDataSourceMetadataProvider() : DataSourceMetadataProvider {
 
     private fun edgeClasses(schema: OImmutableSchema, db: ODatabaseDocumentTx): EdgesClasses {
         return schema.classes
-                .asSequence()
-                .filter { it.isEdgeType }
-                .filter { it.name != "E" }
-                .map {
+            .asSequence()
+            .filter { it.isEdgeType }
+            .filter { it.name != "E" }
+            .map {
 
-                    val props = it.properties()
-                            .map { prop -> prop.name to TypeProperty(prop.name, prop.type.name) }
-                            .toMap()
+                val props = it.properties()
+                    .map { prop -> prop.name to TypeProperty(prop.name, prop.type.name) }
+                    .toMap()
 
-                    TypeClass(it.name, db.countClass(it.name, true), props)
-
-                }.map {
-                    it.name to it
-                }.toMap()
+                TypeClass(it.name, db.countClass(it.name, true), props)
+            }.map {
+                it.name to it
+            }.toMap()
     }
 
     private fun nodeClasses(schema: OImmutableSchema, db: ODatabaseDocumentTx): NodesClasses {
         return schema.classes
-                .asSequence()
-                .filter { it.isVertexType }
-                .filter { it.name != "V" }
-                .map {
+            .asSequence()
+            .filter { it.isVertexType }
+            .filter { it.name != "V" }
+            .map {
 
-                    val props = it.properties()
-                            .map { prop -> prop.name to TypeProperty(prop.name, prop.type.name) }
-                            .toMap()
+                val props = it.properties()
+                    .map { prop -> prop.name to TypeProperty(prop.name, prop.type.name) }
+                    .toMap()
 
-                    TypeClass(it.name, db.countClass(it.name, true), props)
-
-                }.map {
-                    it.name to it
-                }.toMap()
+                TypeClass(it.name, db.countClass(it.name, true), props)
+            }.map {
+                it.name to it
+            }.toMap()
     }
 
-
     override fun supportedDataSourceTypes(): Set<String> = setOf("ORIENTDB")
-
 }

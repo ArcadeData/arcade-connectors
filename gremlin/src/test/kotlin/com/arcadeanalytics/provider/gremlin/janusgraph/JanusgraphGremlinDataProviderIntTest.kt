@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,8 +45,7 @@ internal class JanusgraphGremlinDataProviderIntTest {
 
         val record = cytoData.data.record
         assertThat(record).isNotNull
-                .containsKeys("@in", "@out", "name", "@edgeCount")
-
+            .containsKeys("@in", "@out", "name", "@edgeCount")
     }
 
     @Test
@@ -59,13 +58,12 @@ internal class JanusgraphGremlinDataProviderIntTest {
         val data = provider.fetchData(dataSource, query, 10)
 
         val ids = data.nodes.asSequence()
-                .map { it.data.id }
-                .toList()
+            .map { it.data.id }
+            .toList()
 
         val load = provider.load(dataSource, ids.toTypedArray())
 
         assertThat(load.nodes).hasSize(10)
-
     }
 
     @Test
@@ -76,21 +74,19 @@ internal class JanusgraphGremlinDataProviderIntTest {
         val data = provider.fetchData(dataSource, query, 10)
 
         val ids = data.nodes.asSequence()
-                .map { it.data.id }
-                .toList()
+            .map { it.data.id }
+            .toList()
 
         val label: String = data.nodes.asSequence()
-                .map { it.data.record["@in"] as Map<String, Any> }
-                .map { ins -> ins.keys }
-                .flatMap { k -> k.asSequence() }
-                .first()
-
+            .map { it.data.record["@in"] as Map<String, Any> }
+            .map { ins -> ins.keys }
+            .flatMap { k -> k.asSequence() }
+            .first()
 
         val load = provider.expand(dataSource, ids.toTypedArray(), "in", label, 50)
 
         assertThat(load.nodes).isNotEmpty
         assertThat(load.edges).isNotEmpty
-
     }
 
     @Test
@@ -101,14 +97,13 @@ internal class JanusgraphGremlinDataProviderIntTest {
         val data = provider.fetchData(dataSource, query, 10)
 
         val ids = data.nodes.asSequence()
-                .map { it.data.id }
-                .toList()
+            .map { it.data.id }
+            .toList()
 
         val load = provider.expand(dataSource, ids.toTypedArray(), "both", "", 50)
 
         assertThat(load.nodes).isNotEmpty
         assertThat(load.edges).isNotEmpty
-
     }
 
     @Test
@@ -125,8 +120,7 @@ internal class JanusgraphGremlinDataProviderIntTest {
 
         val record = cytoData.data.record
         assertThat(record).isNotNull
-                .containsKeys("@in", "@out")
-
+            .containsKeys("@in", "@out")
 
         assertThat(data.nodes).isNotEmpty
     }
@@ -147,13 +141,13 @@ internal class JanusgraphGremlinDataProviderIntTest {
         val toIds = secondDataSet.nodes.asSequence().map { it.data.id }.toList()
 
         val edgeClasses = firstDataSet.nodes.union(secondDataSet.nodes)
-                .asSequence()
-                .map { d ->
-                    (d.data.record["@in"] as Map<String, Int>).keys
-                            .union((d.data.record["@out"] as Map<String, Int>).keys)
-                }
-                .flatMap { it.asSequence() }
-                .toSet()
+            .asSequence()
+            .map { d ->
+                (d.data.record["@in"] as Map<String, Int>).keys
+                    .union((d.data.record["@out"] as Map<String, Int>).keys)
+            }
+            .flatMap { it.asSequence() }
+            .toSet()
 
 //        val edgeClasses = (firstNode.record["@in"] as Map<String, Int>).keys
 //                .union((firstNode.record["@out"] as Map<String, Int>).keys)
@@ -162,8 +156,7 @@ internal class JanusgraphGremlinDataProviderIntTest {
 
         val data = provider.edges(dataSource, fromIds.toTypedArray(), edgeClasses.toTypedArray(), toIds.toTypedArray())
 
-
-        println("data = ${data}")
+        println("data = $data")
 
         val cytoData = data.edges.first()
 
@@ -172,27 +165,21 @@ internal class JanusgraphGremlinDataProviderIntTest {
         assertThat(cytoData.data.target).isNotBlank()
 
         assertThat(data.nodes).hasSize(20)
-
     }
-
 
     @Test
     fun shouldLoadFromClass() {
         val graphData = provider.loadFromClass(dataSource, "artist", 10)
 
-        println("graphData = ${graphData}")
+        println("graphData = $graphData")
         assertThat(graphData.nodes).hasSize(10)
-
     }
 
     @Test
     fun shouldLoadFromClassWherePropertyHasValue() {
         val data = provider.loadFromClass(dataSource, "song", "songType", "original", 10)
 
-        println("data = ${data}")
+        println("data = $data")
         assertThat(data.nodes).hasSize(10)
-
     }
-
 }
-

@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,21 +32,17 @@ import org.testcontainers.containers.wait.strategy.Wait
 
 class Neo4jConnectionTest {
 
-
     private val LOGGER = LoggerFactory.getLogger(Neo4jDataProviderIntTest::class.java)
 
     private val container: KGenericContainer = KGenericContainer("neo4j:3.5")
-            .apply {
-                withExposedPorts(7687, 7474)
-                withEnv("NEO4J_AUTH", "neo4j/arcade")
-                waitingFor(Wait.forListeningPort())
-                start()
-
-            }
-
+        .apply {
+            withExposedPorts(7687, 7474)
+            withEnv("NEO4J_AUTH", "neo4j/arcade")
+            waitingFor(Wait.forListeningPort())
+            start()
+        }
 
     private val provider: Neo4jDataProvider
-
 
     private val dataSource: DataSourceInfo
 
@@ -54,14 +50,15 @@ class Neo4jConnectionTest {
 
         container.followOutput(Slf4jLogConsumer(LOGGER))
 
-        dataSource = DataSourceInfo(id = 1L,
-                type = "NEO4J",
-                name = "testDataSource",
-                server = container.containerIpAddress,
-                port = container.firstMappedPort,
-                username = "neo4j",
-                password = "arcade",
-                database = Neo4jDataProviderIntTest::class.java.simpleName
+        dataSource = DataSourceInfo(
+            id = 1L,
+            type = "NEO4J",
+            name = "testDataSource",
+            server = container.containerIpAddress,
+            port = container.firstMappedPort,
+            username = "neo4j",
+            password = "arcade",
+            database = Neo4jDataProviderIntTest::class.java.simpleName
         )
         getDriver(dataSource).use { driver ->
 
@@ -71,9 +68,7 @@ class Neo4jConnectionTest {
         }
 
         provider = Neo4jDataProvider()
-
     }
-
 
     @Test
     internal fun shouldCheckConnectionStatus() {
@@ -82,7 +77,5 @@ class Neo4jConnectionTest {
         container.stop()
 
         assertThatExceptionOfType(RuntimeException::class.java).isThrownBy { provider.testConnection(dataSource) }
-
-
     }
 }

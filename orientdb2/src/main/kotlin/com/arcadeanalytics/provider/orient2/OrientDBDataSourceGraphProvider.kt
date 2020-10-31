@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -56,53 +56,47 @@ class OrientDBDataSourceGraphProvider : DataSourceGraphProvider {
         open(dataSource).use { db ->
 
             queries.asSequence()
-                    .onEach { query -> log.info("fetching documents from datasource {} with query ' {} ' ", dataSource.id, query) }
-                    .forEach { sql ->
+                .onEach { query -> log.info("fetching documents from datasource {} with query ' {} ' ", dataSource.id, query) }
+                .forEach { sql ->
 
-                        val query = OSQLSynchQuery<ODocument>(sql)
+                    val query = OSQLSynchQuery<ODocument>(sql)
 
-                        var resultset = db.query<List<*>>(query)
+                    var resultset = db.query<List<*>>(query)
 
-                        while (!resultset.isEmpty()) {
+                    while (!resultset.isEmpty()) {
 
-                            resultset.asSequence()
-                                    .map { res -> res as ODocument }
-                                    .filter { doc -> doc.fields() > 0 }
-                                    .map { doc -> toSprite(doc) }
-                                    .forEach { doc -> player.play(doc) }
+                        resultset.asSequence()
+                            .map { res -> res as ODocument }
+                            .filter { doc -> doc.fields() > 0 }
+                            .map { doc -> toSprite(doc) }
+                            .forEach { doc -> player.play(doc) }
 
-                            resultset = db.query<List<*>>(query)
-
-                        }
-                        player.end()
+                        resultset = db.query<List<*>>(query)
                     }
+                    player.end()
+                }
         }
-
-
     }
 
     private fun toSprite(document: ODocument): Sprite {
         val rid = document.identity
 
         val sprite = Sprite()
-                .load(document.toMap())
-                .addAll("@class",
-                        document.schemaClass
-                                .allSuperClasses
-                                .asSequence()
-                                .map { c -> c.name }
-                                .toList()
-                )
-                .apply<Any, String>(allFields) { v -> v.toString() }
-                .remove("@class", "V")
-                .remove("@class", "E")
-                .remove("@rid")
-                .add(ARCADE_ID, "${rid.clusterId}_${rid.clusterPosition}")
-                .add(ARCADE_TYPE, document.type())
+            .load(document.toMap())
+            .addAll(
+                "@class",
+                document.schemaClass
+                    .allSuperClasses
+                    .asSequence()
+                    .map { c -> c.name }
+                    .toList()
+            )
+            .apply<Any, String>(allFields) { v -> v.toString() }
+            .remove("@class", "V")
+            .remove("@class", "E")
+            .remove("@rid")
+            .add(ARCADE_ID, "${rid.clusterId}_${rid.clusterPosition}")
+            .add(ARCADE_TYPE, document.type())
         return sprite
     }
-
-
 }
-
-

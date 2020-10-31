@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,22 +33,20 @@ class GremlinMetadataProviderTest {
     fun fetchMetadata() {
         val metadata = provider.fetchMetadata(OrientDBGremlinContainer.dataSource)
 
-        println("metadata = ${metadata}")
+        println("metadata = $metadata")
 
         assertThat(metadata.nodesClasses)
-                .hasSize(11)
-                .containsKeys("Countries")
+            .hasSize(11)
+            .containsKeys("Countries")
 
         assertThat(metadata.nodesClasses["Countries"]!!.cardinality).isEqualTo(249)
 
         assertThat(metadata.nodesClasses["Countries"]?.properties).containsKeys("Id", "Code", "Name")
 
         assertThat(metadata.edgesClasses)
-                .hasSize(9)
-                .containsKeys("HasFriend")
+            .hasSize(9)
+            .containsKeys("HasFriend")
 
         assertThat(metadata.edgesClasses["HasFriend"]!!.cardinality).isEqualTo(1617)
     }
-
 }
-

@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,12 @@
  */
 package com.arcadeanalytics.provider.orient3
 
-import com.arcadeanalytics.provider.*
+import com.arcadeanalytics.provider.CytoData
+import com.arcadeanalytics.provider.Data
+import com.arcadeanalytics.provider.DataSourceGraphDataProvider
+import com.arcadeanalytics.provider.DataSourceInfo
+import com.arcadeanalytics.provider.GraphData
+import com.arcadeanalytics.provider.mapType
 import com.google.common.collect.Maps
 import com.orientechnologies.common.collection.OMultiValue
 import com.orientechnologies.orient.core.db.record.OIdentifiable
@@ -35,10 +40,9 @@ import com.orientechnologies.orient.core.record.impl.OEdgeDocument
 import com.orientechnologies.orient.core.record.impl.OVertexDocument
 import com.orientechnologies.orient.core.sql.executor.OResultSet
 import org.apache.commons.lang3.RegExUtils.removeFirst
-import org.apache.commons.lang3.StringUtils.*
+import org.apache.commons.lang3.StringUtils.trimToEmpty
+import org.apache.commons.lang3.StringUtils.wrap
 import org.slf4j.LoggerFactory
-import java.util.*
-import kotlin.collections.HashSet
 
 /**
  * Specialized provider for OrientDB 3.0.x
@@ -55,35 +59,33 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
 
         try {
             open(dataSource)
-                    .use { db ->
+                .use { db ->
 
-                        val count = db.query("SELECT FROM V LIMIT 1").asSequence().count()
-                        log.info("connection works fine:: '{}' ", dataSource.id)
-                        return count == 1
-                    }
+                    val count = db.query("SELECT FROM V LIMIT 1").asSequence().count()
+                    log.info("connection works fine:: '{}' ", dataSource.id)
+                    return count == 1
+                }
         } catch (e: Exception) {
             throw RuntimeException(e)
         }
     }
-
 
     override fun fetchData(dataSource: DataSourceInfo, query: String, limit: Int): GraphData {
 
         log.info("fetching data from '{}' with query '{}' ", dataSource.id, query)
 
         open(dataSource)
-                .use { db ->
+            .use { db ->
 
-                    val lang = if (query.startsWith("gremlin:")) "gremlin" else "sql"
+                val lang = if (query.startsWith("gremlin:")) "gremlin" else "sql"
 
-                    db.execute(lang, query.removePrefix("gremlin:"))
-                            .use { resultSet ->
-                                val data = mapResultSet(dataSource, resultSet)
-                                log.info("Fetched {} nodes and {} edges ", data.nodes.size, data.edges.size)
-                                return data
-                            }
-                }
-
+                db.execute(lang, query.removePrefix("gremlin:"))
+                    .use { resultSet ->
+                        val data = mapResultSet(dataSource, resultSet)
+                        log.info("Fetched {} nodes and {} edges ", data.nodes.size, data.edges.size)
+                        return data
+                    }
+            }
     }
 
     private fun toCytoData(element: OElement): CytoData {
@@ -93,31 +95,32 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
             else -> transformToMap(element as OEdgeDocument)
         }
 
-
         val ins = HashMap<String, Any>()
         record["@in"] = ins
         val outs = HashMap<String, Any>()
         record["@out"] = outs
 
         val keys = record.entries
-                .asSequence()
-                .filter { e -> e.key.startsWith("in_") }
-                .map { e ->
-                    ins[removeFirst(e.key, "in_")] = e.value
-                    e.key
-                }
-                .toMutableSet()
+            .asSequence()
+            .filter { e -> e.key.startsWith("in_") }
+            .map { e ->
+                ins[removeFirst(e.key, "in_")] = e.value
+                e.key
+            }
+            .toMutableSet()
 
-        keys.addAll(record.entries
+        keys.addAll(
+            record.entries
                 .asSequence()
                 .filter { e -> e.key.startsWith("out_") }
                 .map { e ->
                     outs[removeFirst(e.key, "out_")] = e.value
                     e.key
-                }.toSet())
+                }.toSet()
+        )
 
         keys.asSequence()
-                .forEach { k -> record.remove(k) }
+            .forEach { k -> record.remove(k) }
 
         cleanRecord(record)
 
@@ -135,8 +138,6 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
                 CytoData(group = "nodes", data = data, classes = element.getProperty("@class"))
             }
         }
-
-
     }
 
     private fun cleanRecord(record: MutableMap<String, Any>) {
@@ -156,10 +157,10 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
         for (property in doc.propertyNames) {
             val propertyType = doc.fieldType(property)
             if (propertyType == OType.LINK ||
-                    propertyType == OType.LINKBAG ||
-                    propertyType == OType.LINKLIST ||
-                    propertyType == OType.LINKSET ||
-                    propertyType == OType.LINKMAP
+                propertyType == OType.LINKBAG ||
+                propertyType == OType.LINKLIST ||
+                propertyType == OType.LINKSET ||
+                propertyType == OType.LINKMAP
             ) continue
 
             var value = doc.field<Any>(property)
@@ -202,43 +203,42 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
         val nodes = mutableSetOf<OVertex>()
         val edges = mutableSetOf<OEdge>()
         resultSet.asSequence()
-                .onEach { res -> log.info(res.toJSON())}
-                .map { res -> res.element.get() }
-                .forEach { element ->
-                    if (element.isVertex) {
-                        val vertex: OVertex = element as OVertex
-                        vertex.setProperty("@edgeCount", vertex.getEdges(ODirection.BOTH).asSequence().count())
-                        nodes.add(vertex)
-                    } else if (element.isEdge) {
-                        val edge: OEdge = element as OEdge
-                        edges.add(edge)
+            .onEach { res -> log.info(res.toJSON()) }
+            .map { res -> res.element.get() }
+            .forEach { element ->
+                if (element.isVertex) {
+                    val vertex: OVertex = element as OVertex
+                    vertex.setProperty("@edgeCount", vertex.getEdges(ODirection.BOTH).asSequence().count())
+                    nodes.add(vertex)
+                } else if (element.isEdge) {
+                    val edge: OEdge = element as OEdge
+                    edges.add(edge)
 //                        nodes.add(edge.from)
 //                        nodes.add(edge.to)
-                    }
                 }
+            }
 
         log.info("Computing edge map on {} edges...", edges.size)
 
         val edgeClasses = HashMap<String, Map<String, Any>>()
         val cytoEdges = edges.asSequence()
-                .filter { e-> nodes.contains(e.from) && nodes.contains(e.to) }
-                .map { e -> populateClasses(edgeClasses, e) }
-                .map { e -> mapRid(dataSource, e) }
-                .map { e -> mapInAndOut(dataSource, e) }
-                .map { e -> countInAndOut(e) }
-                .map { e -> toCytoData(e) }
-                .toSet()
+            .filter { e -> nodes.contains(e.from) && nodes.contains(e.to) }
+            .map { e -> populateClasses(edgeClasses, e) }
+            .map { e -> mapRid(dataSource, e) }
+            .map { e -> mapInAndOut(dataSource, e) }
+            .map { e -> countInAndOut(e) }
+            .map { e -> toCytoData(e) }
+            .toSet()
 
         log.info("Computing vertex map on {} vertices...", nodes.size)
 
         val nodeClasses = HashMap<String, Map<String, Any>>()
         val cytoNodes = nodes.asSequence()
-                .map { v -> populateClasses(nodeClasses, v) }
-                .map { v -> mapRid(dataSource, v) }
-                .map { v -> countInAndOut(v) }
-                .map { v -> toCytoData(v) }
-                .toSet()
-
+            .map { v -> populateClasses(nodeClasses, v) }
+            .map { v -> mapRid(dataSource, v) }
+            .map { v -> countInAndOut(v) }
+            .map { v -> toCytoData(v) }
+            .toSet()
 
         return GraphData(nodeClasses, edgeClasses, cytoNodes, cytoEdges, false)
     }
@@ -247,23 +247,23 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
         if (element.isVertex) {
             element as OVertexDocument
             element.fieldNames()
-                    .asSequence()
-                    .filter { f -> f.startsWith("out_") || f.startsWith("in_") }
-                    .forEach { f ->
-                        val size = OMultiValue.getSize(element.field(f))
-                        element.removeField(f)
-                        element.field(f, size)
-                    }
+                .asSequence()
+                .filter { f -> f.startsWith("out_") || f.startsWith("in_") }
+                .forEach { f ->
+                    val size = OMultiValue.getSize(element.field(f))
+                    element.removeField(f)
+                    element.field(f, size)
+                }
         } else {
             element as OEdgeDocument
             element.fieldNames()
-                    .asSequence()
-                    .filter { f -> f.startsWith("out_") || f.startsWith("in_") }
-                    .forEach { f ->
-                        val size = OMultiValue.getSize(element.field(f))
-                        element.removeField(f)
-                        element.field(f, size)
-                    }
+                .asSequence()
+                .filter { f -> f.startsWith("out_") || f.startsWith("in_") }
+                .forEach { f ->
+                    val size = OMultiValue.getSize(element.field(f))
+                    element.removeField(f)
+                    element.field(f, size)
+                }
         }
 
         return element
@@ -308,32 +308,32 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
         val properties = classes[vertex.schemaType.get().toString()]
 
         vertex.propertyNames
-                .asSequence()
-                .filter { p -> !p.startsWith("@") }
-                .filter { p -> !p.startsWith("in_") }
-                .filter { p -> !p.startsWith("out_") }
-                .filter { p ->
-                    val propertyType = vertex.fieldType(p)
-                    propertyType != OType.LINK &&
-                            propertyType != OType.LINKMAP &&
-                            propertyType != OType.LINKSET &&
-                            propertyType != OType.LINKLIST &&
-                            propertyType != OType.LINKBAG
-                }
-                .forEach { f ->
-                    val type = vertex.fieldType(f)
-                    if (type != null)
-                        (properties as MutableMap<String, Any>).putIfAbsent(f, mapType(type.name))
-                }
-
+            .asSequence()
+            .filter { p -> !p.startsWith("@") }
+            .filter { p -> !p.startsWith("in_") }
+            .filter { p -> !p.startsWith("out_") }
+            .filter { p ->
+                val propertyType = vertex.fieldType(p)
+                propertyType != OType.LINK &&
+                    propertyType != OType.LINKMAP &&
+                    propertyType != OType.LINKSET &&
+                    propertyType != OType.LINKLIST &&
+                    propertyType != OType.LINKBAG
+            }
+            .forEach { f ->
+                val type = vertex.fieldType(f)
+                if (type != null)
+                (properties as MutableMap<String, Any>).putIfAbsent(f, mapType(type.name))
+            }
     }
 
-
-    override fun expand(dataSource: DataSourceInfo,
-                        ids: Array<String>,
-                        direction: String,
-                        edgeLabel: String,
-                        maxTraversal: Int): GraphData {
+    override fun expand(
+        dataSource: DataSourceInfo,
+        ids: Array<String>,
+        direction: String,
+        edgeLabel: String,
+        maxTraversal: Int
+    ): GraphData {
 
         val cleanedEdgeLabel = wrap(trimToEmpty(edgeLabel), "`")
 
@@ -352,21 +352,23 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
         query += "] MAXDEPTH 2) LIMIT $maxTraversal"
 
         return fetchData(dataSource, query, maxTraversal)
-
     }
 
-    override fun edges(dataSource: DataSourceInfo,
-                       fromIds: Array<String>,
-                       edgesLabel: Array<String>,
-                       toIds: Array<String>): GraphData {
+    override fun edges(
+        dataSource: DataSourceInfo,
+        fromIds: Array<String>,
+        edgesLabel: Array<String>,
+        toIds: Array<String>
+    ): GraphData {
         val cleanedFromIds = cleanIds(dataSource, fromIds)
         val cleanedToIds = cleanIds(dataSource, toIds)
         val cleanLabels = edgesLabel.joinToString("','", "'", "'")
 
-        val query = """MATCH {class: V, AS:node, WHERE: ( @rid IN [$cleanedFromIds] ) } 
-                    |.bothE($cleanLabels ) { AS: rel } 
-                    |.bothV() { AS: target, WHERE: ( @rid IN [$cleanedToIds] ) } 
-                    | RETURN ${'$'}pathElements 
+        val query =
+            """MATCH {class: V, AS:node, WHERE: ( @rid IN [$cleanedFromIds] ) }
+                    |.bothE($cleanLabels ) { AS: rel }
+                    |.bothV() { AS: target, WHERE: ( @rid IN [$cleanedToIds] ) }
+                    | RETURN ${'$'}pathElements
                     """.trimMargin()
 
         return fetchData(dataSource, query, 10000)
@@ -381,17 +383,15 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
         query += "] "
 
         return fetchData(dataSource, query, ids.size)
-
     }
 
     private fun cleanIds(dataSource: DataSourceInfo, ids: Array<String>): String {
         return ids
-                .asSequence()
-                .map { r -> r.removePrefix("${dataSource.id}_") }
-                .map { r -> "#" + r.replace('_', ':') }
-                .joinToString { it }
+            .asSequence()
+            .map { r -> r.removePrefix("${dataSource.id}_") }
+            .map { r -> "#" + r.replace('_', ':') }
+            .joinToString { it }
     }
-
 
     override fun loadFromClass(dataSource: DataSourceInfo, className: String, limit: Int): GraphData {
         val query = "select * from `$className` limit $limit"
@@ -402,6 +402,4 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
         val query = "select * from `$className` where `$propName` = '$propertyValue' limit $limit"
         return fetchData(dataSource, query, limit)
     }
-
-
 }

@@ -1,10 +1,18 @@
 package com.arcadeanalytics.provider.rdbms
 
-import com.arcadeanalytics.provider.*
+import com.arcadeanalytics.provider.CytoData
+import com.arcadeanalytics.provider.Data
+import com.arcadeanalytics.provider.DataSourceInfo
+import com.arcadeanalytics.provider.DataSourceTableDataProvider
+import com.arcadeanalytics.provider.GraphData
+import com.arcadeanalytics.provider.QueryParams
+import com.arcadeanalytics.provider.TABLE_CLASS
+import com.arcadeanalytics.provider.TypeProperty
+import com.arcadeanalytics.provider.mapType
+import com.arcadeanalytics.provider.prefixIfAbsent
 import com.arcadeanalytics.provider.rdbms.persistence.util.DBSourceConnection
 import java.sql.ResultSet
 import java.sql.ResultSetMetaData
-
 
 class RDBMSTableDataProvider : DataSourceTableDataProvider {
 
@@ -28,7 +36,7 @@ class RDBMSTableDataProvider : DataSourceTableDataProvider {
                     tableClass["cardinality"] = cytoNodes.size
                     tableClass["properties"] = nodesProperties
                     val nodeClasses = mutableMapOf<String, MutableMap<String, Any>>()
-                    nodeClasses[TABLE_CLASS] = tableClass;
+                    nodeClasses[TABLE_CLASS] = tableClass
 
 /*-
  * #%L
@@ -39,9 +47,9 @@ class RDBMSTableDataProvider : DataSourceTableDataProvider {
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -83,33 +91,31 @@ class RDBMSTableDataProvider : DataSourceTableDataProvider {
 
             val data = Data(id = cardinality++.toString(), record = record)
 
-            val cytoData = CytoData(classes = TABLE_CLASS,
-                    group = "nodes",
-                    data = data)
+            val cytoData = CytoData(
+                classes = TABLE_CLASS,
+                group = "nodes",
+                data = data
+            )
 
             cytoNodes.add(cytoData)
         }
         return cytoNodes
     }
 
-
     override fun fetchData(dataSource: DataSourceInfo, query: String, params: QueryParams, limit: Int): GraphData {
         var filledQuery = query
         params.asSequence()
-                .forEach { p -> filledQuery = filledQuery.replace("${p.name.prefixIfAbsent(":")}", p.value) }
+            .forEach { p -> filledQuery = filledQuery.replace("${p.name.prefixIfAbsent(":")}", p.value) }
 
         return fetchData(dataSource, filledQuery, limit)
     }
 
-
     override fun supportedDataSourceTypes(): Set<String> = setOf(
-            "RDBMS_POSTGRESQL",
-            "RDBMS_MYSQL",
-            "RDBMS_MSSQLSERVER",
-            "RDBMS_HSQL",
-            "RDBMS_ORACLE",
-            "RDBMS_DATA_WORLD"
+        "RDBMS_POSTGRESQL",
+        "RDBMS_MYSQL",
+        "RDBMS_MSSQLSERVER",
+        "RDBMS_HSQL",
+        "RDBMS_ORACLE",
+        "RDBMS_DATA_WORLD"
     )
-
-
 }

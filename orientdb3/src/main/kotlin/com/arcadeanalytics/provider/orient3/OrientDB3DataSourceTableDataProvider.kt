@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,15 +19,21 @@
  */
 package com.arcadeanalytics.provider.orient3
 
-import com.arcadeanalytics.provider.*
+import com.arcadeanalytics.provider.CytoData
+import com.arcadeanalytics.provider.Data
+import com.arcadeanalytics.provider.DataSourceInfo
+import com.arcadeanalytics.provider.DataSourceTableDataProvider
+import com.arcadeanalytics.provider.GraphData
+import com.arcadeanalytics.provider.QueryParams
+import com.arcadeanalytics.provider.TABLE_CLASS
+import com.arcadeanalytics.provider.TypeProperty
+import com.arcadeanalytics.provider.prefixIfAbsent
 import com.orientechnologies.orient.core.metadata.schema.OType
 import com.orientechnologies.orient.core.record.impl.ODocumentHelper
 import com.orientechnologies.orient.core.sql.executor.OResult
 import com.orientechnologies.orient.core.sql.executor.OResultSet
 import org.apache.commons.lang3.StringUtils.truncate
 import org.slf4j.LoggerFactory
-import java.util.*
-
 
 /**
  * Specialized provider for OrientDB 3.0.x
@@ -41,7 +47,7 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
     override fun fetchData(dataSource: DataSourceInfo, query: String, params: QueryParams, limit: Int): GraphData {
         var filledQuery = query
         params.asSequence()
-                .forEach { p -> filledQuery = filledQuery.replace("${p.name.prefixIfAbsent(":")}", p.value) }
+            .forEach { p -> filledQuery = filledQuery.replace("${p.name.prefixIfAbsent(":")}", p.value) }
 
         return fetchData(dataSource, filledQuery, limit)
     }
@@ -51,22 +57,20 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
         log.info("fetching data from '{}' with query '{}' ", dataSource.id, truncate(query, 256))
 
         open(dataSource)
-                .use { db ->
+            .use { db ->
 
-                    val lang = if (query.startsWith("gremlin:")) "gremlin" else "sql"
+                val lang = if (query.startsWith("gremlin:")) "gremlin" else "sql"
 
-                    db.execute(lang, query.removePrefix("gremlin:"))
-                            .use { resultSet ->
+                db.execute(lang, query.removePrefix("gremlin:"))
+                    .use { resultSet ->
 
-                                val data = mapResultSet(resultSet)
+                        val data = mapResultSet(resultSet)
 
-                                log.info("Fetched {} rows", data.nodes.size)
+                        log.info("Fetched {} rows", data.nodes.size)
 
-                                return data
-
-                            }
-                }
-
+                        return data
+                    }
+            }
     }
 
     fun mapResultSet(resultSet: OResultSet): GraphData {
@@ -75,9 +79,9 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
 
         var count: Long = 0
         val cytoNodes = resultSet.asSequence()
-                .map { v -> populateProperties(nodesProperties, v) }
-                .map { v -> toCytoData(v, count++) }
-                .toSet()
+            .map { v -> populateProperties(nodesProperties, v) }
+            .map { v -> toCytoData(v, count++) }
+            .toSet()
 
         log.debug("properties:: {} ", nodesProperties)
         val tableClass = mutableMapOf<String, Any>()
@@ -86,7 +90,7 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
         tableClass.put("properties", nodesProperties)
 
         val nodeClasses = mutableMapOf<String, MutableMap<String, Any>>()
-        nodeClasses.put(TABLE_CLASS, tableClass);
+        nodeClasses.put(TABLE_CLASS, tableClass)
 
         val edgeClasses = mutableMapOf<String, MutableMap<String, Any>>()
         val cytoEdges = emptySet<CytoData>()
@@ -94,29 +98,27 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
         return GraphData(nodeClasses, edgeClasses, cytoNodes, cytoEdges)
     }
 
-
     private fun populateProperties(properties: MutableMap<String, TypeProperty>, element: OResult): OResult {
 
         val props = element.propertyNames
-                .asSequence()
-                .filter { name -> !properties.containsKey(name) }
-                .filter { p -> !p.startsWith("@") }
-                .filter { p -> !p.startsWith("in_") }
-                .filter { p -> !p.startsWith("out_") }
-                .map { name ->
+            .asSequence()
+            .filter { name -> !properties.containsKey(name) }
+            .filter { p -> !p.startsWith("@") }
+            .filter { p -> !p.startsWith("in_") }
+            .filter { p -> !p.startsWith("out_") }
+            .map { name ->
 
-                    val property = element.getProperty<Any>(name)
+                val property = element.getProperty<Any>(name)
 
-                    val type = property.javaClass.simpleName
+                val type = property.javaClass.simpleName
 
-                    name to TypeProperty(name, type)
-                }.toMap()
+                name to TypeProperty(name, type)
+            }.toMap()
 
         properties.putAll(props)
 
         return element
     }
-
 
     private fun toCytoData(element: OResult, index: Long): CytoData {
 
@@ -126,7 +128,6 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
 
         val data = Data(id = index.toString(), record = record)
         return CytoData(group = "nodes", data = data, classes = TABLE_CLASS)
-
     }
 
     private fun cleanRecord(record: MutableMap<String, Any>) {
@@ -143,36 +144,31 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
     private fun transformToMap(doc: OResult): MutableMap<String, Any> {
         val record = HashMap<String, Any>()
         doc.propertyNames.asSequence()
-                .filter { p -> !p.startsWith("@") }
-                .filter { p -> !p.startsWith("in_") }
-                .filter { p -> !p.startsWith("out_") }
-                .filter { property ->
-                    val propertyType = doc.getMetadata(property)
-                    return@filter propertyType != OType.LINK ||
-                            propertyType != OType.LINKBAG ||
-                            propertyType != OType.LINKLIST ||
-                            propertyType != OType.LINKSET ||
-                            propertyType != OType.LINKMAP
+            .filter { p -> !p.startsWith("@") }
+            .filter { p -> !p.startsWith("in_") }
+            .filter { p -> !p.startsWith("out_") }
+            .filter { property ->
+                val propertyType = doc.getMetadata(property)
+                return@filter propertyType != OType.LINK ||
+                    propertyType != OType.LINKBAG ||
+                    propertyType != OType.LINKLIST ||
+                    propertyType != OType.LINKSET ||
+                    propertyType != OType.LINKMAP
+            }
+            .filter { property -> doc.getProperty<Any>(property) != null }
+            .forEach { property ->
 
-                }
-                .filter { property -> doc.getProperty<Any>(property) != null }
-                .forEach { property ->
+                var value = doc.getProperty<Any>(property)
 
-                    var value = doc.getProperty<Any>(property)
-
-                    record[property] = value
-                }
+                record[property] = value
+            }
 
         record[ODocumentHelper.ATTRIBUTE_RID] = doc.identity
-                .filter { id -> id.isValid }
-                .map { id -> id.toString() }
+            .filter { id -> id.isValid }
+            .map { id -> id.toString() }
 
         record[ODocumentHelper.ATTRIBUTE_CLASS] = TABLE_CLASS
 
         return record
     }
-
-
 }
-
-

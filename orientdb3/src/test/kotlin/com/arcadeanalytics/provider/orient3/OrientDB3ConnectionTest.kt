@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,19 +20,17 @@
 package com.arcadeanalytics.provider.orient3
 
 import com.arcadeanalytics.provider.DataSourceInfo
-import com.arcadeanalytics.test.KGenericContainer
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.testcontainers.containers.OrientDBContainer
-import org.testcontainers.containers.wait.strategy.Wait
 
 class OrientDB3ConnectionTest {
 
     private val container = OrientDBContainer(ORIENTDB_DOCKER_IMAGE)
-            .withServerPassword(ORIENTDB_ROOT_PASSWORD)
-            .apply {
-                start()
-            }
+        .withServerPassword(ORIENTDB_ROOT_PASSWORD)
+        .apply {
+            start()
+        }
 
     private val provider: OrientDB3DataSourceGraphDataProvider
 
@@ -40,16 +38,16 @@ class OrientDB3ConnectionTest {
 
     init {
 
-        dataSource = DataSourceInfo(id = 1L,
-                type = "ORIENTDB",
-                name = "testDataSource",
-                server = container.containerIpAddress,
-                port = container.firstMappedPort,
-                username = "admin",
-                password = "admin",
-                database = OrientDB3DataSourceGraphDataProviderIntTest::class.java.simpleName
+        dataSource = DataSourceInfo(
+            id = 1L,
+            type = "ORIENTDB",
+            name = "testDataSource",
+            server = container.containerIpAddress,
+            port = container.firstMappedPort,
+            username = "admin",
+            password = "admin",
+            database = OrientDB3DataSourceGraphDataProviderIntTest::class.java.simpleName
         )
-
 
         val dbUrl = createTestDatabase(container.serverUrl, dataSource.database)
 
@@ -58,7 +56,6 @@ class OrientDB3ConnectionTest {
         provider = OrientDB3DataSourceGraphDataProvider()
     }
 
-
     @Test
     internal fun shouldTestConnection() {
         Assertions.assertThat(provider.testConnection(dataSource)).isTrue()
@@ -66,10 +63,6 @@ class OrientDB3ConnectionTest {
         container.stop()
 
         Assertions.assertThatExceptionOfType(RuntimeException::class.java)
-                .isThrownBy { provider.testConnection(dataSource) }
-
-
+            .isThrownBy { provider.testConnection(dataSource) }
     }
-
-
 }

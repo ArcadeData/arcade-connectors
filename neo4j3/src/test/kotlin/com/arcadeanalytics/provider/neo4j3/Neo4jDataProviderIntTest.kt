@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,33 +41,32 @@ class Neo4jDataProviderIntTest {
         getDriver(dataSource).use {
             it.session(AccessMode.READ).use { session ->
 
-                val query = """MATCH (a)-[r]->(o)
+                val query =
+                    """MATCH (a)-[r]->(o)
                                         WITH a, o, type(r) as type
                                         RETURN a, type, count(type) as in_count
                                         ORDER BY a""".trimMargin()
-                println("query = ${query}")
+                println("query = $query")
 
                 for (record in session.run(query)) {
 
-                    println("record = ${record}")
+                    println("record = $record")
                 }
             }
         }
     }
 
-
     @Test
     @Throws(Exception::class)
     fun testFetchData() {
 
-        //given
+        // given
 
-
-        //when
+        // when
         val query = "MATCH (people:Person)-[fof:FriendOf]-(friends) RETURN people, fof, friends"
         val data = provider.fetchData(dataSource, query, 100)
 
-        //then
+        // then
         assertThat(data.nodes).hasSize(4)
         assertThat(data.edges).hasSize(2)
         assertThat(data.nodesClasses).containsKeys("Person")
@@ -75,63 +74,55 @@ class Neo4jDataProviderIntTest {
 
         val cytoData = data.nodes.first()
         assertThat(cytoData.data.record).isNotNull
-                .containsKeys("name", "@edgeCount", "@in", "@out")
+            .containsKeys("name", "@edgeCount", "@in", "@out")
 
-
-        println("cytoData = ${cytoData}")
+        println("cytoData = $cytoData")
         val record = cytoData.data.record
         assertThat(record).isNotNull
-                .containsKeys("name", "@edgeCount", "@in", "@out")
+            .containsKeys("name", "@edgeCount", "@in", "@out")
 
         assertThat(record["@edgeCount"]).isEqualTo(2)
         assertThat(record["@in"] as Map<String, Int>).containsOnly(entry("HaterOf", 1))
         assertThat(record["@out"] as Map<String, Int>).containsOnly(entry("FriendOf", 1))
-
     }
 
     @Test
     @Throws(Exception::class)
     fun testFetchNodes() {
 
-        //given
+        // given
 
-
-        //when
+        // when
         val query = "MATCH (n) RETURN n;"
         val data = provider.fetchData(dataSource, query, 100)
 
-        //then
+        // then
         assertThat(data.nodes).hasSize(8)
         assertThat(data.nodesClasses).containsKeys("Person", "Car")
 //        assertThat(data.edgesClasses).containsKeys("FriendOf", "HaterOf")
 
         data.nodes
-                .onEach { println("it = ${it}") }
-                .map { node -> node.data.record }
-                .forEach { record ->
-                    assertThat(record)
-                            .containsKeys("name", "@edgeCount", "@in", "@out")
+            .onEach { println("it = $it") }
+            .map { node -> node.data.record }
+            .forEach { record ->
+                assertThat(record)
+                    .containsKeys("name", "@edgeCount", "@in", "@out")
 
-                    assertThat(record["@edgeCount"] as Int).isGreaterThanOrEqualTo(0)
-                    assertThat(record["@in"]).isNotNull
-                    assertThat(record["@out"]).isNotNull
-
-                }
-
+                assertThat(record["@edgeCount"] as Int).isGreaterThanOrEqualTo(0)
+                assertThat(record["@in"]).isNotNull
+                assertThat(record["@out"]).isNotNull
+            }
     }
-
 
     @Test
     @Throws(Exception::class)
     fun shouldTraverseFromGivenNode() {
-        //given
+        // given
 
-
-        //when
+        // when
         val data = provider.expand(dataSource, arrayOf("0,1"), "out", "FriendOf", 300)
 
-
-        //then
+        // then
         assertThat(data.nodes).hasSize(2)
 
         assertThat(data.edges).hasSize(1)
@@ -148,13 +139,11 @@ class Neo4jDataProviderIntTest {
 
         val record = cytoData.data.record
         assertThat(record).isNotNull
-                .containsKeys("name", "@edgeCount", "@in", "@out")
+            .containsKeys("name", "@edgeCount", "@in", "@out")
 
         assertThat(record["@edgeCount"]).isEqualTo(2)
         assertThat(record["@in"] as Map<String, Int>).containsOnly(entry("HaterOf", 1))
         assertThat(record["@out"] as Map<String, Int>).containsOnly(entry("FriendOf", 1))
-
-
     }
 
     @Test
@@ -171,13 +160,11 @@ class Neo4jDataProviderIntTest {
 
         val record = cytoData.data.record
         assertThat(record).isNotNull
-                .containsKeys("name", "@edgeCount", "@in", "@out")
+            .containsKeys("name", "@edgeCount", "@in", "@out")
 
         assertThat(record["@edgeCount"]).isEqualTo(2)
         assertThat(record["@in"] as Map<String, Int>).containsOnly(entry("HaterOf", 1))
         assertThat(record["@out"] as Map<String, Int>).containsOnly(entry("FriendOf", 1))
-
-
     }
 
     @Test
@@ -192,9 +179,9 @@ class Neo4jDataProviderIntTest {
         val secondNode = secondDataSet.nodes.first().data
 
         val edgeClasses = (firstNode.record["@in"] as Map<String, Int>).keys
-                .union((firstNode.record["@out"] as Map<String, Int>).keys)
-                .union((secondNode.record["@in"] as Map<String, Int>).keys)
-                .union((secondNode.record["@out"] as Map<String, Int>).keys)
+            .union((firstNode.record["@out"] as Map<String, Int>).keys)
+            .union((secondNode.record["@in"] as Map<String, Int>).keys)
+            .union((secondNode.record["@out"] as Map<String, Int>).keys)
 
         val data = provider.edges(dataSource, arrayOf(firstNode.id), edgeClasses.toTypedArray(), arrayOf(secondNode.id))
 
@@ -205,9 +192,7 @@ class Neo4jDataProviderIntTest {
         assertThat(cytoData.data.target).isNotBlank()
 
         assertThat(data.nodes).hasSize(2)
-
     }
-
 
     @Test
     fun shouldLoadFromClassWherePropertyHasValue() {
@@ -216,7 +201,7 @@ class Neo4jDataProviderIntTest {
         assertThat(data.nodes).hasSize(1)
 
         val cytoData = data.nodes.first()
-        println("cytoData = ${cytoData}")
+        println("cytoData = $cytoData")
         assertThat(cytoData.data.record).isNotNull
         assertThat(cytoData.data.record["@edgeCount"].toString().toInt()).isGreaterThan(0)
 
@@ -224,25 +209,22 @@ class Neo4jDataProviderIntTest {
 
         val record = cytoData.data.record
         assertThat(record).isNotNull
-                .containsKeys("name", "@edgeCount", "@in", "@out")
+            .containsKeys("name", "@edgeCount", "@in", "@out")
 
         assertThat(record["@edgeCount"]).isEqualTo(2)
         assertThat(record["@out"] as Map<String, Int>).containsOnly(entry("HaterOf", 1))
         assertThat(record["@in"] as Map<String, Int>).containsOnly(entry("FriendOf", 1))
-
     }
-
 
     @Test
     @Throws(Exception::class)
     fun shouldTraverseAllEdgesGivenNode() {
-        //given
+        // given
 
-
-        //when
+        // when
         val data = provider.expand(dataSource, arrayOf("0,1"), "both", "", 300)
 
-        //then
+        // then
         assertThat(data.nodes).hasSize(3)
         assertThat(data.edges).hasSize(2)
 
@@ -255,8 +237,5 @@ class Neo4jDataProviderIntTest {
         assertThat(cytoData.data.record["@edgeCount"]).isEqualTo(2)
 
         assertThat(cytoData.data.source).isEmpty()
-
     }
-
-
 }

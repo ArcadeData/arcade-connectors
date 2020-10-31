@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,7 +32,6 @@ interface DataSourceGraphDataProvider : DataSourceProvider {
      */
     fun testConnection(dataSource: DataSourceInfo): Boolean = true
 
-
     /**
      * Fetch data from the given dataSource using the provided query in the appropriate query language.
      * Result set could be limited passing a limit value.
@@ -42,9 +41,11 @@ interface DataSourceGraphDataProvider : DataSourceProvider {
      * @param limit max number of element to retrieve
      * @return the {@link GraphData} representation of the result set
      */
-    fun fetchData(dataSource: DataSourceInfo,
-                  query: String,
-                  limit: Int): GraphData
+    fun fetchData(
+        dataSource: DataSourceInfo,
+        query: String,
+        limit: Int
+    ): GraphData
 
     /**
      * Given a list of nodes ids, a direction and an edge label, expand the graph.
@@ -57,11 +58,13 @@ interface DataSourceGraphDataProvider : DataSourceProvider {
      * @param maxTraversal max number of traversal step
      * @return the {@link GraphData} representation of the result set
      */
-    fun expand(dataSource: DataSourceInfo,
-               ids: Array<String>,
-               direction: String,
-               edgeLabel: String,
-               maxTraversal: Int): GraphData
+    fun expand(
+        dataSource: DataSourceInfo,
+        ids: Array<String>,
+        direction: String,
+        edgeLabel: String,
+        maxTraversal: Int
+    ): GraphData
 
     /**
      * Given a list of starting nodes ids, a list of edge labels and a list of other nodes ids, load the edges between the two set of nodes.
@@ -73,10 +76,12 @@ interface DataSourceGraphDataProvider : DataSourceProvider {
      * @param toIds destination nodes identifiers
      * @return the {@link GraphData} representation of the result set
      */
-    fun edges(dataSource: DataSourceInfo,
-              fromIds: Array<String>,
-              edgesLabel: Array<String>,
-              toIds: Array<String>): GraphData
+    fun edges(
+        dataSource: DataSourceInfo,
+        fromIds: Array<String>,
+        edgesLabel: Array<String>,
+        toIds: Array<String>
+    ): GraphData
 
     /**
      * Load elements by ids
@@ -84,9 +89,10 @@ interface DataSourceGraphDataProvider : DataSourceProvider {
      * @param ids list of identifiers to be loaded
      * @return the {@link GraphData} representation of the result set
      */
-    fun load(dataSource: DataSourceInfo,
-             ids: Array<String>): GraphData
-
+    fun load(
+        dataSource: DataSourceInfo,
+        ids: Array<String>
+    ): GraphData
 
     /**
      * Loads element from a given class. A class is a different concept in  different data stores: type, table, label, class.
@@ -95,9 +101,11 @@ interface DataSourceGraphDataProvider : DataSourceProvider {
      * @param limit max number of element to load
      * @return the {@link GraphData} representation of the result set
      */
-    fun loadFromClass(dataSource: DataSourceInfo,
-                      className: String,
-                      limit: Int): GraphData
+    fun loadFromClass(
+        dataSource: DataSourceInfo,
+        className: String,
+        limit: Int
+    ): GraphData
 
     /**
      * Loads element from a given class filtering by a property value.
@@ -110,9 +118,11 @@ interface DataSourceGraphDataProvider : DataSourceProvider {
      * @return the {@link GraphData} representation of the result set
      */
 
-    fun loadFromClass(dataSource: DataSourceInfo,
-                      className: String,
-                      propertyName: String,
-                      propertyValue: String,
-                      limit: Int): GraphData
+    fun loadFromClass(
+        dataSource: DataSourceInfo,
+        className: String,
+        propertyName: String,
+        propertyValue: String,
+        limit: Int
+    ): GraphData
 }

@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,15 @@
  */
 package com.arcadeanalytics.provider.gremlin
 
-import com.arcadeanalytics.provider.*
+import com.arcadeanalytics.provider.DataSourceInfo
+import com.arcadeanalytics.provider.DataSourceMetadata
+import com.arcadeanalytics.provider.DataSourceMetadataProvider
+import com.arcadeanalytics.provider.EdgesClasses
+import com.arcadeanalytics.provider.NodesClasses
+import com.arcadeanalytics.provider.TypeClass
+import com.arcadeanalytics.provider.TypeProperties
+import com.arcadeanalytics.provider.TypeProperty
+import com.arcadeanalytics.provider.mapType
 import org.apache.tinkerpop.gremlin.driver.Client
 import org.slf4j.LoggerFactory
 
@@ -42,70 +50,60 @@ class GremlinMetadataProvider : DataSourceMetadataProvider {
             val edgesClasses = mapEdgesClasses(client)
 
             return DataSourceMetadata(nodeClasses, edgesClasses)
-
         } finally {
             client.close()
             cluster.close()
-
         }
-
-
     }
 
     fun mapNodeClasses(client: Client): NodesClasses {
         return client.submit("g.V().label().groupCount()")
-                .asSequence()
-                .onEach { tc -> println("tc = ${tc}") }
-                .map { r -> r.`object` as Map<String, Long> }
-                .flatMap { m -> m.entries.asSequence() }
-                .map { TypeClass(it.key, it.value, mapNodeProperties(it.key, client)) }
-                .map {
-                    it.name to it
-                }.toMap()
+            .asSequence()
+            .onEach { tc -> println("tc = $tc") }
+            .map { r -> r.`object` as Map<String, Long> }
+            .flatMap { m -> m.entries.asSequence() }
+            .map { TypeClass(it.key, it.value, mapNodeProperties(it.key, client)) }
+            .map {
+                it.name to it
+            }.toMap()
     }
-
 
     private fun mapNodeProperties(label: String, client: Client): TypeProperties {
 
         return client.submit("""g.V().hasLabel(${splitMultilabel(label)}).limit(1).next()""")
-                .asSequence()
-                .flatMap { r -> r.element.properties<Any>().asSequence() }
-                .map { property -> TypeProperty(property.key(), mapType(property.value().javaClass.simpleName)) }
-                .map { it.name to it }
-                .toMap()
+            .asSequence()
+            .flatMap { r -> r.element.properties<Any>().asSequence() }
+            .map { property -> TypeProperty(property.key(), mapType(property.value().javaClass.simpleName)) }
+            .map { it.name to it }
+            .toMap()
     }
-
 
     private fun mapEdgesClasses(client: Client): EdgesClasses {
         return client.submit("g.E().label().dedup()").asSequence()
-                .map { r -> r.`object`.toString() }
-                .map { TypeClass(it, countEdgeLabel(it, client), mapEdgeProperties(it, client)) }
-                .map {
-                    it.name to it
-                }.toMap()
+            .map { r -> r.`object`.toString() }
+            .map { TypeClass(it, countEdgeLabel(it, client), mapEdgeProperties(it, client)) }
+            .map {
+                it.name to it
+            }.toMap()
     }
 
     private fun mapEdgeProperties(label: String, client: Client): TypeProperties {
 
         return client.submit("""g.E().hasLabel(${splitMultilabel(label)} ).limit(1).next()""")
-                .asSequence()
-                .flatMap { r -> r.element.properties<Any>().asSequence() }
-                .map { property -> TypeProperty(property.key(), mapType(property.value().javaClass.simpleName)) }
-                .map { it.name to it }
-                .toMap()
+            .asSequence()
+            .flatMap { r -> r.element.properties<Any>().asSequence() }
+            .map { property -> TypeProperty(property.key(), mapType(property.value().javaClass.simpleName)) }
+            .map { it.name to it }
+            .toMap()
     }
-
 
     private fun countNodeLabel(label: String, client: Client): Long {
         return client.submit("""g.V().hasLabel(${splitMultilabel(label)}).count()""")
-                .one().long
-
+            .one().long
     }
 
     private fun countEdgeLabel(label: String, client: Client): Long {
         return client.submit("""g.E().hasLabel(${splitMultilabel(label)}).count()""")
-                .one().long
-
+            .one().long
     }
-
 }

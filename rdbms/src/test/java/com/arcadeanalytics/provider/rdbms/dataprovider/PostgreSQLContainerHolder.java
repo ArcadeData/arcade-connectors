@@ -24,17 +24,15 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 public abstract class PostgreSQLContainerHolder {
+  public static final PostgreSQLContainer container;
 
-    public static final PostgreSQLContainer container;
+  static {
+    container =
+      new PostgreSQLContainer(DockerImageName.parse("arcadeanalytics/postgres-dvdrental").asCompatibleSubstituteFor("postgres"))
+        .withUsername("postgres")
+        .withPassword("postgres");
+    container.start();
 
-    static {
-        container = new PostgreSQLContainer(DockerImageName.parse("arcadeanalytics/postgres-dvdrental").asCompatibleSubstituteFor("postgres"))
-                .withUsername("postgres")
-                .withPassword("postgres");
-        container.start();
-
-        container.withDatabaseName("dvdrental");
-
-
-    }
+    container.withDatabaseName("dvdrental");
+  }
 }

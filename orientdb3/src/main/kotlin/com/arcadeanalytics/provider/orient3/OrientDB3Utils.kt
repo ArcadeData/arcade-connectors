@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,33 +31,27 @@ import com.orientechnologies.orient.core.record.impl.ODocument
 import com.orientechnologies.orient.core.sql.executor.OResultSet
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraph
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory
-import java.util.*
-
+import java.util.Optional
 
 const val ORIENTDB3 = "ORIENTDB3"
 
 private val orientdbConnectionUrl = "remote:{server}:{port}"
 
-
 fun createOrientdbConnectionUrl(dataSource: DataSourceInfo): String {
     return orientdbConnectionUrl.replace("{server}", dataSource.server)
-            .replace("{port}", dataSource.port.toString())
+        .replace("{port}", dataSource.port.toString())
 }
 
-
-
-
 fun open(dataSource: DataSourceInfo): ODatabaseSession {
-    val orientdbConnectionUrl = createOrientdbConnectionUrl(dataSource);
+    val orientdbConnectionUrl = createOrientdbConnectionUrl(dataSource)
 
     val orientDB = OrientDB(orientdbConnectionUrl, OrientDBConfig.defaultConfig())
-
 
     return orientDB.open(dataSource.database, dataSource.username, dataSource.password)
 }
 
 fun openGremlin(dataSource: DataSourceInfo): OrientGraph {
-    val orientdbConnectionUrl = createOrientdbConnectionUrl(dataSource);
+    val orientdbConnectionUrl = createOrientdbConnectionUrl(dataSource)
     val orientDB = OrientDB(orientdbConnectionUrl, OrientDBConfig.defaultConfig())
 //    val session = orientDB.open(dataSource.database, dataSource.username, dataSource.password)
 
