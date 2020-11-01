@@ -33,6 +33,7 @@ import java.util.Map;
  */
 
 public abstract class EntityClassMapper {
+
   protected Entity entity;
   protected Map<String, String> attribute2property;
   protected Map<String, String> property2attribute;

@@ -34,6 +34,7 @@ import java.util.Set;
  */
 
 public class VertexType extends ElementType {
+
   private List<EdgeType> inEdgesType;
   private List<EdgeType> outEdgesType;
   private boolean isFromJoinTable;

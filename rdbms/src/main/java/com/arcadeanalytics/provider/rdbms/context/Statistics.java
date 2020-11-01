@@ -36,6 +36,7 @@ import java.util.Set;
  */
 
 public class Statistics {
+
   // indicates the running step, -1 if no step are running
   public volatile int runningStepNumber;
 

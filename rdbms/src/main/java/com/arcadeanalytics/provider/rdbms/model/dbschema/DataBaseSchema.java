@@ -31,6 +31,7 @@ import java.util.List;
  */
 
 public class DataBaseSchema implements DataSourceSchemaInfo {
+
   private int majorVersion;
   private int minorVersion;
   private int driverMajorVersion;

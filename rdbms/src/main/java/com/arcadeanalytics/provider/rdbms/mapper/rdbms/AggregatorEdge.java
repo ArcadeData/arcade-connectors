@@ -27,6 +27,7 @@ import com.arcadeanalytics.provider.rdbms.model.graphmodel.EdgeType;
  */
 
 public class AggregatorEdge {
+
   private final String outVertexClassName;
   private final String inVertexClassName;
   private final EdgeType edgeType;

@@ -30,6 +30,7 @@ import java.util.List;
  */
 
 public class CanonicalRelationship extends Relationship {
+
   private ForeignKey foreignKey;
   private PrimaryKey primaryKey;
 

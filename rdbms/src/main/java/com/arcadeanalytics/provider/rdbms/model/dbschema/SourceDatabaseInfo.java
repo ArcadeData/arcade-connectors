@@ -28,6 +28,7 @@ import java.util.Map;
  */
 
 public class SourceDatabaseInfo {
+
   private final String sourceId;
   private final String sourceDBName;
   private final String sourceRDBMS;

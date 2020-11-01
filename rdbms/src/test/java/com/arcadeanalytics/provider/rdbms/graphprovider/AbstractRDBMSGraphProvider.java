@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 public abstract class AbstractRDBMSGraphProvider {
+
   public long nodes;
   public long edges;
 

@@ -24,6 +24,7 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 public abstract class MySQLContainerHolder {
+
   public static final MySQLContainer container;
 
   static {

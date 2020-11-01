@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.MySQLContainer;
 
 public class MysqlSQLDataProviderWithAggregationTest extends AbstractRDBMSProviderWithAggregationTest {
+
   private DataSourceInfo dataSource = null;
 
   @BeforeEach

@@ -29,6 +29,7 @@ import java.util.List;
  */
 
 public abstract class Relationship {
+
   protected Entity foreignEntity; // Entity importing the key (starting entity)
   protected Entity parentEntity; // Entity exporting the key (arrival entity)
   protected String direction; // represents the direction of the relationship

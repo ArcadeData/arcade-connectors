@@ -35,6 +35,7 @@ import java.util.Map;
  */
 
 public class EEClassMapper extends EntityClassMapper {
+
   private EdgeType edgeType;
 
   public EEClassMapper(Entity entity, EdgeType edgeType, Map<String, String> attribute2property, Map<String, String> property2attribute) {

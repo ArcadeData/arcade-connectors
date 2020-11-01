@@ -29,6 +29,7 @@ import java.io.PrintStream;
  * @author Gabriele Ponzi
  */
 public class MessageHandler implements PluginMessageHandler {
+
   private int level; // affects OutputStreamManager level
   private OutputStreamManager outputManager;
 

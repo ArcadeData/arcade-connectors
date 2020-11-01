@@ -28,6 +28,7 @@ package com.arcadeanalytics.provider.rdbms.model.graphmodel;
  */
 
 public class EdgeType extends ElementType {
+
   private VertexType inVertexType;
   private VertexType outVertexType;
   private int numberRelationshipsRepresented; // the number of relationships represented by the edge

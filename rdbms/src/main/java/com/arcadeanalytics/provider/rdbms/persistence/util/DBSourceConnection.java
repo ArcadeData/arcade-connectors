@@ -39,10 +39,10 @@ import org.slf4j.LoggerFactory;
  */
 
 public class DBSourceConnection {
+
   private static final Logger log = LoggerFactory.getLogger(DBSourceConnection.class);
 
   private static Map<String, String> type2template = new HashMap<String, String>() {
-
     {
       put("RDBMS_HSQL", "jdbc:hsqldb:{server}:{database}");
       put("RDBMS_DATA_WORLD", "jdbc:data:world:sql:{server}:{database}");

@@ -36,6 +36,7 @@ import java.util.Set;
  */
 
 public class HierarchicalBag {
+
   private Map<Integer, Set<Entity>> depth2entities;
   private String inheritancePattern;
 

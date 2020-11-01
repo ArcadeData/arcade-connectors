@@ -57,6 +57,7 @@ import org.junit.jupiter.api.Test;
  */
 
 public class FilterTableMappingTest {
+
   private static final String XML_TABLE_PER_CLASS = "src/test/resources/provider/rdbms/inheritance/hibernate/tablePerClassHierarchyImportTest.xml";
   private static final String XML_TABLE_PER_SUBCLASS1 = "src/test/resources/provider/rdbms/inheritance/hibernate/tablePerSubclassImportTest1.xml";
   private static final String XML_TABLE_PER_SUBCLASS2 = "src/test/resources/provider/rdbms/inheritance/hibernate/tablePerSubclassImportTest2.xml";

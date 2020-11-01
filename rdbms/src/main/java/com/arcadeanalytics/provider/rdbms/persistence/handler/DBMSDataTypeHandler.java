@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
  */
 
 public class DBMSDataTypeHandler {
+
   protected final Logger log = LoggerFactory.getLogger(DBMSDataTypeHandler.class);
 
   public boolean jsonImplemented;

@@ -35,6 +35,7 @@ import java.util.Set;
  */
 
 public class Entity implements Comparable<Entity> {
+
   private final String name;
   private final DataSourceInfo dataSource;
   private final String schemaName;

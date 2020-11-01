@@ -34,6 +34,7 @@ import java.util.Map;
  */
 
 public class PostgreSQLDataTypeHandler extends DBMSDataTypeHandler {
+
   private List<String> geospatialTypes;
 
   public PostgreSQLDataTypeHandler() {

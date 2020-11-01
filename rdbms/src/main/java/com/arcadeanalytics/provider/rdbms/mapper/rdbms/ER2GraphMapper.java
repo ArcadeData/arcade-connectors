@@ -72,6 +72,7 @@ import org.slf4j.LoggerFactory;
  */
 
 public class ER2GraphMapper {
+
   public final int DEFAULT_CLASS_MAPPER_INDEX = 0;
   // rules
   protected final Map<Entity, List<EVClassMapper>> entity2EVClassMappers;

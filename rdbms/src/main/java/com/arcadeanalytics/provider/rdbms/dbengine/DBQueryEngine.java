@@ -49,6 +49,7 @@ import org.slf4j.LoggerFactory;
  */
 
 public class DBQueryEngine implements DataSourceQueryEngine {
+
   private static final Logger log = LoggerFactory.getLogger(DBQueryEngine.class);
 
   private final QueryBuilder queryBuilder;

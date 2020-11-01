@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
  */
 
 public class StrategyFactory {
+
   private final Logger log = LoggerFactory.getLogger(StrategyFactory.class);
 
   public StrategyFactory() {}

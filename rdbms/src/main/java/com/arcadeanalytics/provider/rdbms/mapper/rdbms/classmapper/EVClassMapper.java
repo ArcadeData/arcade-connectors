@@ -35,6 +35,7 @@ import java.util.Map;
  */
 
 public class EVClassMapper extends EntityClassMapper {
+
   private VertexType vertexType;
 
   public EVClassMapper(Entity entity, VertexType vertexType, Map<String, String> attribute2property, Map<String, String> property2attribute) {

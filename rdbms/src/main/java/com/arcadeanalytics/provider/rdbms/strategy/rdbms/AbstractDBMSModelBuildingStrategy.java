@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
  */
 
 public abstract class AbstractDBMSModelBuildingStrategy implements WorkflowStrategy {
+
   private final Logger log = LoggerFactory.getLogger(AbstractDBMSModelBuildingStrategy.class);
 
   protected ER2GraphMapper mapper;

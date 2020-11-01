@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
  */
 
 public class QueryResult {
+
   private final Logger log = LoggerFactory.getLogger(QueryResult.class);
   private final Connection dbConnection;
   private final Statement statement;

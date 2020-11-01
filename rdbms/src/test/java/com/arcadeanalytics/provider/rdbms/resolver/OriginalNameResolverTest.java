@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
  */
 
 public class OriginalNameResolverTest {
+
   private OriginalConventionNameResolver nameResolver;
 
   @BeforeEach

@@ -52,6 +52,7 @@ import org.junit.jupiter.api.Test;
  */
 
 public class AggregationStrategyTest {
+
   private DBQueryEngine dbQueryEngine;
   private String driver = "org.hsqldb.jdbc.JDBCDriver";
   private String jurl = "jdbc:hsqldb:mem:mydb";

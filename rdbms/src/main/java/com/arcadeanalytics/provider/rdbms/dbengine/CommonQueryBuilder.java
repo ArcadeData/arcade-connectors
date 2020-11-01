@@ -34,6 +34,7 @@ import java.util.List;
  */
 
 public class CommonQueryBuilder implements QueryBuilder {
+
   protected String quote;
 
   public CommonQueryBuilder() {

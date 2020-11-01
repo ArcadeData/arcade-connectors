@@ -31,6 +31,7 @@ import java.util.List;
  */
 
 public class GraphModel {
+
   private List<VertexType> verticesType;
   private List<EdgeType> edgesType;
 

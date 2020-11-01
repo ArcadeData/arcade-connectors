@@ -30,6 +30,7 @@ import java.util.List;
  */
 
 public class Key {
+
   protected final Entity belongingEntity;
   protected final List<Attribute> involvedAttributes;
 

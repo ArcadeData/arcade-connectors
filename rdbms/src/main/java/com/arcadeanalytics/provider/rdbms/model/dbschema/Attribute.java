@@ -27,6 +27,7 @@ package com.arcadeanalytics.provider.rdbms.model.dbschema;
  */
 
 public class Attribute implements Comparable<Attribute> {
+
   private final String name;
   private final String dataType;
   private final Entity belongingEntity;

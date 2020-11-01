@@ -51,6 +51,7 @@ import org.w3c.dom.NodeList;
  */
 
 public class Hibernate2GraphMapper extends ER2GraphMapper {
+
   private static final Logger log = LoggerFactory.getLogger(Hibernate2GraphMapper.class);
   private final String xmlPath;
 

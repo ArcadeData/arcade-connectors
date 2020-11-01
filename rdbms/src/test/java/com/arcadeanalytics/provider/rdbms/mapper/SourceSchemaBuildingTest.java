@@ -47,6 +47,7 @@ import org.junit.jupiter.api.Test;
  */
 
 public class SourceSchemaBuildingTest {
+
   private ER2GraphMapper mapper;
   private DBQueryEngine dbQueryEngine;
   private String driver = "org.hsqldb.jdbc.JDBCDriver";

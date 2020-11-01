@@ -37,6 +37,7 @@ import java.io.PrintStream;
  */
 
 public class OutputStreamManager {
+
   public static final int BLANK_LEVEL = 0;
   public static final int DEBUG_LEVEL = 1;
   public static final int INFO_LEVEL = 2;

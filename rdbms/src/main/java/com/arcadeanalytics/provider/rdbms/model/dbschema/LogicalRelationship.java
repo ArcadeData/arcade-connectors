@@ -30,6 +30,7 @@ import java.util.List;
  */
 
 public class LogicalRelationship extends Relationship {
+
   private List<Attribute> fromColumns;
   private List<Attribute> toColumns;
 

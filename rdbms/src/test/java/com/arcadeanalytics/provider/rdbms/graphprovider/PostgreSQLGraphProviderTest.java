@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 public class PostgreSQLGraphProviderTest extends AbstractRDBMSGraphProvider {
+
   final PostgreSQLContainer container = PostgreSQLContainerHolder.container;
 
   @Test

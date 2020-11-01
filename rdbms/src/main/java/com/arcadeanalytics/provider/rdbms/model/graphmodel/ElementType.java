@@ -34,6 +34,7 @@ import java.util.Set;
  */
 
 public class ElementType implements Comparable<ElementType> {
+
   protected String name;
   protected List<ModelProperty> properties;
   protected List<ModelProperty> inheritedProperties;

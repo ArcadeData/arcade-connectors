@@ -57,6 +57,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RDBMSGraphProvider implements DataSourceGraphProvider {
+
   private final Logger log = LoggerFactory.getLogger(RDBMSGraphProvider.class);
 
   @Override

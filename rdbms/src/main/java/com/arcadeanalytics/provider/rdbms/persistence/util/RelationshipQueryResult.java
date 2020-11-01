@@ -32,6 +32,7 @@ import java.sql.Statement;
  */
 
 public class RelationshipQueryResult extends QueryResult {
+
   private String relationshipName; // usually corresponds to the name of the correspondent edge class
 
   public RelationshipQueryResult(Connection connection, Statement statement, ResultSet result, String originalQuery, String relationshipName) {

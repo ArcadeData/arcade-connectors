@@ -28,6 +28,7 @@ package com.arcadeanalytics.provider.rdbms.model.graphmodel;
  */
 
 public class ModelProperty {
+
   private String name;
   private int ordinalPosition;
   private String originalType;

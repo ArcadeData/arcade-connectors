@@ -14,6 +14,7 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 public class MysqlGraphProviderTest extends AbstractRDBMSGraphProvider {
+
   private static final Logger LOGGER = LoggerFactory.getLogger(PostgreSQLDataProviderTest.class);
   private static final String driver = "com.mysql.cj.jdbc.Driver";
   private static final String username = "test";

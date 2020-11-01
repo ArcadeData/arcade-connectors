@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 public class PostgreSQLDataProviderTest extends AbstractRDBMSProviderTest {
+
   private DataSourceInfo dataSource;
 
   @BeforeEach

@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
  */
 
 public class DBMSSimpleModelBuildingStrategy extends AbstractDBMSModelBuildingStrategy {
+
   private static final Logger log = LoggerFactory.getLogger(DBMSSimpleModelBuildingStrategy.class);
 
   public DBMSSimpleModelBuildingStrategy() {}

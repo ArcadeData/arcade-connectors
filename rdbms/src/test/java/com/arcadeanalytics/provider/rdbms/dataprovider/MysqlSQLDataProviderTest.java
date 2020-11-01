@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.MySQLContainer;
 
 public class MysqlSQLDataProviderTest extends AbstractRDBMSProviderTest {
+
   private static final DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssX");
 
   private DataSourceInfo dataSource = null;
