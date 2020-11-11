@@ -60,7 +60,7 @@
         <guava.version>30.0-jre</guava.version>
         <assertj-core.version>3.18.0</assertj-core.version>
         <assertj-guava.version>3.4.0</assertj-guava.version>
-        <testcontainers.version>1.15.0-rc2</testcontainers.version>
+        <testcontainers.version>1.15.0</testcontainers.version>
 
 
     </properties>
