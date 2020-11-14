@@ -34,6 +34,7 @@ fun getCluster(dataSource: DataSourceInfo): Cluster =
         .serializer(createSerializer(dataSource))
         .enableSsl(dataSource.enableSsl)
         .sslSkipCertValidation(dataSource.skipCertValidation)
+        .maxContentLength(65536 * 4)
         .credentials(dataSource.username, dataSource.password)
         .maxWaitForConnection(20000)
         .create()

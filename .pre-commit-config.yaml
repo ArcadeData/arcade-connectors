@@ -9,10 +9,10 @@ repos:
 #    rev: "2.1.2"
 #    hooks:
 #      - id: prettier
-  - repo: https://github.com/robfrank/prettier-java-pre-commit-hook
-    rev: 6cee14352969d3628898ca8d243f7ea2b9e39f26
-    hooks:
-      - id: prettier-java
+#  - repo: https://github.com/robfrank/prettier-java-pre-commit-hook
+#    rev: 6cee14352969d3628898ca8d243f7ea2b9e39f26
+#    hooks:
+#      - id: prettier-java
   - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
     rev: v1.5.0
     hooks:
