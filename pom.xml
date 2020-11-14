@@ -25,7 +25,7 @@
     <groupId>com.arcadeanalytics</groupId>
     <artifactId>arcade-connectors-parent</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.13-SNAPSHOT</version>
+    <version>1.0.13</version>
 
     <name>Arcade Connectors</name>
     <url>https://arcadeanalytics.com/</url>
@@ -84,7 +84,7 @@
     <scm>
         <connection>scm:git:git@github.com:ArcadeData/arcade-connectors.git</connection>
         <url>https://github.com/ArcadeData/arcade-connectors</url>
-        <tag>HEAD</tag>
+        <tag>v1.0.13</tag>
     </scm>
 
     <modules>
