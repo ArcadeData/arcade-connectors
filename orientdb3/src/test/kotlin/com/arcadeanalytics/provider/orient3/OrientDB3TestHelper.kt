@@ -21,7 +21,6 @@
 package com.arcadeanalytics.provider.orient3
 
 import com.arcadeanalytics.provider.DataSourceInfo
-import com.orientechnologies.orient.core.OConstants
 import com.orientechnologies.orient.core.db.ODatabaseType
 import com.orientechnologies.orient.core.db.OrientDB
 import com.orientechnologies.orient.core.db.OrientDBConfig
@@ -30,7 +29,7 @@ import org.testcontainers.containers.OrientDBContainer
 import org.testcontainers.utility.DockerImageName
 import java.io.IOException
 
-val ORIENTDB_DOCKER_IMAGE = DockerImageName.parse("arcadeanalytics/orientdb3:${OConstants.getRawVersion()}")
+val ORIENTDB_DOCKER_IMAGE = DockerImageName.parse("arcadeanalytics/orientdb3:latest")
     .asCompatibleSubstituteFor("orientdb")
 
 const val ORIENTDB_ROOT_PASSWORD = "arcade"
