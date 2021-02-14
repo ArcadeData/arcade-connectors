@@ -20,7 +20,7 @@ import kotlin.math.min
  * #%L
  * Arcade Connectors
  * %%
- * Copyright (C) 2018 - 2020 ArcadeData
+ * Copyright (C) 2018 - 2021 ArcadeData
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
