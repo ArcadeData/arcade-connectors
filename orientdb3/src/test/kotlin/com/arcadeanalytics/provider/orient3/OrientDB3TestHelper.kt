@@ -21,6 +21,7 @@
 package com.arcadeanalytics.provider.orient3
 
 import com.arcadeanalytics.provider.DataSourceInfo
+import com.orientechnologies.orient.core.OConstants
 import com.orientechnologies.orient.core.db.ODatabaseType
 import com.orientechnologies.orient.core.db.OrientDB
 import com.orientechnologies.orient.core.db.OrientDBConfig
@@ -29,7 +30,8 @@ import org.testcontainers.containers.OrientDBContainer
 import org.testcontainers.utility.DockerImageName
 import java.io.IOException
 
-val ORIENTDB_DOCKER_IMAGE = DockerImageName.parse("arcadeanalytics/orientdb3:latest").asCompatibleSubstituteFor("orientdb")
+val ORIENTDB_DOCKER_IMAGE = DockerImageName.parse("arcadeanalytics/orientdb3:${OConstants.getRawVersion()}")
+    .asCompatibleSubstituteFor("orientdb")
 
 const val ORIENTDB_ROOT_PASSWORD = "arcade"
 
@@ -41,24 +43,20 @@ object OrientDB3Container {
             start()
         }
 
-    val dataSource: DataSourceInfo
+    val dataSource: DataSourceInfo = DataSourceInfo(
+        id = 1L,
+        type = "ORIENTDB",
+        name = "testDataSource",
+        server = container.containerIpAddress,
+        port = container.firstMappedPort,
+        username = "admin",
+        password = "admin",
+        database = "testDatabase"
+    )
 
-    val dbUrl: String
+    val dbUrl: String = createTestDatabase(container.serverUrl, dataSource.database)
 
     init {
-
-        dataSource = DataSourceInfo(
-            id = 1L,
-            type = "ORIENTDB",
-            name = "testDataSource",
-            server = container.containerIpAddress,
-            port = container.firstMappedPort,
-            username = "admin",
-            password = "admin",
-            database = "testDatabase"
-        )
-
-        dbUrl = createTestDatabase(container.serverUrl, dataSource.database)
 
         createPersonSchema(dbUrl, dataSource)
     }

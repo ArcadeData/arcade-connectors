@@ -23,31 +23,32 @@ import com.arcadeanalytics.provider.DataSourceInfo
 import com.arcadeanalytics.provider.gremlin.getCluster
 import com.arcadeanalytics.test.KGenericContainer
 import org.apache.tinkerpop.gremlin.driver.Client
+import org.janusgraph.core.JanusGraph
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.utility.DockerImageName
 
 object JanusgraphContainer {
 
-    private val container: KGenericContainer = KGenericContainer(DockerImageName.parse("janusgraph/janusgraph:0.5.2"))
-        .apply {
-            withExposedPorts(8182)
-            waitingFor(Wait.defaultWaitStrategy())
-            start()
-        }
+    private val container: KGenericContainer =
+        KGenericContainer(DockerImageName.parse("janusgraph/janusgraph:${JanusGraph.version()}"))
+            .apply {
+                withExposedPorts(8182)
+                waitingFor(Wait.defaultWaitStrategy())
+                start()
+            }
 
-    val dataSource: DataSourceInfo
+    val dataSource: DataSourceInfo = DataSourceInfo(
+        id = 1L,
+        type = "GREMLIN_JANUSGRAPH",
+        name = "testDataSource",
+        server = container.containerIpAddress,
+        port = container.firstMappedPort,
+        username = "",
+        password = "",
+        database = ""
+    )
 
     init {
-        dataSource = DataSourceInfo(
-            id = 1L,
-            type = "GREMLIN_JANUSGRAPH",
-            name = "testDataSource",
-            server = container.containerIpAddress,
-            port = container.firstMappedPort,
-            username = "",
-            password = "",
-            database = ""
-        )
 
         val cluster = getCluster(dataSource)
 
