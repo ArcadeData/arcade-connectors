@@ -323,7 +323,7 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
             .forEach { f ->
                 val type = vertex.fieldType(f)
                 if (type != null)
-                (properties as MutableMap<String, Any>).putIfAbsent(f, mapType(type.name))
+                    (properties as MutableMap<String, Any>).putIfAbsent(f, mapType(type.name))
             }
     }
 

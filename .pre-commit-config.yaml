@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.3.0
+    rev: v3.4.0
     hooks:
       - id: check-yaml
       - id: end-of-file-fixer
@@ -14,7 +14,7 @@ repos:
 #    hooks:
 #      - id: prettier-java
   - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-    rev: v1.5.0
+    rev: v2.0.0
     hooks:
       - id: pretty-format-kotlin
         args: [ --autofix ]
