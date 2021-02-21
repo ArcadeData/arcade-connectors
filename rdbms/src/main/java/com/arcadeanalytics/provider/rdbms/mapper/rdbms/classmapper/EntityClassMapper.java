@@ -34,53 +34,53 @@ import java.util.Map;
 
 public abstract class EntityClassMapper {
 
-  protected Entity entity;
-  protected Map<String, String> attribute2property;
-  protected Map<String, String> property2attribute;
+    protected Entity entity;
+    protected Map<String, String> attribute2property;
+    protected Map<String, String> property2attribute;
 
-  public EntityClassMapper(Entity entity, Map<String, String> attribute2property, Map<String, String> property2attribute) {
-    this.entity = entity;
-    this.attribute2property = attribute2property;
-    this.property2attribute = property2attribute;
-  }
+    public EntityClassMapper(Entity entity, Map<String, String> attribute2property, Map<String, String> property2attribute) {
+        this.entity = entity;
+        this.attribute2property = attribute2property;
+        this.property2attribute = property2attribute;
+    }
 
-  public Entity getEntity() {
-    return entity;
-  }
+    public Entity getEntity() {
+        return entity;
+    }
 
-  public void setEntity(Entity entity) {
-    this.entity = entity;
-  }
+    public void setEntity(Entity entity) {
+        this.entity = entity;
+    }
 
-  public Map<String, String> getAttribute2property() {
-    return attribute2property;
-  }
+    public Map<String, String> getAttribute2property() {
+        return attribute2property;
+    }
 
-  public void setAttribute2property(Map<String, String> attribute2property) {
-    this.attribute2property = attribute2property;
-  }
+    public void setAttribute2property(Map<String, String> attribute2property) {
+        this.attribute2property = attribute2property;
+    }
 
-  public Map<String, String> getProperty2attribute() {
-    return property2attribute;
-  }
+    public Map<String, String> getProperty2attribute() {
+        return property2attribute;
+    }
 
-  public void setProperty2attribute(Map<String, String> property2attribute) {
-    this.property2attribute = property2attribute;
-  }
+    public void setProperty2attribute(Map<String, String> property2attribute) {
+        this.property2attribute = property2attribute;
+    }
 
-  public String getAttributeByProperty(String property) {
-    return this.property2attribute.get(property);
-  }
+    public String getAttributeByProperty(String property) {
+        return this.property2attribute.get(property);
+    }
 
-  public String getPropertyByAttribute(String attribute) {
-    return this.attribute2property.get(attribute);
-  }
+    public String getPropertyByAttribute(String attribute) {
+        return this.attribute2property.get(attribute);
+    }
 
-  public boolean containsAttribute(String attributeName) {
-    return this.attribute2property.containsKey(attributeName);
-  }
+    public boolean containsAttribute(String attributeName) {
+        return this.attribute2property.containsKey(attributeName);
+    }
 
-  public boolean containsProperty(String propertyName) {
-    return this.property2attribute.containsKey(propertyName);
-  }
+    public boolean containsProperty(String propertyName) {
+        return this.property2attribute.containsKey(propertyName);
+    }
 }

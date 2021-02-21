@@ -34,7 +34,7 @@ To build and test just run:
 
 ## Modules
 
-The _common_ module contains the definitions of the interfaces each connector should implements, the ssh-tunnel support and factories.
+The _common_ module contains the definitions of the interfaces each connector should implement, the ssh-tunnel support and factories.
 
 ## Interfaces
 

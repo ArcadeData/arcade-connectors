@@ -31,26 +31,26 @@ import java.util.List;
  */
 public class PostgreSQLQueryBuilder extends CommonQueryBuilder {
 
-  public String buildGeospatialQuery(Entity entity, List<String> geospatialTypes) {
-    String query = "select ";
+    public String buildGeospatialQuery(Entity entity, List<String> geospatialTypes) {
+        String query = "select ";
 
-    for (Attribute currentAttribute : entity.getAllAttributes()) {
-      if (this.isGeospatial(geospatialTypes, currentAttribute.getDataType())) query +=
-        "ST_AsText(" + quote + currentAttribute.getName() + quote + ") as " + currentAttribute.getName() + ","; else query +=
-        quote + currentAttribute.getName() + quote + ",";
+        for (Attribute currentAttribute : entity.getAllAttributes()) {
+            if (this.isGeospatial(geospatialTypes, currentAttribute.getDataType())) query +=
+                "ST_AsText(" + quote + currentAttribute.getName() + quote + ") as " + currentAttribute.getName() + ","; else query +=
+                quote + currentAttribute.getName() + quote + ",";
+        }
+
+        query = query.substring(0, query.length() - 1);
+
+        String entitySchema = entity.getSchemaName();
+
+        if (entitySchema != null) query += " from " + entitySchema + "." + quote + entity.getName() + quote; else query +=
+            " from " + quote + entity.getName() + quote;
+
+        return query;
     }
 
-    query = query.substring(0, query.length() - 1);
-
-    String entitySchema = entity.getSchemaName();
-
-    if (entitySchema != null) query += " from " + entitySchema + "." + quote + entity.getName() + quote; else query +=
-      " from " + quote + entity.getName() + quote;
-
-    return query;
-  }
-
-  public boolean isGeospatial(List<String> geospatialTypes, String type) {
-    return geospatialTypes.contains(type);
-  }
+    public boolean isGeospatial(List<String> geospatialTypes, String type) {
+        return geospatialTypes.contains(type);
+    }
 }

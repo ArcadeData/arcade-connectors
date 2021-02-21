@@ -27,23 +27,23 @@ package com.arcadeanalytics.provider.rdbms.context;
  */
 
 public interface PluginMessageHandler {
-  int getOutputManagerLevel();
+    int getOutputManagerLevel();
 
-  void setOutputManagerLevel(int outputManagerLevel);
+    void setOutputManagerLevel(int outputManagerLevel);
 
-  void debug(Object requester, String message);
+    void debug(Object requester, String message);
 
-  void debug(Object requester, String format, Object... args);
+    void debug(Object requester, String format, Object... args);
 
-  void info(Object requester, String message);
+    void info(Object requester, String message);
 
-  void info(Object requester, String format, Object... args);
+    void info(Object requester, String format, Object... args);
 
-  void warn(Object requester, String message);
+    void warn(Object requester, String message);
 
-  void warn(Object requester, String format, Object... args);
+    void warn(Object requester, String format, Object... args);
 
-  void error(Object requester, String message);
+    void error(Object requester, String message);
 
-  void error(Object requester, String format, Object... args);
+    void error(Object requester, String format, Object... args);
 }

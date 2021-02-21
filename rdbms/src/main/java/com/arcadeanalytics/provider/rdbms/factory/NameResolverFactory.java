@@ -33,18 +33,18 @@ import com.arcadeanalytics.provider.rdbms.nameresolver.OriginalConventionNameRes
 
 public class NameResolverFactory {
 
-  public NameResolver buildNameResolver(String nameResolverConvention) {
-    if (nameResolverConvention == null) {
-      return new OriginalConventionNameResolver();
-    } else {
-      switch (nameResolverConvention) {
-        case "java":
-          return new JavaConventionNameResolver();
-        case "original":
-          return new OriginalConventionNameResolver();
-        default:
-          return new OriginalConventionNameResolver();
-      }
+    public NameResolver buildNameResolver(String nameResolverConvention) {
+        if (nameResolverConvention == null) {
+            return new OriginalConventionNameResolver();
+        } else {
+            switch (nameResolverConvention) {
+                case "java":
+                    return new JavaConventionNameResolver();
+                case "original":
+                    return new OriginalConventionNameResolver();
+                default:
+                    return new OriginalConventionNameResolver();
+            }
+        }
     }
-  }
 }

@@ -31,17 +31,17 @@ import java.util.List;
  */
 
 public interface QueryBuilder {
-  String countTableRecords(String currentTableName, String currentTableSchema);
+    String countTableRecords(String currentTableName, String currentTableSchema);
 
-  String getRecordById(Entity entity, String[] propertyOfKey, String[] valueOfKey);
+    String getRecordById(Entity entity, String[] propertyOfKey, String[] valueOfKey);
 
-  String getRecordsByEntity(Entity entity);
+    String getRecordsByEntity(Entity entity);
 
-  String getRecordsFromMultipleEntities(List<Entity> mappedEntities, String[][] columns);
+    String getRecordsFromMultipleEntities(List<Entity> mappedEntities, String[][] columns);
 
-  String getRecordsFromSingleTableByDiscriminatorValue(String discriminatorColumn, String currentDiscriminatorValue, Entity entity);
+    String getRecordsFromSingleTableByDiscriminatorValue(String discriminatorColumn, String currentDiscriminatorValue, Entity entity);
 
-  String getEntityTypeFromSingleTable(String discriminatorColumn, Entity entity, String[] propertyOfKey, String[] valueOfKey);
+    String getEntityTypeFromSingleTable(String discriminatorColumn, Entity entity, String[] propertyOfKey, String[] valueOfKey);
 
-  String buildAggregateTableFromHierarchicalBag(HierarchicalBag bag);
+    String buildAggregateTableFromHierarchicalBag(HierarchicalBag bag);
 }

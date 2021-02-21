@@ -29,17 +29,17 @@ package com.arcadeanalytics.provider.rdbms.exception;
 @SuppressWarnings("serial")
 public class RDBMSProviderAggregationException extends Exception {
 
-  public RDBMSProviderAggregationException() {}
+    public RDBMSProviderAggregationException() {}
 
-  public RDBMSProviderAggregationException(String message) {
-    super(message);
-  }
+    public RDBMSProviderAggregationException(String message) {
+        super(message);
+    }
 
-  public RDBMSProviderAggregationException(String message, Throwable cause) {
-    super(message, cause);
-  }
+    public RDBMSProviderAggregationException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-  public RDBMSProviderAggregationException(Throwable cause) {
-    super(cause);
-  }
+    public RDBMSProviderAggregationException(Throwable cause) {
+        super(cause);
+    }
 }

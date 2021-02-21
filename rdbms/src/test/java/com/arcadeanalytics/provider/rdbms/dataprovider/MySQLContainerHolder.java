@@ -25,15 +25,15 @@ import org.testcontainers.utility.DockerImageName;
 
 public abstract class MySQLContainerHolder {
 
-  public static final MySQLContainer container;
+    public static final MySQLContainer container;
 
-  static {
-    container =
-      new MySQLContainer(DockerImageName.parse("arcadeanalytics/mysql-sakila").asCompatibleSubstituteFor("mysql"))
-        .withUsername("test")
-        .withPassword("test")
-        .withDatabaseName("sakila");
+    static {
+        container =
+            new MySQLContainer(DockerImageName.parse("arcadeanalytics/mysql-sakila").asCompatibleSubstituteFor("mysql"))
+                .withUsername("test")
+                .withPassword("test")
+                .withDatabaseName("sakila");
 
-    container.start();
-  }
+        container.start();
+    }
 }

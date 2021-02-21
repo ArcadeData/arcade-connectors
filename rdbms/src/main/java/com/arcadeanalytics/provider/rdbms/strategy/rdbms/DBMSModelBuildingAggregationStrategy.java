@@ -36,36 +36,45 @@ import org.slf4j.LoggerFactory;
 
 public class DBMSModelBuildingAggregationStrategy extends AbstractDBMSModelBuildingStrategy {
 
-  private static final Logger log = LoggerFactory.getLogger(DBMSModelBuildingAggregationStrategy.class);
+    private static final Logger log = LoggerFactory.getLogger(DBMSModelBuildingAggregationStrategy.class);
 
-  @Override
-  public ER2GraphMapper createSchemaMapper(
-    DataSourceInfo dataSource,
-    String outOrientGraphUri,
-    String chosenMapper,
-    String xmlPath,
-    NameResolver nameResolver,
-    DBMSDataTypeHandler handler,
-    List<String> includedTables,
-    List<String> excludedTables,
-    String executionStrategy,
-    DBQueryEngine queryEngine,
-    Statistics statistics
-  ) {
-    ER2GraphMapper mapper = new ER2GraphMapper(dataSource, includedTables, excludedTables, queryEngine, handler, executionStrategy, nameResolver, statistics);
+    @Override
+    public ER2GraphMapper createSchemaMapper(
+        DataSourceInfo dataSource,
+        String outOrientGraphUri,
+        String chosenMapper,
+        String xmlPath,
+        NameResolver nameResolver,
+        DBMSDataTypeHandler handler,
+        List<String> includedTables,
+        List<String> excludedTables,
+        String executionStrategy,
+        DBQueryEngine queryEngine,
+        Statistics statistics
+    ) {
+        ER2GraphMapper mapper = new ER2GraphMapper(
+            dataSource,
+            includedTables,
+            excludedTables,
+            queryEngine,
+            handler,
+            executionStrategy,
+            nameResolver,
+            statistics
+        );
 
-    // Step 1: DataBase schema building
-    mapper.buildSourceDatabaseSchema();
-    log.debug("{}", mapper.getDataBaseSchema().toString());
+        // Step 1: DataBase schema building
+        mapper.buildSourceDatabaseSchema();
+        log.debug("{}", mapper.getDataBaseSchema().toString());
 
-    // Step 2: Graph model building
-    mapper.buildGraphModel(nameResolver);
-    log.debug("{}", mapper.getGraphModel().toString());
+        // Step 2: Graph model building
+        mapper.buildGraphModel(nameResolver);
+        log.debug("{}", mapper.getGraphModel().toString());
 
-    // Step 3: Aggregation
-    mapper.performAggregations();
-    log.debug("'Junction-Entity' aggregation complete:: {}", mapper.getGraphModel().toString());
+        // Step 3: Aggregation
+        mapper.performAggregations();
+        log.debug("'Junction-Entity' aggregation complete:: {}", mapper.getGraphModel().toString());
 
-    return mapper;
-  }
+        return mapper;
+    }
 }

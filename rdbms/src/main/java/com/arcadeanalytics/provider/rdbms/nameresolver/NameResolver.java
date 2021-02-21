@@ -30,9 +30,9 @@ import com.arcadeanalytics.provider.rdbms.model.dbschema.CanonicalRelationship;
  */
 
 public interface NameResolver {
-  String resolveVertexName(String candidateName);
+    String resolveVertexName(String candidateName);
 
-  String resolveVertexProperty(String candidateName);
+    String resolveVertexProperty(String candidateName);
 
-  String resolveEdgeName(CanonicalRelationship relationship);
+    String resolveEdgeName(CanonicalRelationship relationship);
 }

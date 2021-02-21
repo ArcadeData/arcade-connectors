@@ -35,84 +35,84 @@ import org.testcontainers.utility.DockerImageName;
 
 public class MysqlGraphProviderTest extends AbstractRDBMSGraphProvider {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(PostgreSQLDataProviderTest.class);
-  private static final String driver = "com.mysql.cj.jdbc.Driver";
-  private static final String username = "test";
-  private static final String password = "test";
-  public static MySQLContainer container = new MySQLContainer(DockerImageName.parse("arcadeanalytics/mysql-sakila").asCompatibleSubstituteFor("mysql"))
-    .withUsername(username)
-    .withPassword(password)
-    .withDatabaseName("sakila");
+    private static final Logger LOGGER = LoggerFactory.getLogger(PostgreSQLDataProviderTest.class);
+    private static final String driver = "com.mysql.cj.jdbc.Driver";
+    private static final String username = "test";
+    private static final String password = "test";
+    public static MySQLContainer container = new MySQLContainer(DockerImageName.parse("arcadeanalytics/mysql-sakila").asCompatibleSubstituteFor("mysql"))
+        .withUsername(username)
+        .withPassword(password)
+        .withDatabaseName("sakila");
 
-  @BeforeAll
-  public static void beforeClass() throws Exception {
-    container.start();
-    container.withDatabaseName("sakila");
-  }
+    @BeforeAll
+    public static void beforeClass() throws Exception {
+        container.start();
+        container.withDatabaseName("sakila");
+    }
 
-  @Test
-  public void shouldFetchAllVertexes() {
-    // setting the aggregationEnabled flag in the dataSource
+    @Test
+    public void shouldFetchAllVertexes() {
+        // setting the aggregationEnabled flag in the dataSource
 
-    DataSourceInfo dataSource = new DataSourceInfo(
-      1L,
-      "RDBMS_MYSQL",
-      "testDataSource",
-      "desc",
-      container.getContainerIpAddress(),
-      container.getFirstMappedPort(),
-      container.getDatabaseName(),
-      username,
-      password,
-      false,
-      "{}",
-      false,
-      false,
-      "",
-      22,
-      "",
-      false
-    );
-    provider = new RDBMSGraphProvider();
+        DataSourceInfo dataSource = new DataSourceInfo(
+            1L,
+            "RDBMS_MYSQL",
+            "testDataSource",
+            "desc",
+            container.getContainerIpAddress(),
+            container.getFirstMappedPort(),
+            container.getDatabaseName(),
+            username,
+            password,
+            false,
+            "{}",
+            false,
+            false,
+            "",
+            22,
+            "",
+            false
+        );
+        provider = new RDBMSGraphProvider();
 
-    provider.provideTo(dataSource, player);
+        provider.provideTo(dataSource, player);
 
-    assertThat(player.processed()).isEqualTo(47273);
+        assertThat(player.processed()).isEqualTo(47273);
 
-    Assert.assertEquals(47273, nodes);
-    Assert.assertEquals(0, edges);
-  }
+        Assert.assertEquals(47273, nodes);
+        Assert.assertEquals(0, edges);
+    }
 
-  @Test
-  public void shouldFetchAllVertexesExceptJoinTables() {
-    // setting the aggregationEnabled flag in the dataSource
-    DataSourceInfo dataSource = new DataSourceInfo(
-      1L,
-      "RDBMS_MYSQL",
-      "testDataSource",
-      "desc",
-      container.getContainerIpAddress(),
-      container.getFirstMappedPort(),
-      container.getDatabaseName(),
-      username,
-      password,
-      true,
-      "{}",
-      false,
-      false,
-      "",
-      22,
-      "",
-      false
-    );
+    @Test
+    public void shouldFetchAllVertexesExceptJoinTables() {
+        // setting the aggregationEnabled flag in the dataSource
+        DataSourceInfo dataSource = new DataSourceInfo(
+            1L,
+            "RDBMS_MYSQL",
+            "testDataSource",
+            "desc",
+            container.getContainerIpAddress(),
+            container.getFirstMappedPort(),
+            container.getDatabaseName(),
+            username,
+            password,
+            true,
+            "{}",
+            false,
+            false,
+            "",
+            22,
+            "",
+            false
+        );
 
-    provider = new RDBMSGraphProvider();
+        provider = new RDBMSGraphProvider();
 
-    provider.provideTo(dataSource, player);
+        provider.provideTo(dataSource, player);
 
-    assertThat(player.processed()).isEqualTo(47273);
+        assertThat(player.processed()).isEqualTo(47273);
 
-    Assert.assertEquals(40811, nodes);
-    Assert.assertEquals(6462, edges);
-  }
+        Assert.assertEquals(40811, nodes);
+        Assert.assertEquals(6462, edges);
+    }
 }

@@ -31,30 +31,30 @@ import com.arcadeanalytics.provider.rdbms.dbengine.QueryBuilder;
 
 public class QueryBuilderFactory {
 
-  public QueryBuilder buildQueryBuilder(String type) {
-    QueryBuilder queryBuilder;
+    public QueryBuilder buildQueryBuilder(String type) {
+        QueryBuilder queryBuilder;
 
-    switch (type) {
-      case "RDBMS_ORACLE":
-        queryBuilder = new CommonQueryBuilder();
-        break;
-      case "RDBMS_MSQSLSERVER":
-        queryBuilder = new CommonQueryBuilder();
-        break;
-      case "RDBMS_MYSQL":
-        queryBuilder = new MysqlQueryBuilder();
-        break;
-      case "RDBMS_POSTGRESQL":
-        queryBuilder = new PostgreSQLQueryBuilder();
-        break;
-      case "RDBMS_HSQL":
-        queryBuilder = new CommonQueryBuilder();
-        break;
-      default:
-        queryBuilder = new CommonQueryBuilder();
-        break;
+        switch (type) {
+            case "RDBMS_ORACLE":
+                queryBuilder = new CommonQueryBuilder();
+                break;
+            case "RDBMS_MSQSLSERVER":
+                queryBuilder = new CommonQueryBuilder();
+                break;
+            case "RDBMS_MYSQL":
+                queryBuilder = new MysqlQueryBuilder();
+                break;
+            case "RDBMS_POSTGRESQL":
+                queryBuilder = new PostgreSQLQueryBuilder();
+                break;
+            case "RDBMS_HSQL":
+                queryBuilder = new CommonQueryBuilder();
+                break;
+            default:
+                queryBuilder = new CommonQueryBuilder();
+                break;
+        }
+
+        return queryBuilder;
     }
-
-    return queryBuilder;
-  }
 }

@@ -29,69 +29,69 @@ import org.testcontainers.containers.PostgreSQLContainer;
 
 public class PostgreSQLGraphProviderTest extends AbstractRDBMSGraphProvider {
 
-  final PostgreSQLContainer container = PostgreSQLContainerHolder.container;
+    final PostgreSQLContainer container = PostgreSQLContainerHolder.container;
 
-  @Test
-  public void shouldFetchAllVertexes() {
-    // setting the aggregationEnabled flag in the dataSource
-    DataSourceInfo dataSource = new DataSourceInfo(
-      1L,
-      "RDBMS_POSTGRESQL",
-      "testDataSource",
-      "desc",
-      container.getContainerIpAddress(),
-      container.getFirstMappedPort(),
-      container.getDatabaseName(),
-      "postgres",
-      "postgres",
-      false,
-      "{}",
-      false,
-      false,
-      "",
-      22,
-      "",
-      false
-    );
+    @Test
+    public void shouldFetchAllVertexes() {
+        // setting the aggregationEnabled flag in the dataSource
+        DataSourceInfo dataSource = new DataSourceInfo(
+            1L,
+            "RDBMS_POSTGRESQL",
+            "testDataSource",
+            "desc",
+            container.getContainerIpAddress(),
+            container.getFirstMappedPort(),
+            container.getDatabaseName(),
+            "postgres",
+            "postgres",
+            false,
+            "{}",
+            false,
+            false,
+            "",
+            22,
+            "",
+            false
+        );
 
-    provider = new RDBMSGraphProvider();
+        provider = new RDBMSGraphProvider();
 
-    provider.provideTo(dataSource, player);
-    Assert.assertEquals(44820, player.processed());
+        provider.provideTo(dataSource, player);
+        Assert.assertEquals(44820, player.processed());
 
-    Assert.assertEquals(44820, nodes);
-    Assert.assertEquals(0, edges);
-  }
+        Assert.assertEquals(44820, nodes);
+        Assert.assertEquals(0, edges);
+    }
 
-  @Test
-  public void shouldFetchAllVertexesExceptJoinTables() {
-    // setting the aggregationEnabled flag in the dataSource
-    DataSourceInfo dataSource = new DataSourceInfo(
-      1L,
-      "RDBMS_POSTGRESQL",
-      "testDataSource",
-      "desc",
-      container.getContainerIpAddress(),
-      container.getFirstMappedPort(),
-      container.getDatabaseName(),
-      "postgres",
-      "postgres",
-      true,
-      "{}",
-      false,
-      false,
-      "",
-      22,
-      "",
-      false
-    );
+    @Test
+    public void shouldFetchAllVertexesExceptJoinTables() {
+        // setting the aggregationEnabled flag in the dataSource
+        DataSourceInfo dataSource = new DataSourceInfo(
+            1L,
+            "RDBMS_POSTGRESQL",
+            "testDataSource",
+            "desc",
+            container.getContainerIpAddress(),
+            container.getFirstMappedPort(),
+            container.getDatabaseName(),
+            "postgres",
+            "postgres",
+            true,
+            "{}",
+            false,
+            false,
+            "",
+            22,
+            "",
+            false
+        );
 
-    provider = new RDBMSGraphProvider();
+        provider = new RDBMSGraphProvider();
 
-    provider.provideTo(dataSource, player);
-    Assert.assertEquals(player.processed(), 44820);
+        provider.provideTo(dataSource, player);
+        Assert.assertEquals(player.processed(), 44820);
 
-    Assert.assertEquals(38358, nodes);
-    Assert.assertEquals(6462, edges);
-  }
+        Assert.assertEquals(38358, nodes);
+        Assert.assertEquals(6462, edges);
+    }
 }

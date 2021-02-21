@@ -22,19 +22,19 @@ package com.arcadeanalytics.provider.rdbms.exception;
 
 public class RDBMSProviderOperationNotAllowedException extends RuntimeException {
 
-  public RDBMSProviderOperationNotAllowedException() {
-    super();
-  }
+    public RDBMSProviderOperationNotAllowedException() {
+        super();
+    }
 
-  public RDBMSProviderOperationNotAllowedException(String message) {
-    super(message);
-  }
+    public RDBMSProviderOperationNotAllowedException(String message) {
+        super(message);
+    }
 
-  public RDBMSProviderOperationNotAllowedException(String message, Throwable cause) {
-    super(message, cause);
-  }
+    public RDBMSProviderOperationNotAllowedException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-  public RDBMSProviderOperationNotAllowedException(Throwable cause) {
-    super(cause);
-  }
+    public RDBMSProviderOperationNotAllowedException(Throwable cause) {
+        super(cause);
+    }
 }

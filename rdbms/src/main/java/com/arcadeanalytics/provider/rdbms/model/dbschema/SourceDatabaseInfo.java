@@ -29,98 +29,98 @@ import java.util.Map;
 
 public class SourceDatabaseInfo {
 
-  private final String sourceId;
-  private final String sourceDBName;
-  private final String sourceRDBMS;
-  private final String driverName;
-  private final String url;
-  private final String username;
-  private final String password;
-  private final Map connectionProperties;
+    private final String sourceId;
+    private final String sourceDBName;
+    private final String sourceRDBMS;
+    private final String driverName;
+    private final String url;
+    private final String username;
+    private final String password;
+    private final Map connectionProperties;
 
-  private int maxRowsThreshold;
+    private int maxRowsThreshold;
 
-  public SourceDatabaseInfo(String sourceId, String sourceDBName, String sourceRDBMS, String driverName, String url, String username, String password) {
-    this(sourceId, sourceDBName, sourceRDBMS, driverName, url, username, password, new LinkedHashMap<String, String>());
-  }
+    public SourceDatabaseInfo(String sourceId, String sourceDBName, String sourceRDBMS, String driverName, String url, String username, String password) {
+        this(sourceId, sourceDBName, sourceRDBMS, driverName, url, username, password, new LinkedHashMap<String, String>());
+    }
 
-  public SourceDatabaseInfo(
-    String sourceId,
-    String sourceDBName,
-    String sourceRDBMS,
-    String driverName,
-    String url,
-    String username,
-    String password,
-    Map<String, String> connectionProperties
-  ) {
-    this.sourceId = sourceId;
-    this.sourceDBName = sourceDBName;
-    this.sourceRDBMS = sourceRDBMS;
-    this.driverName = driverName;
-    this.url = url;
-    this.username = username;
-    this.password = password;
-    this.connectionProperties = connectionProperties;
-  }
+    public SourceDatabaseInfo(
+        String sourceId,
+        String sourceDBName,
+        String sourceRDBMS,
+        String driverName,
+        String url,
+        String username,
+        String password,
+        Map<String, String> connectionProperties
+    ) {
+        this.sourceId = sourceId;
+        this.sourceDBName = sourceDBName;
+        this.sourceRDBMS = sourceRDBMS;
+        this.driverName = driverName;
+        this.url = url;
+        this.username = username;
+        this.password = password;
+        this.connectionProperties = connectionProperties;
+    }
 
-  public String getSourceId() {
-    return this.sourceId;
-  }
+    public String getSourceId() {
+        return this.sourceId;
+    }
 
-  public String getSourceDBName() {
-    return sourceDBName;
-  }
+    public String getSourceDBName() {
+        return sourceDBName;
+    }
 
-  public String getSourceRDBMS() {
-    return sourceRDBMS;
-  }
+    public String getSourceRDBMS() {
+        return sourceRDBMS;
+    }
 
-  public String getDriverName() {
-    return this.driverName;
-  }
+    public String getDriverName() {
+        return this.driverName;
+    }
 
-  public String getUrl() {
-    return this.url;
-  }
+    public String getUrl() {
+        return this.url;
+    }
 
-  public String getUsername() {
-    return this.username;
-  }
+    public String getUsername() {
+        return this.username;
+    }
 
-  public String getPassword() {
-    return this.password;
-  }
+    public String getPassword() {
+        return this.password;
+    }
 
-  public Map getConnectionProperties() {
-    return connectionProperties;
-  }
+    public Map getConnectionProperties() {
+        return connectionProperties;
+    }
 
-  public int getMaxRowsThreshold() {
-    return this.maxRowsThreshold;
-  }
+    public int getMaxRowsThreshold() {
+        return this.maxRowsThreshold;
+    }
 
-  public void setMaxRowsThreshold(int maxRowsThreshold) {
-    this.maxRowsThreshold = maxRowsThreshold;
-  }
+    public void setMaxRowsThreshold(int maxRowsThreshold) {
+        this.maxRowsThreshold = maxRowsThreshold;
+    }
 
-  @Override
-  public int hashCode() {
-    int result = sourceId.hashCode();
-    result = 31 * result + driverName.hashCode();
-    result = 31 * result + url.hashCode();
-    return result;
-  }
+    @Override
+    public int hashCode() {
+        int result = sourceId.hashCode();
+        result = 31 * result + driverName.hashCode();
+        result = 31 * result + url.hashCode();
+        return result;
+    }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
-    SourceDatabaseInfo that = (SourceDatabaseInfo) o;
+        SourceDatabaseInfo that = (SourceDatabaseInfo) o;
 
-    if (!sourceId.equals(that.sourceId)) return false;
-    if (!driverName.equals(that.driverName)) return false;
-    return url.equals(that.url);
-  }
+        if (!sourceId.equals(that.sourceId)) return false;
+        if (!driverName.equals(that.driverName)) return false;
+        return url.equals(that.url);
+    }
 }

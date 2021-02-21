@@ -31,78 +31,78 @@ import java.util.List;
 
 public class LogicalRelationship extends Relationship {
 
-  private List<Attribute> fromColumns;
-  private List<Attribute> toColumns;
+    private List<Attribute> fromColumns;
+    private List<Attribute> toColumns;
 
-  public LogicalRelationship(Entity foreignEntity, Entity parentEntity) {
-    this.foreignEntity = foreignEntity;
-    this.parentEntity = parentEntity;
-    this.direction = "direct";
-  }
-
-  public LogicalRelationship(Entity foreignEntity, Entity parentEntity, List<Attribute> fromColumns, List<Attribute> toColumns) {
-    this.foreignEntity = foreignEntity;
-    this.parentEntity = parentEntity;
-    this.fromColumns = fromColumns;
-    this.toColumns = toColumns;
-    this.direction = "direct";
-  }
-
-  @Override
-  public List<Attribute> getFromColumns() {
-    return fromColumns;
-  }
-
-  public void setFromColumns(List<Attribute> columns) {
-    this.fromColumns = columns;
-  }
-
-  @Override
-  public List<Attribute> getToColumns() {
-    return this.toColumns;
-  }
-
-  public void setToColumns(List<Attribute> columns) {
-    this.toColumns = columns;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    CanonicalRelationship that = (CanonicalRelationship) obj;
-    if (this.foreignEntity.equals(that.getForeignEntity()) && this.parentEntity.equals(that.getParentEntity())) {
-      if (this.fromColumns.equals(that.getFromColumns()) && this.toColumns.equals(that.getToColumns())) {
-        return true;
-      }
+    public LogicalRelationship(Entity foreignEntity, Entity parentEntity) {
+        this.foreignEntity = foreignEntity;
+        this.parentEntity = parentEntity;
+        this.direction = "direct";
     }
-    return false;
-  }
 
-  @Override
-  public String toString() {
-    String fromColumns = "[";
-    for (Attribute attribute : this.fromColumns) {
-      fromColumns += attribute.getName() + ",";
+    public LogicalRelationship(Entity foreignEntity, Entity parentEntity, List<Attribute> fromColumns, List<Attribute> toColumns) {
+        this.foreignEntity = foreignEntity;
+        this.parentEntity = parentEntity;
+        this.fromColumns = fromColumns;
+        this.toColumns = toColumns;
+        this.direction = "direct";
     }
-    fromColumns = fromColumns.substring(0, fromColumns.length() - 1);
-    fromColumns += "]";
 
-    String toColumns = "[";
-    for (Attribute attribute : this.toColumns) {
-      toColumns += attribute.getName() + ",";
+    @Override
+    public List<Attribute> getFromColumns() {
+        return fromColumns;
     }
-    toColumns = toColumns.substring(0, toColumns.length() - 1);
-    toColumns += "]";
 
-    return (
-      "LogicalRelationship [foreignEntity=" +
-      foreignEntity.getName() +
-      ", parentEntity=" +
-      parentEntity.getName() +
-      ", From Columns=" +
-      fromColumns +
-      ", To Columns=" +
-      toColumns +
-      " ]"
-    );
-  }
+    public void setFromColumns(List<Attribute> columns) {
+        this.fromColumns = columns;
+    }
+
+    @Override
+    public List<Attribute> getToColumns() {
+        return this.toColumns;
+    }
+
+    public void setToColumns(List<Attribute> columns) {
+        this.toColumns = columns;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        CanonicalRelationship that = (CanonicalRelationship) obj;
+        if (this.foreignEntity.equals(that.getForeignEntity()) && this.parentEntity.equals(that.getParentEntity())) {
+            if (this.fromColumns.equals(that.getFromColumns()) && this.toColumns.equals(that.getToColumns())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        String fromColumns = "[";
+        for (Attribute attribute : this.fromColumns) {
+            fromColumns += attribute.getName() + ",";
+        }
+        fromColumns = fromColumns.substring(0, fromColumns.length() - 1);
+        fromColumns += "]";
+
+        String toColumns = "[";
+        for (Attribute attribute : this.toColumns) {
+            toColumns += attribute.getName() + ",";
+        }
+        toColumns = toColumns.substring(0, toColumns.length() - 1);
+        toColumns += "]";
+
+        return (
+            "LogicalRelationship [foreignEntity=" +
+            foreignEntity.getName() +
+            ", parentEntity=" +
+            parentEntity.getName() +
+            ", From Columns=" +
+            fromColumns +
+            ", To Columns=" +
+            toColumns +
+            " ]"
+        );
+    }
 }

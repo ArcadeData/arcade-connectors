@@ -30,84 +30,84 @@ import java.io.PrintStream;
  */
 public class MessageHandler implements PluginMessageHandler {
 
-  private int level; // affects OutputStreamManager level
-  private OutputStreamManager outputManager;
+    private int level; // affects OutputStreamManager level
+    private OutputStreamManager outputManager;
 
-  public MessageHandler(PrintStream outputStream, int level) {
-    this.level = level;
-    this.outputManager = new OutputStreamManager(outputStream, level);
-  }
+    public MessageHandler(PrintStream outputStream, int level) {
+        this.level = level;
+        this.outputManager = new OutputStreamManager(outputStream, level);
+    }
 
-  public MessageHandler(int level) {
-    this.level = level;
-    this.outputManager = new OutputStreamManager(level);
-  }
+    public MessageHandler(int level) {
+        this.level = level;
+        this.outputManager = new OutputStreamManager(level);
+    }
 
-  public MessageHandler(OutputStreamManager outputStreamManager) {
-    this.outputManager = outputStreamManager;
-    this.level = this.outputManager.getLevel();
-  }
+    public MessageHandler(OutputStreamManager outputStreamManager) {
+        this.outputManager = outputStreamManager;
+        this.level = this.outputManager.getLevel();
+    }
 
-  public OutputStreamManager getOutputManager() {
-    return this.outputManager;
-  }
+    public OutputStreamManager getOutputManager() {
+        return this.outputManager;
+    }
 
-  public void setOutputManager(OutputStreamManager outputManager) {
-    this.outputManager = outputManager;
-  }
+    public void setOutputManager(OutputStreamManager outputManager) {
+        this.outputManager = outputManager;
+    }
 
-  @Override
-  public int getOutputManagerLevel() {
-    return this.level;
-  }
+    @Override
+    public int getOutputManagerLevel() {
+        return this.level;
+    }
 
-  @Override
-  public void setOutputManagerLevel(int level) {
-    this.level = level;
-    this.updateOutputStreamManagerLevel();
-  }
+    @Override
+    public void setOutputManagerLevel(int level) {
+        this.level = level;
+        this.updateOutputStreamManagerLevel();
+    }
 
-  private synchronized void updateOutputStreamManagerLevel() {
-    this.outputManager.setLevel(this.level);
-  }
+    private synchronized void updateOutputStreamManagerLevel() {
+        this.outputManager.setLevel(this.level);
+    }
 
-  @Override
-  public synchronized void debug(Object requester, String message) {
-    this.outputManager.debug(message);
-  }
+    @Override
+    public synchronized void debug(Object requester, String message) {
+        this.outputManager.debug(message);
+    }
 
-  @Override
-  public synchronized void debug(Object requester, String format, Object... args) {
-    this.outputManager.debug(format, args);
-  }
+    @Override
+    public synchronized void debug(Object requester, String format, Object... args) {
+        this.outputManager.debug(format, args);
+    }
 
-  @Override
-  public synchronized void info(Object requester, String message) {
-    this.outputManager.info(message);
-  }
+    @Override
+    public synchronized void info(Object requester, String message) {
+        this.outputManager.info(message);
+    }
 
-  @Override
-  public synchronized void info(Object requester, String format, Object... args) {
-    this.outputManager.info(format, args);
-  }
+    @Override
+    public synchronized void info(Object requester, String format, Object... args) {
+        this.outputManager.info(format, args);
+    }
 
-  @Override
-  public synchronized void warn(Object requester, String message) {
-    this.outputManager.warn(message);
-  }
+    @Override
+    public synchronized void warn(Object requester, String message) {
+        this.outputManager.warn(message);
+    }
 
-  @Override
-  public synchronized void warn(Object requester, String format, Object... args) {
-    this.outputManager.warn(format, args);
-  }
+    @Override
+    public synchronized void warn(Object requester, String format, Object... args) {
+        this.outputManager.warn(format, args);
+    }
 
-  @Override
-  public synchronized void error(Object requester, String message) {
-    this.outputManager.error(message);
-  }
+    @Override
+    public synchronized void error(Object requester, String message) {
+        this.outputManager.error(message);
+    }
 
-  @Override
-  public synchronized void error(Object requester, String format, Object... args) {
-    this.outputManager.error(format, args);
-  }
+    @Override
+    public synchronized void error(Object requester, String format, Object... args) {
+        this.outputManager.error(format, args);
+    }
 }

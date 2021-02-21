@@ -36,20 +36,20 @@ import com.arcadeanalytics.provider.rdbms.persistence.handler.SQLServerDataTypeH
 
 public class DataTypeHandlerFactory {
 
-  public DBMSDataTypeHandler buildDataTypeHandler(String type) {
-    switch (type) {
-      case "RDBMS_ORACLE":
-        return new OracleDataTypeHandler();
-      case "RDBMS_MSQSLSERVER":
-        return new SQLServerDataTypeHandler();
-      case "RDBMS_MYSQL":
-        return new MySQLDataTypeHandler();
-      case "RDBMS_POSTGRESQL":
-        return new PostgreSQLDataTypeHandler();
-      case "RDBMS_HSQL":
-        return new HSQLDBDataTypeHandler();
-      default:
-        return new DBMSDataTypeHandler();
+    public DBMSDataTypeHandler buildDataTypeHandler(String type) {
+        switch (type) {
+            case "RDBMS_ORACLE":
+                return new OracleDataTypeHandler();
+            case "RDBMS_MSQSLSERVER":
+                return new SQLServerDataTypeHandler();
+            case "RDBMS_MYSQL":
+                return new MySQLDataTypeHandler();
+            case "RDBMS_POSTGRESQL":
+                return new PostgreSQLDataTypeHandler();
+            case "RDBMS_HSQL":
+                return new HSQLDBDataTypeHandler();
+            default:
+                return new DBMSDataTypeHandler();
+        }
     }
-  }
 }

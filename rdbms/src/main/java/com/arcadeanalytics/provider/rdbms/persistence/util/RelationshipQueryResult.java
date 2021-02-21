@@ -33,14 +33,14 @@ import java.sql.Statement;
 
 public class RelationshipQueryResult extends QueryResult {
 
-  private String relationshipName; // usually corresponds to the name of the correspondent edge class
+    private String relationshipName; // usually corresponds to the name of the correspondent edge class
 
-  public RelationshipQueryResult(Connection connection, Statement statement, ResultSet result, String originalQuery, String relationshipName) {
-    super(connection, statement, result, originalQuery);
-    this.relationshipName = relationshipName;
-  }
+    public RelationshipQueryResult(Connection connection, Statement statement, ResultSet result, String originalQuery, String relationshipName) {
+        super(connection, statement, result, originalQuery);
+        this.relationshipName = relationshipName;
+    }
 
-  public String getRelationshipName() {
-    return this.relationshipName;
-  }
+    public String getRelationshipName() {
+        return this.relationshipName;
+    }
 }

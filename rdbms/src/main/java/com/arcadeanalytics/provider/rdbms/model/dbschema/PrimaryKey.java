@@ -30,17 +30,17 @@ import java.util.List;
 
 public class PrimaryKey extends Key {
 
-  public PrimaryKey(Entity belongingEntity, List<Attribute> involvedAttributes) {
-    super(belongingEntity, involvedAttributes);
-  }
-
-  public Attribute getAttributeByOrdinalPosition(int ordinalPosition) {
-    // overflow
-    if (ordinalPosition > super.getInvolvedAttributes().size()) return null;
-
-    for (Attribute attribute : super.involvedAttributes) {
-      if (attribute.getOrdinalPosition() == ordinalPosition) return attribute;
+    public PrimaryKey(Entity belongingEntity, List<Attribute> involvedAttributes) {
+        super(belongingEntity, involvedAttributes);
     }
-    return null;
-  }
+
+    public Attribute getAttributeByOrdinalPosition(int ordinalPosition) {
+        // overflow
+        if (ordinalPosition > super.getInvolvedAttributes().size()) return null;
+
+        for (Attribute attribute : super.involvedAttributes) {
+            if (attribute.getOrdinalPosition() == ordinalPosition) return attribute;
+        }
+        return null;
+    }
 }

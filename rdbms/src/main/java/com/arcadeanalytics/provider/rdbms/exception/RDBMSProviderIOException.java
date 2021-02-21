@@ -31,17 +31,17 @@ import java.io.IOException;
 @SuppressWarnings("serial")
 public class RDBMSProviderIOException extends IOException {
 
-  public RDBMSProviderIOException() {}
+    public RDBMSProviderIOException() {}
 
-  public RDBMSProviderIOException(String message) {
-    super(message);
-  }
+    public RDBMSProviderIOException(String message) {
+        super(message);
+    }
 
-  public RDBMSProviderIOException(String message, Throwable cause) {
-    super(message, cause);
-  }
+    public RDBMSProviderIOException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-  public RDBMSProviderIOException(Throwable cause) {
-    super(cause);
-  }
+    public RDBMSProviderIOException(Throwable cause) {
+        super(cause);
+    }
 }

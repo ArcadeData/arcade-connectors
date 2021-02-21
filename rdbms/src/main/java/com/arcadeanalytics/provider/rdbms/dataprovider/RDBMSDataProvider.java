@@ -48,17 +48,6 @@ import com.arcadeanalytics.provider.rdbms.persistence.util.QueryResult;
 import com.arcadeanalytics.provider.rdbms.persistence.util.RelationshipQueryResult;
 import com.arcadeanalytics.provider.rdbms.strategy.rdbms.AbstractDBMSModelBuildingStrategy;
 import com.google.common.collect.Sets;
-import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.parser.CCJSqlParserUtil;
-import net.sf.jsqlparser.schema.Column;
-import net.sf.jsqlparser.statement.select.PlainSelect;
-import net.sf.jsqlparser.statement.select.Select;
-import net.sf.jsqlparser.statement.select.SelectExpressionItem;
-import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -73,6 +62,16 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.Select;
+import net.sf.jsqlparser.statement.select.SelectExpressionItem;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RDBMSDataProvider implements DataSourceGraphDataProvider {
 
@@ -109,18 +108,18 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
         StrategyFactory strategyFactory = new StrategyFactory();
         try {
             mapper =
-                    ((AbstractDBMSModelBuildingStrategy) strategyFactory.buildStrategy(chosenStrategy)).createSchemaMapper(
-                            datasource,
-                            null,
-                            "basicDBMapper",
-                            null,
-                            nameResolver,
-                            handler,
-                            null,
-                            null,
-                            chosenStrategy,
-                            dbQueryEngine,
-                            statistics
+                ((AbstractDBMSModelBuildingStrategy) strategyFactory.buildStrategy(chosenStrategy)).createSchemaMapper(
+                        datasource,
+                        null,
+                        "basicDBMapper",
+                        null,
+                        nameResolver,
+                        handler,
+                        null,
+                        null,
+                        chosenStrategy,
+                        dbQueryEngine,
+                        statistics
                     );
         } catch (RDBMSProviderIOException e) {
             throw new RuntimeException(e);
@@ -167,7 +166,7 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
                 VertexType aggregatedVertexType = this.dataFetcher.getMapper().getVertexTypeByEntity(entity);
                 AggregatorEdge edgeType = this.dataFetcher.getMapper().getAggregatorEdgeByJoinVertexTypeName(aggregatedVertexType.getName());
                 throw new RDBMSProviderAggregationException(
-                        "Wrong query content: " + "the requested table was aggregated into the " + edgeType.getEdgeType().getName() + " edge class."
+                    "Wrong query content: " + "the requested table was aggregated into the " + edgeType.getEdgeType().getName() + " edge class."
                 );
             }
 
@@ -227,15 +226,15 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
             PlainSelect plain = (PlainSelect) select.getSelectBody();
             if (datasource.getType().equals("RDBMS_DATA_WORLD")) {
                 boolean notFound = plain
-                        .getSelectItems()
-                        .stream()
-                        .filter(item -> item instanceof SelectExpressionItem)
-                        .map(item -> ((SelectExpressionItem) item).getExpression())
-                        .filter(expression -> expression instanceof Column)
-                        .map(column -> ((Column) column).getColumnName())
-                        .filter(name -> name.equals("raw_index"))
-                        .collect(Collectors.toList())
-                        .isEmpty();
+                    .getSelectItems()
+                    .stream()
+                    .filter(item -> item instanceof SelectExpressionItem)
+                    .map(item -> ((SelectExpressionItem) item).getExpression())
+                    .filter(expression -> expression instanceof Column)
+                    .map(column -> ((Column) column).getColumnName())
+                    .filter(name -> name.equals("raw_index"))
+                    .collect(Collectors.toList())
+                    .isEmpty();
                 if (notFound) {
                     log.debug("fixing query to DW, add 'row_index' column");
                     plain.addSelectItems(new SelectExpressionItem(new Column("row_index")));
@@ -279,20 +278,20 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
 
                 // filtering in just the relationships with the chosen direction
                 mappedRelationships =
-                        mappedRelationships
-                                .stream()
-                                .filter(
-                                        r -> {
-                                            Entity rootEntity = null;
-                                            if (direction.equals("in")) {
-                                                rootEntity = r.getParentEntity();
-                                            } else if (direction.equals("out")) {
-                                                rootEntity = r.getForeignEntity();
-                                            }
-                                            return rootEntitiesInQuery.contains(rootEntity);
-                                        }
-                                )
-                                .collect(Collectors.toList());
+                    mappedRelationships
+                        .stream()
+                        .filter(
+                            r -> {
+                                Entity rootEntity = null;
+                                if (direction.equals("in")) {
+                                    rootEntity = r.getParentEntity();
+                                } else if (direction.equals("out")) {
+                                    rootEntity = r.getForeignEntity();
+                                }
+                                return rootEntitiesInQuery.contains(rootEntity);
+                            }
+                        )
+                        .collect(Collectors.toList());
 
                 List<Attribute> filteringColumns = null;
 
@@ -315,27 +314,27 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
                     final int rootEntityId = rootEntity.getSchemaPosition();
                     final int enteringEntityId = enteringEntity.getSchemaPosition();
                     List<String> rootNodeIds = Arrays
-                            .asList(roots)
-                            .stream()
-                            .filter(
-                                    id -> {
-                                        int tableId = Integer.parseInt(id.split("_")[0]);
-                                        return tableId == rootEntityId || tableId == enteringEntityId;
-                                    }
-                            )
-                            .map(id -> id.substring(id.indexOf("_") + 1)) // cleaning ids to get the original ones back
-                            .collect(Collectors.toList());
+                        .asList(roots)
+                        .stream()
+                        .filter(
+                            id -> {
+                                int tableId = Integer.parseInt(id.split("_")[0]);
+                                return tableId == rootEntityId || tableId == enteringEntityId;
+                            }
+                        )
+                        .map(id -> id.substring(id.indexOf("_") + 1)) // cleaning ids to get the original ones back
+                        .collect(Collectors.toList());
 
                     queryResult =
-                            dbQueryEngine.expandRelationship(
-                                    enteringEntity,
-                                    rootEntity,
-                                    currRelationship.getFromColumns(),
-                                    currRelationship.getToColumns(),
-                                    rootNodeIds,
-                                    direction,
-                                    datasource
-                            );
+                        dbQueryEngine.expandRelationship(
+                            enteringEntity,
+                            rootEntity,
+                            currRelationship.getFromColumns(),
+                            currRelationship.getToColumns(),
+                            rootNodeIds,
+                            direction,
+                            datasource
+                        );
 
                     List<String> newNodeIds = new ArrayList<>(rootNodeIds);
 
@@ -354,15 +353,15 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
                         if (idTargetIndexToExtract != null) {
                             final int index = idTargetIndexToExtract.intValue();
                             newNodeIds =
-                                    newNodeIds
-                                            .stream()
-                                            .map(
-                                                    id -> {
-                                                        String[] splits = id.split("_");
-                                                        return splits[index];
-                                                    }
-                                            )
-                                            .collect(Collectors.toList());
+                                newNodeIds
+                                    .stream()
+                                    .map(
+                                        id -> {
+                                            String[] splits = id.split("_");
+                                            return splits[index];
+                                        }
+                                    )
+                                    .collect(Collectors.toList());
                         }
                     }
 
@@ -390,10 +389,10 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
                 List<CanonicalRelationship> joinTableRelationships = new LinkedList<>(joinTable.getOutCanonicalRelationships());
                 if (joinTableRelationships.size() != 2) {
                     throw new RDBMSProviderAggregationException(
-                            "Wrong relationships mapping: " +
-                                    "the aggregated " +
-                                    joinTable.getName() +
-                                    " join table does not have 2 out relationships to represent the N-N relationship."
+                        "Wrong relationships mapping: " +
+                        "the aggregated " +
+                        joinTable.getName() +
+                        " join table does not have 2 out relationships to represent the N-N relationship."
                     );
                 }
                 Relationship firstJoinTableRelationship = null;
@@ -417,52 +416,52 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
 
                 // first external entity join: getting join table's records
                 QueryResult joinTableRecordsResult = dbQueryEngine.expandRelationship(
-                        joinTable,
-                        firstExternalEntity,
-                        firstJoinTableRelationship.getFromColumns(),
-                        firstJoinTableRelationship.getToColumns(),
-                        rootNodeIds,
-                        direction,
-                        datasource
+                    joinTable,
+                    firstExternalEntity,
+                    firstJoinTableRelationship.getFromColumns(),
+                    firstJoinTableRelationship.getToColumns(),
+                    rootNodeIds,
+                    direction,
+                    datasource
                 );
 
                 // building the edges from the join table records
                 GraphData enteringEdgesGraphData = dataFetcher.buildEdgesFromJoinTableRecords(
-                        joinTableRecordsResult,
-                        edgeClassName,
-                        firstExternalEntity,
-                        joinTable,
-                        secondExternalEntity,
-                        direction
+                    joinTableRecordsResult,
+                    edgeClassName,
+                    firstExternalEntity,
+                    joinTable,
+                    secondExternalEntity,
+                    direction
                 );
                 graphDataCollection.add(enteringEdgesGraphData);
 
                 // new root ids: we need the ids from the join table records
 
                 rootNodeIds =
-                        enteringEdgesGraphData
-                                .getEdges()
-                                .stream()
-                                .map(
-                                        cytoData -> {
-                                            String id = cytoData.getData().getId();
-                                            id = id.substring(id.indexOf("_") + 1);
-                                            return id;
-                                        }
-                                )
-                                .collect(Collectors.toList());
+                    enteringEdgesGraphData
+                        .getEdges()
+                        .stream()
+                        .map(
+                            cytoData -> {
+                                String id = cytoData.getData().getId();
+                                id = id.substring(id.indexOf("_") + 1);
+                                return id;
+                            }
+                        )
+                        .collect(Collectors.toList());
 
                 // second external entity join: getting entering entity's records
                 queryResult =
-                        dbQueryEngine.expandRelationship(
-                                secondExternalEntity,
-                                joinTable,
-                                secondJoinTableRelationship.getFromColumns(),
-                                secondJoinTableRelationship.getToColumns(),
-                                rootNodeIds,
-                                direction,
-                                datasource
-                        );
+                    dbQueryEngine.expandRelationship(
+                        secondExternalEntity,
+                        joinTable,
+                        secondJoinTableRelationship.getFromColumns(),
+                        secondJoinTableRelationship.getToColumns(),
+                        rootNodeIds,
+                        direction,
+                        datasource
+                    );
 
                 Map<String, List<RelationshipQueryResult>> direction2countQueryResults = getRelationshipsCountAggregationCase(datasource, secondExternalEntity);
 
@@ -592,10 +591,10 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
     }
 
     public List<RelationshipQueryResult> getOutRelationshipsCount(
-            DataSourceInfo datasource,
-            Entity entity,
-            List<Attribute> filteringColumns,
-            List<String> filteringRootNodeIds
+        DataSourceInfo datasource,
+        Entity entity,
+        List<Attribute> filteringColumns,
+        List<String> filteringRootNodeIds
     ) {
         List<RelationshipQueryResult> countResults = new LinkedList<>();
 
@@ -605,14 +604,14 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
             final RelationshipQueryResult queryResult;
             try {
                 queryResult =
-                        dbQueryEngine.performConnectionCountQueryGroupedByElement(
-                                currentRelationship,
-                                "foreignTable",
-                                filteringColumns,
-                                filteringRootNodeIds,
-                                datasource,
-                                relationshipName
-                        );
+                    dbQueryEngine.performConnectionCountQueryGroupedByElement(
+                        currentRelationship,
+                        "foreignTable",
+                        filteringColumns,
+                        filteringRootNodeIds,
+                        datasource,
+                        relationshipName
+                    );
                 countResults.add(queryResult);
             } catch (SQLException e) {
                 log.error("unable to get OUT relationship count for :: " + currentRelationship, e);
@@ -635,10 +634,10 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
     }
 
     public List<RelationshipQueryResult> getInRelationshipsCount(
-            DataSourceInfo datasource,
-            Entity entity,
-            List<Attribute> filteringColumns,
-            List<String> filteringRootNodeIds
+        DataSourceInfo datasource,
+        Entity entity,
+        List<Attribute> filteringColumns,
+        List<String> filteringRootNodeIds
     ) {
         List<RelationshipQueryResult> countResults = new LinkedList<>();
 
@@ -648,14 +647,14 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
             final RelationshipQueryResult queryResult;
             try {
                 queryResult =
-                        dbQueryEngine.performConnectionCountQueryGroupedByElement(
-                                currentRelationship,
-                                "parentTable",
-                                filteringColumns,
-                                filteringRootNodeIds,
-                                datasource,
-                                relationshipName
-                        );
+                    dbQueryEngine.performConnectionCountQueryGroupedByElement(
+                        currentRelationship,
+                        "parentTable",
+                        filteringColumns,
+                        filteringRootNodeIds,
+                        datasource,
+                        relationshipName
+                    );
                 countResults.add(queryResult);
             } catch (SQLException e) {
                 log.error("unable to get IN relationship count for :: " + currentRelationship, e);
@@ -671,10 +670,10 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
     }
 
     private Map<String, List<RelationshipQueryResult>> getRelationshipsCountAggregationCase(
-            DataSourceInfo datasource,
-            Entity entity,
-            List<Attribute> filteringColumns,
-            List<String> filteringRootNodeIds
+        DataSourceInfo datasource,
+        Entity entity,
+        List<Attribute> filteringColumns,
+        List<String> filteringRootNodeIds
     ) {
         List<RelationshipQueryResult> outCountResults = new LinkedList<>();
         List<RelationshipQueryResult> inCountResults = new LinkedList<>();
@@ -709,14 +708,14 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
             final RelationshipQueryResult queryResult;
             try {
                 queryResult =
-                        dbQueryEngine.performConnectionCountQueryGroupedByElement(
-                                currentRelationship,
-                                "foreignTable",
-                                filteringColumns,
-                                filteringRootNodeIds,
-                                datasource,
-                                relationshipName
-                        );
+                    dbQueryEngine.performConnectionCountQueryGroupedByElement(
+                        currentRelationship,
+                        "foreignTable",
+                        filteringColumns,
+                        filteringRootNodeIds,
+                        datasource,
+                        relationshipName
+                    );
                 if (direction.equals("out")) {
                     outCountResults.add(queryResult);
                 } else {
@@ -756,14 +755,14 @@ public class RDBMSDataProvider implements DataSourceGraphDataProvider {
             final RelationshipQueryResult queryResult;
             try {
                 queryResult =
-                        dbQueryEngine.performConnectionCountQueryGroupedByElement(
-                                currentRelationship,
-                                "parentTable",
-                                filteringColumns,
-                                filteringRootNodeIds,
-                                datasource,
-                                relationshipName
-                        );
+                    dbQueryEngine.performConnectionCountQueryGroupedByElement(
+                        currentRelationship,
+                        "parentTable",
+                        filteringColumns,
+                        filteringRootNodeIds,
+                        datasource,
+                        relationshipName
+                    );
                 if (direction.equals("out")) {
                     outCountResults.add(queryResult);
                 } else {

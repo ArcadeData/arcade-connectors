@@ -31,84 +31,84 @@ import java.util.List;
 
 public class Key {
 
-  protected final Entity belongingEntity;
-  protected final List<Attribute> involvedAttributes;
+    protected final Entity belongingEntity;
+    protected final List<Attribute> involvedAttributes;
 
-  public Key(Entity belongingEntity, List<Attribute> involvedAttributes) {
-    this.belongingEntity = belongingEntity;
-    this.involvedAttributes = involvedAttributes;
-  }
-
-  public Entity getBelongingEntity() {
-    return this.belongingEntity;
-  }
-
-  public List<Attribute> getInvolvedAttributes() {
-    return this.involvedAttributes;
-  }
-
-  public void addAttribute(Attribute attribute) {
-    this.involvedAttributes.add(attribute);
-  }
-
-  public boolean removeAttribute(Attribute toRemove) {
-    return this.involvedAttributes.remove(toRemove);
-  }
-
-  public Attribute getAttributeByName(String name) {
-    Attribute toReturn = null;
-
-    for (Attribute a : this.involvedAttributes) {
-      if (a.getName().equals(name)) {
-        toReturn = a;
-        break;
-      }
-    }
-    return toReturn;
-  }
-
-  public Attribute getAttributeByNameIgnoreCase(String name) {
-    Attribute toReturn = null;
-
-    for (Attribute a : this.involvedAttributes) {
-      if (a.getName().equalsIgnoreCase(name)) {
-        toReturn = a;
-        break;
-      }
-    }
-    return toReturn;
-  }
-
-  @Override
-  public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((belongingEntity == null) ? 0 : belongingEntity.getName().hashCode());
-    result = prime * result + ((involvedAttributes == null) ? 0 : involvedAttributes.hashCode());
-    return result;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    Key that = (Key) obj;
-
-    if (this.belongingEntity.getName().equals(that.belongingEntity.getName())) {
-      if (this.involvedAttributes.equals(that.getInvolvedAttributes())) {
-        return true;
-      }
+    public Key(Entity belongingEntity, List<Attribute> involvedAttributes) {
+        this.belongingEntity = belongingEntity;
+        this.involvedAttributes = involvedAttributes;
     }
 
-    return false;
-  }
-
-  public String toString() {
-    String s = "[";
-    for (Attribute attribute : this.involvedAttributes) {
-      s += attribute.getName() + ",";
+    public Entity getBelongingEntity() {
+        return this.belongingEntity;
     }
-    s = s.substring(0, s.length() - 1);
-    s += "]";
 
-    return s;
-  }
+    public List<Attribute> getInvolvedAttributes() {
+        return this.involvedAttributes;
+    }
+
+    public void addAttribute(Attribute attribute) {
+        this.involvedAttributes.add(attribute);
+    }
+
+    public boolean removeAttribute(Attribute toRemove) {
+        return this.involvedAttributes.remove(toRemove);
+    }
+
+    public Attribute getAttributeByName(String name) {
+        Attribute toReturn = null;
+
+        for (Attribute a : this.involvedAttributes) {
+            if (a.getName().equals(name)) {
+                toReturn = a;
+                break;
+            }
+        }
+        return toReturn;
+    }
+
+    public Attribute getAttributeByNameIgnoreCase(String name) {
+        Attribute toReturn = null;
+
+        for (Attribute a : this.involvedAttributes) {
+            if (a.getName().equalsIgnoreCase(name)) {
+                toReturn = a;
+                break;
+            }
+        }
+        return toReturn;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((belongingEntity == null) ? 0 : belongingEntity.getName().hashCode());
+        result = prime * result + ((involvedAttributes == null) ? 0 : involvedAttributes.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        Key that = (Key) obj;
+
+        if (this.belongingEntity.getName().equals(that.belongingEntity.getName())) {
+            if (this.involvedAttributes.equals(that.getInvolvedAttributes())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public String toString() {
+        String s = "[";
+        for (Attribute attribute : this.involvedAttributes) {
+            s += attribute.getName() + ",";
+        }
+        s = s.substring(0, s.length() - 1);
+        s += "]";
+
+        return s;
+    }
 }

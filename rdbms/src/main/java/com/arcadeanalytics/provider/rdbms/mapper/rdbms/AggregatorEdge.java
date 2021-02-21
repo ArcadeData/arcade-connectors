@@ -28,25 +28,25 @@ import com.arcadeanalytics.provider.rdbms.model.graphmodel.EdgeType;
 
 public class AggregatorEdge {
 
-  private final String outVertexClassName;
-  private final String inVertexClassName;
-  private final EdgeType edgeType;
+    private final String outVertexClassName;
+    private final String inVertexClassName;
+    private final EdgeType edgeType;
 
-  public AggregatorEdge(String outVertexClassName, String inVertexClassName, EdgeType edgeType) {
-    this.outVertexClassName = outVertexClassName;
-    this.inVertexClassName = inVertexClassName;
-    this.edgeType = edgeType;
-  }
+    public AggregatorEdge(String outVertexClassName, String inVertexClassName, EdgeType edgeType) {
+        this.outVertexClassName = outVertexClassName;
+        this.inVertexClassName = inVertexClassName;
+        this.edgeType = edgeType;
+    }
 
-  public String getOutVertexClassName() {
-    return outVertexClassName;
-  }
+    public String getOutVertexClassName() {
+        return outVertexClassName;
+    }
 
-  public String getInVertexClassName() {
-    return inVertexClassName;
-  }
+    public String getInVertexClassName() {
+        return inVertexClassName;
+    }
 
-  public EdgeType getEdgeType() {
-    return edgeType;
-  }
+    public EdgeType getEdgeType() {
+        return edgeType;
+    }
 }

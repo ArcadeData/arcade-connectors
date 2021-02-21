@@ -30,7 +30,7 @@ import java.util.List;
 
 public class ForeignKey extends Key {
 
-  public ForeignKey(Entity belongingEntity, List<Attribute> involvedAttributes) {
-    super(belongingEntity, involvedAttributes);
-  }
+    public ForeignKey(Entity belongingEntity, List<Attribute> involvedAttributes) {
+        super(belongingEntity, involvedAttributes);
+    }
 }

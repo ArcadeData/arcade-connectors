@@ -37,33 +37,33 @@ import java.util.List;
 
 public class MapperFactory {
 
-  public ER2GraphMapper buildMapper(
-    String chosenMapper,
-    DataSourceInfo dataSource,
-    String xmlPath,
-    List<String> includedTables,
-    List<String> excludedTables,
-    String executionStrategy,
-    DBQueryEngine queryEngine,
-    DBMSDataTypeHandler handler,
-    NameResolver nameResolver,
-    Statistics statistics
-  ) {
-    switch (chosenMapper) {
-      case "hibernate":
-        return new Hibernate2GraphMapper(
-          dataSource,
-          xmlPath,
-          includedTables,
-          excludedTables,
-          queryEngine,
-          handler,
-          executionStrategy,
-          nameResolver,
-          statistics
-        );
-      default:
-        return new ER2GraphMapper(dataSource, includedTables, excludedTables, queryEngine, handler, executionStrategy, nameResolver, statistics);
+    public ER2GraphMapper buildMapper(
+        String chosenMapper,
+        DataSourceInfo dataSource,
+        String xmlPath,
+        List<String> includedTables,
+        List<String> excludedTables,
+        String executionStrategy,
+        DBQueryEngine queryEngine,
+        DBMSDataTypeHandler handler,
+        NameResolver nameResolver,
+        Statistics statistics
+    ) {
+        switch (chosenMapper) {
+            case "hibernate":
+                return new Hibernate2GraphMapper(
+                    dataSource,
+                    xmlPath,
+                    includedTables,
+                    excludedTables,
+                    queryEngine,
+                    handler,
+                    executionStrategy,
+                    nameResolver,
+                    statistics
+                );
+            default:
+                return new ER2GraphMapper(dataSource, includedTables, excludedTables, queryEngine, handler, executionStrategy, nameResolver, statistics);
+        }
     }
-  }
 }
