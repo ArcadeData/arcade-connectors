@@ -19,10 +19,9 @@
     <modelVersion>4.0.0</modelVersion>
     <properties>
         <commons-lang3.version>3.11</commons-lang3.version>
-        <orientdb.version>3.1.7</orientdb.version>
-        <orientdb.version>3.0.25</orientdb.version>
+        <orientdb.version>3.1.8</orientdb.version>
         <mysql-connector-java.version>8.0.22</mysql-connector-java.version>
-        <postgresql.version>42.2.18</postgresql.version>
+        <postgresql.version>42.2.19</postgresql.version>
         <hsqldb.version>2.5.1</hsqldb.version>
         <dw-jdbc.version>0.4.4</dw-jdbc.version>
         <jackson-databind.version>2.9.10.7</jackson-databind.version>
