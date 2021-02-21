@@ -11,6 +11,11 @@ repos:
       - id: prettier
         additional_dependencies:
           - "prettier-plugin-java@1.0.1"
+        args:
+          - --write
+          - --list-different
+          - --ignore-unknown
+          - --plugin=prettier-plugin-java
   - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
     rev: v2.0.0
     hooks:

@@ -1,9 +1,9 @@
 # Prettier configuration
 overrides:
   - files:
-      - "*.java"
+      - "**/*.java"
     options:
       printWidth: 160
-      tabWidth: 2
+      tabWidth: 4
       useTabs: false
       trailingComma: none
