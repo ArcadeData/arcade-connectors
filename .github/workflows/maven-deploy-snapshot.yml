@@ -10,11 +10,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2.3.4
 
-      - uses: actions/setup-node@v2
-      - run: npm install prettier
       - uses: actions/setup-python@v2
       - name: Pre commit
         uses: pre-commit/action@v2.0.0
+        run: npm install prettier
 
       - name: Cache
         uses: actions/cache@v2.1.4
