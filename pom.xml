@@ -47,7 +47,7 @@
         <nexus-staging-maven-plugin.version>1.6.8</nexus-staging-maven-plugin.version>
         <license-maven-plugin.version>2.0.0</license-maven-plugin.version>
         <build-helper-maven-plugin.version>3.2.0</build-helper-maven-plugin.version>
-        <dokka.version>1.4.20</dokka.version>
+        <dokka.version>1.4.30</dokka.version>
 
         <kotlin.version>1.4.32</kotlin.version>
         <arcade-data.version>1.0.8</arcade-data.version>
@@ -55,7 +55,7 @@
         <junit.platform.version>1.2.0</junit.platform.version>
         <slf4j-api.version>1.7.30</slf4j-api.version>
         <logback-classic.version>1.2.3</logback-classic.version>
-        <guava.version>30.1-jre</guava.version>
+        <guava.version>30.1.1-jre</guava.version>
         <assertj-core.version>3.19.0</assertj-core.version>
         <assertj-guava.version>3.4.0</assertj-guava.version>
         <testcontainers.version>1.15.2</testcontainers.version>
