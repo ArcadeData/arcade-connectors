@@ -37,7 +37,7 @@ jobs:
         uses: codecov/codecov-action@v1.4.1
 
       - name: Run codacy-coverage-reporter
-        uses: codacy/codacy-coverage-reporter-action@1.0.1
+        uses: codacy/codacy-coverage-reporter-action@v1.2
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: test-coverage-aggregator/target/site/jacoco-aggregate/jacoco.xml
