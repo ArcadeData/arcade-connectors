@@ -1,23 +1,22 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.4.0
+    rev: v4.4.0
     hooks:
       - id: check-yaml
       - id: end-of-file-fixer
       - id: trailing-whitespace
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v2.2.1
+    rev: v3.0.2
     hooks:
       - id: prettier
         additional_dependencies:
-          - "prettier-plugin-java@1.0.1"
+          - prettier@2.3.2
         args:
           - --write
           - --list-different
           - --ignore-unknown
-          - --plugin=prettier-plugin-java
   - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-    rev: v2.0.0
+    rev: v2.10.0
     hooks:
       - id: pretty-format-kotlin
         args: [--autofix]
