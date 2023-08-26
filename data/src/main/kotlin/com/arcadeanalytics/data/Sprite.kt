@@ -38,17 +38,18 @@ class Sprite {
     val data: ListMultimap<String, Any?> = ArrayListMultimap.create()
 
     fun add(field: String, value: Any?): Sprite {
-        if (value is Collection<*>)
+        if (value is Collection<*>) {
             value.asSequence()
                 .filter { it != null }
                 .forEach { v -> data.put(field, v) }
-        else if (value != null) data.put(field, value)
+        } else if (value != null) data.put(field, value)
         return this
     }
 
     fun add(field: String, value: String): Sprite {
-        if (value.isNotBlank())
+        if (value.isNotBlank()) {
             data.put(field, value)
+        }
         return this
     }
 
@@ -104,7 +105,6 @@ class Sprite {
     }
 
     fun addIfNotExists(field: String, fieldValue: Any): Sprite {
-
         if (hasNotValue(field, fieldValue)) {
             add(field, fieldValue)
         }
@@ -173,7 +173,6 @@ class Sprite {
     }
 
     fun <F : Any, T : Any> apply(field: String, fieldModifier: (F) -> T): Sprite {
-
         if (hasField(field)) {
             val newValues = newValuesOf(field, fieldModifier)
             remove(field)
@@ -184,7 +183,6 @@ class Sprite {
     }
 
     fun <F : Any, T : Any> apply(from: String, transformer: (F) -> T, to: String): Sprite {
-
         if (hasField(from)) {
             val newValues = newValuesOf(from, transformer)
             addAll(to, newValues)
@@ -218,9 +216,8 @@ class Sprite {
         prefix: CharSequence = "",
         postfix: CharSequence = "",
         limit: Int = -1,
-        truncated: CharSequence = "..."
+        truncated: CharSequence = "...",
     ): Sprite {
-
         val merged = rawValuesOf<String>(field)
             .joinToString(separator, prefix, postfix, limit, truncated)
 
@@ -234,12 +231,10 @@ class Sprite {
     }
 
     fun valuesOf(field: String): List<String> {
-
         return rawValuesOf<Any>(field).map { it -> it.toString() }.toList()
     }
 
     fun valuesOf(regex: Regex): List<String> {
-
         return fields(regex)
             .map { field ->
                 rawValuesOf<Any>(field)
@@ -252,7 +247,6 @@ class Sprite {
     }
 
     fun valuesOf(regex: Pattern): List<String> {
-
         return fields(regex)
             .map { field ->
                 rawValuesOf<Any>(field)
@@ -303,7 +297,6 @@ class Sprite {
     }
 
     fun splitValues(field: String, separator: String): Sprite {
-
         val copySuffix = copySuffix
         copy(field, "$field$copySuffix")
             .remove(field)
@@ -319,7 +312,6 @@ class Sprite {
     }
 
     fun isEmpty(): Boolean {
-
         return data.isEmpty
     }
 
@@ -343,7 +335,6 @@ class Sprite {
     }
 
     override fun toString(): String {
-
         return data.toString()
     }
 }

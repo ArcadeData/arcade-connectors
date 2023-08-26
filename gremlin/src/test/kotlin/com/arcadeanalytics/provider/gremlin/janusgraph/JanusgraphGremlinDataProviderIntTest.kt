@@ -32,7 +32,6 @@ internal class JanusgraphGremlinDataProviderIntTest {
 
     @Test
     fun shouldFetchVertices() {
-
         val query = "g.V().limit(50) "
 
         val data = provider.fetchData(dataSource, query, 50)
@@ -50,7 +49,6 @@ internal class JanusgraphGremlinDataProviderIntTest {
 
     @Test
     fun shouldLoadVerticesByIds() {
-
         assertThat(provider.testConnection(dataSource)).isTrue()
 
         val query = "g.V().limit(10) "
@@ -68,7 +66,6 @@ internal class JanusgraphGremlinDataProviderIntTest {
 
     @Test
     fun shouldTraverse() {
-
         val query = "g.V().limit(10) "
 
         val data = provider.fetchData(dataSource, query, 10)
@@ -91,7 +88,6 @@ internal class JanusgraphGremlinDataProviderIntTest {
 
     @Test
     fun shouldTraverseAll() {
-
         val query = "g.V().limit(10) "
 
         val data = provider.fetchData(dataSource, query, 10)
@@ -108,7 +104,6 @@ internal class JanusgraphGremlinDataProviderIntTest {
 
     @Test
     fun testFetchVerticesAndEdges() {
-
         val query = "g.V().bothE()limit(10)"
 
         val data = provider.fetchData(dataSource, query, 10)

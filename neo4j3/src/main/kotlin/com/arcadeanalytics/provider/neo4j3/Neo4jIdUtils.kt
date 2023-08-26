@@ -35,7 +35,6 @@ fun toArcadeId(dataSource: DataSourceInfo, type: Neo4jType, neo4jId: Long): Stri
 }
 
 fun toNeo4jId(dataSource: DataSourceInfo, arcadeId: String): String {
-
     val cleaned = StringUtils.removeStart(arcadeId, dataSource.id.toString() + Neo4jType.NODE.suffix())
 
     return StringUtils.removeStart(cleaned, dataSource.id.toString() + Neo4jType.EDGE.suffix())
@@ -47,7 +46,6 @@ fun createConnectionUrl(datasource: DataSourceInfo): String {
 }
 
 fun getDriver(datasource: DataSourceInfo): Driver {
-
     val connectionUrl = createConnectionUrl(datasource)
 
     val config = Config.build()
@@ -57,7 +55,8 @@ fun getDriver(datasource: DataSourceInfo): Driver {
 
     return GraphDatabase.driver(
         connectionUrl,
-        AuthTokens.basic(datasource.username, datasource.password), config
+        AuthTokens.basic(datasource.username, datasource.password),
+        config,
     )
 }
 
@@ -71,7 +70,7 @@ enum class Neo4jType {
         override fun suffix(): String {
             return "_e_"
         }
-    };
+    }, ;
 
     abstract fun suffix(): String
 }

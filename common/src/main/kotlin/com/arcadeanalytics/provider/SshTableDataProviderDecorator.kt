@@ -22,7 +22,6 @@ package com.arcadeanalytics.provider
 class SshTableDataProviderDecorator(private val provider: DataSourceTableDataProvider) : SshTunnelTemplate(), DataSourceTableDataProvider {
 
     override fun fetchData(dataSource: DataSourceInfo, query: String, params: QueryParams, limit: Int): GraphData {
-
         val (session, wrapper) = buildTunnel(dataSource)
 
         val graphData = provider.fetchData(wrapper, query, params, limit)
@@ -33,7 +32,6 @@ class SshTableDataProviderDecorator(private val provider: DataSourceTableDataPro
     }
 
     override fun fetchData(dataSource: DataSourceInfo, query: String, limit: Int): GraphData {
-
         val (session, wrapper) = buildTunnel(dataSource)
 
         val graphData = provider.fetchData(wrapper, query, limit)

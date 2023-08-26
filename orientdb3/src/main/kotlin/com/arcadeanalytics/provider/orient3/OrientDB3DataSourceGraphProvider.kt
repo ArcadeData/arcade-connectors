@@ -47,7 +47,6 @@ class OrientDB3DataSourceGraphProvider : DataSourceGraphProvider {
     }
 
     override fun provideTo(dataSource: DataSourceInfo, player: SpritePlayer) {
-
         try {
             provide(dataSource, player, "V")
             provide(dataSource, player, "E")
@@ -57,7 +56,6 @@ class OrientDB3DataSourceGraphProvider : DataSourceGraphProvider {
     }
 
     private fun provide(dataSource: DataSourceInfo, player: SpritePlayer, what: String) {
-
         val count: Long = open(dataSource).use { db ->
             db.query("select count(*) as count from $what").use { result ->
                 result.asSequence().first().getProperty("count")
@@ -71,7 +69,6 @@ class OrientDB3DataSourceGraphProvider : DataSourceGraphProvider {
         log.info("start indexing of '{}' from data-source {} - total :: {} ", what, dataSource.id, count)
 
         while (fetched < count) {
-
             open(dataSource).use { db ->
                 db.query("SELECT * FROM $what WHERE @rid > $skip LIMIT 1000").use { resultSet ->
                     resultSet.asSequence()
@@ -103,7 +100,7 @@ class OrientDB3DataSourceGraphProvider : DataSourceGraphProvider {
                     .allSuperClasses
                     .asSequence()
                     .map { c -> c.name }
-                    .toList()
+                    .toList(),
             )
             .apply<Any, String>(allFields) { v -> v.toString() }
             .remove("@class", "V")

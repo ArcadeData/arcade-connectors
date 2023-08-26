@@ -48,13 +48,13 @@ fun createSerializer(dataSource: DataSourceInfo): MessageSerializer {
         "GREMLIN_ORIENTDB" ->
             GryoMessageSerializerV3d0(
                 GryoMapper.build()
-                    .addRegistry(OrientIoRegistry.getInstance())
+                    .addRegistry(OrientIoRegistry.getInstance()),
             )
         "GREMLIN_NEPTUNE" -> GryoMessageSerializerV3d0()
         "GREMLIN_JANUSGRAPH" ->
             GryoMessageSerializerV3d0(
                 GryoMapper.build()
-                    .addRegistry(JanusGraphIoRegistry.getInstance())
+                    .addRegistry(JanusGraphIoRegistry.getInstance()),
             )
         "GREMLIN_COSMOSDB" -> {
             val serializer = GraphSONMessageSerializerV1d0()

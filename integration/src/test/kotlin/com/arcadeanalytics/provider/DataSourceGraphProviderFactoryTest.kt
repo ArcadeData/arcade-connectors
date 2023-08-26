@@ -44,7 +44,7 @@ internal class DataSourceGraphProviderFactoryTest {
             Arguments.of("RDBMS_MSSQLSERVER", "RDBMSGraphProvider"),
             Arguments.of("RDBMS_ORACLE", "RDBMSGraphProvider"),
             Arguments.of("RDBMS_HSQL", "RDBMSGraphProvider"),
-            Arguments.of("RDBMS_DATA_WORLD", "RDBMSGraphProvider")
+            Arguments.of("RDBMS_DATA_WORLD", "RDBMSGraphProvider"),
 
         )
     }
@@ -74,7 +74,7 @@ internal class DataSourceGraphProviderFactoryTest {
                 "RDBMS_MSSQLSERVER",
                 "RDBMS_HSQL",
                 "RDBMS_ORACLE",
-                "RDBMS_DATA_WORLD"
+                "RDBMS_DATA_WORLD",
             )
     }
 
@@ -82,9 +82,8 @@ internal class DataSourceGraphProviderFactoryTest {
     @MethodSource("types2implementation")
     internal fun `should create right data provider for given data source type`(
         type: String,
-        impl: String
+        impl: String,
     ) {
-
         val dataSource = DataSourceInfo(
             id = 1L,
             type = type,
@@ -93,7 +92,7 @@ internal class DataSourceGraphProviderFactoryTest {
             port = 1234,
             username = "admin",
             password = "admin",
-            database = "testDb"
+            database = "testDb",
         )
 
         val provider = factory.create(dataSource)

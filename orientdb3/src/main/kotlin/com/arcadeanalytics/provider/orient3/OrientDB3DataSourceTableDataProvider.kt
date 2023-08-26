@@ -53,7 +53,6 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
     }
 
     override fun fetchData(dataSource: DataSourceInfo, query: String, limit: Int): GraphData {
-
         log.info("fetching data from '{}' with query '{}' ", dataSource.id, truncate(query, 256))
 
         open(dataSource)
@@ -74,7 +73,6 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
     }
 
     fun mapResultSet(resultSet: OResultSet): GraphData {
-
         val nodesProperties = mutableMapOf<String, TypeProperty>()
 
         var count: Long = 0
@@ -99,7 +97,6 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
     }
 
     private fun populateProperties(properties: MutableMap<String, TypeProperty>, element: OResult): OResult {
-
         val props = element.propertyNames
             .asSequence()
             .filter { name -> !properties.containsKey(name) }
@@ -121,7 +118,6 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
     }
 
     private fun toCytoData(element: OResult, index: Long): CytoData {
-
         val record: MutableMap<String, Any> = transformToMap(element)
 
         cleanRecord(record)

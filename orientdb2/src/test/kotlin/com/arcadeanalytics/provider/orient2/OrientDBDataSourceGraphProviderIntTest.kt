@@ -34,14 +34,12 @@ import java.util.ArrayList
  */
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-
 class OrientDBDataSourceGraphProviderIntTest {
 
     private val provider: OrientDBDataSourceGraphProvider = OrientDBDataSourceGraphProvider()
 
     @Test
     fun shouldFetchAllVerticesAndEdges() {
-
         val docs = ArrayList<Sprite>()
 
         val indexer = object : SpritePlayer {

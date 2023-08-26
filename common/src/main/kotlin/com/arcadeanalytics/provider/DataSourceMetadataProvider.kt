@@ -28,17 +28,17 @@ typealias TypeProperties = Map<String, TypeProperty>
 data class TypeClass(
     val name: String,
     val cardinality: Long,
-    val properties: TypeProperties
+    val properties: TypeProperties,
 )
 
 data class TypeProperty(
     val name: String,
-    val type: String
+    val type: String,
 )
 
 data class DataSourceMetadata(
     val nodesClasses: NodesClasses,
-    val edgesClasses: EdgesClasses
+    val edgesClasses: EdgesClasses,
 )
 
 interface DataSourceMetadataProvider : DataSourceProvider {

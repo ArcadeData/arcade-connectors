@@ -50,7 +50,7 @@ object OrientDB3Container {
         port = container.firstMappedPort,
         username = "admin",
         password = "admin",
-        database = "testDatabase"
+        database = "testDatabase",
     )
 
     val dbUrl: String = createTestDatabase(container.serverUrl, dataSource.database)
@@ -72,7 +72,6 @@ object OrientDB3Container {
  * @return
  */
 fun getServerUrl(container: GenericContainer<*>): String {
-
     return "remote:${container.getContainerIpAddress()}:${container.getMappedPort(2424)}"
 }
 
@@ -82,7 +81,6 @@ fun getServerUrl(container: GenericContainer<*>): String {
  * @param dbUrl
  */
 fun createPersonSchema(dbUrl: String, dataSource: DataSourceInfo) {
-
     val command: String =
         """
 
@@ -124,9 +122,7 @@ fun createPersonSchema(dbUrl: String, dataSource: DataSourceInfo) {
  * @return
  */
 fun createTestDatabase(serverUrl: String, dbname: String): String {
-
     try {
-
         val orientDB = OrientDB(serverUrl, "root", ORIENTDB_ROOT_PASSWORD, OrientDBConfig.defaultConfig())
         orientDB.create(dbname, ODatabaseType.PLOCAL)
         orientDB.close()

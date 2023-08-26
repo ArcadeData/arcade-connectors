@@ -28,7 +28,7 @@ import kotlin.streams.asSequence
 
 class DataSourceProviderFactory<T : DataSourceProvider>(
     private val clazz: Class<T>,
-    pluginPath: String = "./plugins"
+    pluginPath: String = "./plugins",
 ) {
 
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -54,13 +54,12 @@ class DataSourceProviderFactory<T : DataSourceProvider>(
                         .flatMap { it.entries }
                         .map { it.key to it.value }
                         .onEach { log.info("found::  {} ", it.first) }
-                        .toMap()
+                        .toMap(),
                 )
             }
     }
 
     fun create(dataSourceInfo: DataSourceInfo): T {
-
         if (!dataProviders.containsKey(dataSourceInfo.type)) throw RuntimeException("data source type not supported " + dataSourceInfo.type)
 
         val provider = dataProviders[dataSourceInfo.type]!!

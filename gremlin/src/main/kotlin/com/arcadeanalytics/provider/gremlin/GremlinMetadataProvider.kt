@@ -38,14 +38,12 @@ class GremlinMetadataProvider : DataSourceMetadataProvider {
     override fun supportedDataSourceTypes() = setOf("GREMLIN_ORIENTDB", "GREMLIN_NEPTUNE", "GREMLIN_JANUSGRAPH")
 
     override fun fetchMetadata(dataSource: DataSourceInfo): DataSourceMetadata {
-
         log.info("fetching metadata for dataSource {} ", dataSource.id)
 
         val cluster = getCluster(dataSource)
 
         val client = cluster.connect<Client>().init()
         try {
-
             val nodeClasses = mapNodeClasses(client)
             val edgesClasses = mapEdgesClasses(client)
 
@@ -69,7 +67,6 @@ class GremlinMetadataProvider : DataSourceMetadataProvider {
     }
 
     private fun mapNodeProperties(label: String, client: Client): TypeProperties {
-
         return client.submit("""g.V().hasLabel(${splitMultilabel(label)}).limit(1).next()""")
             .asSequence()
             .flatMap { r -> r.element.properties<Any>().asSequence() }
@@ -88,7 +85,6 @@ class GremlinMetadataProvider : DataSourceMetadataProvider {
     }
 
     private fun mapEdgeProperties(label: String, client: Client): TypeProperties {
-
         return client.submit("""g.E().hasLabel(${splitMultilabel(label)} ).limit(1).next()""")
             .asSequence()
             .flatMap { r -> r.element.properties<Any>().asSequence() }

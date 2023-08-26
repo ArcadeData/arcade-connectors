@@ -46,7 +46,7 @@ object OrientDBGremlinContainer {
             port = container.firstMappedPort,
             username = "root",
             password = "arcade",
-            database = "demodb"
+            database = "demodb",
         )
     }
 }

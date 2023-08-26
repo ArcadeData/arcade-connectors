@@ -35,7 +35,6 @@ class OrientDBDataSourceMetadataProvider() : DataSourceMetadataProvider {
     private val log = LoggerFactory.getLogger(OrientDBDataSourceMetadataProvider::class.java)
 
     override fun fetchMetadata(dataSource: DataSourceInfo): DataSourceMetadata {
-
         log.info("fetcing metadata from datasource '{}' ", dataSource.id)
 
         open(dataSource).use {
@@ -55,7 +54,6 @@ class OrientDBDataSourceMetadataProvider() : DataSourceMetadataProvider {
             .filter { it.isEdgeType }
             .filter { it.name != "E" }
             .map {
-
                 val props = it.properties()
                     .map { prop -> prop.name to TypeProperty(prop.name, prop.type.name) }
                     .toMap()
@@ -72,7 +70,6 @@ class OrientDBDataSourceMetadataProvider() : DataSourceMetadataProvider {
             .filter { it.isVertexType }
             .filter { it.name != "V" }
             .map {
-
                 val props = it.properties()
                     .map { prop -> prop.name to TypeProperty(prop.name, prop.type.name) }
                     .toMap()

@@ -58,7 +58,7 @@ object OrientDBContainer {
             port = container.firstMappedPort,
             username = "admin",
             password = "admin",
-            database = "testDatabase"
+            database = "testDatabase",
         )
 
         val serverUrl = getServerUrl(container)
@@ -76,7 +76,6 @@ object OrientDBContainer {
  * @return
  */
 fun getServerUrl(container: GenericContainer<*>): String {
-
     return "remote:${container.getContainerIpAddress()}:${container.getMappedPort(2424)}"
 }
 
@@ -115,8 +114,8 @@ fun createPersonSchema(dbUrl: String) {
                     CREATE EDGE FriendOf FROM (SELECT FROM Person WHERE name = 'john') TO (SELECT FROM Person WHERE name = 'jane') set kind='fraternal';
                     CREATE EDGE HaterOf FROM (SELECT FROM Person WHERE name = 'jane') TO (SELECT FROM Person WHERE name = 'rob') set kind='killer';
                     CREATE EDGE HaterOf FROM (SELECT FROM Person WHERE name = 'frank') TO (SELECT FROM Person WHERE name = 'john') set kind='killer';
-                    """.trimIndent()
-                )
+                    """.trimIndent(),
+                ),
             ).execute<Any>()
         }
 }
@@ -128,7 +127,6 @@ fun createPersonSchema(dbUrl: String) {
  * @return
  */
 fun createTestDatabase(serverUrl: String, dbname: String): String {
-
     try {
         OServerAdmin(serverUrl)
             .apply {

@@ -39,12 +39,10 @@ import java.util.function.Consumer
 abstract class SshTunnelTemplate : DataSourceProvider {
 
     protected fun buildTunnel(dataSourceInfo: DataSourceInfo): Pair<Session, DataSourceInfo> {
-
         JSch.setLogger(JschSlf4jLogger())
         val jsch = JSch()
         val localPort = findFreePort()
         try {
-
             val privKeyFileName = getProperty("SSH_PRIV_KEY", ".ssh/id_rsa")
             val pubKeyFileName = getProperty("SSH_PUB_KEY", ".ssh/id_rsa.pub")
 
@@ -95,7 +93,6 @@ abstract class SshTunnelTemplate : DataSourceProvider {
     }
 
     private fun createLocalhostDataSource(dataSourceInfo: DataSourceInfo, localPort: Int): DataSourceInfo {
-
         return DataSourceInfo(
             dataSourceInfo.id,
             dataSourceInfo.type,
@@ -112,7 +109,7 @@ abstract class SshTunnelTemplate : DataSourceProvider {
             false,
             "localhost",
             localPort,
-            ""
+            "",
         )
     }
 

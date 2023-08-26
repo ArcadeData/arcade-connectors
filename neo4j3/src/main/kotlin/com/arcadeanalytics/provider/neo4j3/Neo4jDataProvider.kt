@@ -41,7 +41,7 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
     override fun fetchData(
         dataSource: DataSourceInfo,
         query: String,
-        limit: Int
+        limit: Int,
     ): GraphData {
         getDriver(dataSource).use { driver ->
             driver.session(AccessMode.READ).use { session ->
@@ -66,9 +66,8 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
         ids: Array<String>,
         direction: String,
         edgeLabel: String,
-        maxTraversal: Int
+        maxTraversal: Int,
     ): GraphData {
-
         val label: String = if (edgeLabel.isEmpty()) "[rel]" else "[rel:$edgeLabel]"
 
         val rel = when (direction) {
@@ -85,7 +84,6 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
     }
 
     override fun edges(dataSource: DataSourceInfo, fromIds: Array<String>, edgesLabel: Array<String>, toIds: Array<String>): GraphData {
-
         val cleanedFromIds = cleanIds(fromIds, dataSource)
         val cleanedToIds = cleanIds(toIds, dataSource)
 
@@ -99,7 +97,6 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
     }
 
     override fun load(dataSource: DataSourceInfo, ids: Array<String>): GraphData {
-
         val cleanedIds = cleanIds(ids, dataSource)
 
         val query =
@@ -153,9 +150,8 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
     private fun runQueryAndMapResult(
         session: Session,
         query: String,
-        mapper: Neo4jStatementResultMapper
+        mapper: Neo4jStatementResultMapper,
     ): GraphData {
-
         log.debug("run query and map:: '{}' ", query)
 
         val result = session.run(query)
@@ -168,7 +164,6 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
     }
 
     private fun countInAndOutOnNode(session: Session, dataSource: DataSourceInfo, nodes: Set<CytoData>): Set<CytoData> {
-
         nodes.asSequence()
             .forEach { data ->
                 val id = toNeo4jId(dataSource, data.data.id)

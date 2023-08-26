@@ -33,7 +33,6 @@ class OrientDB3DataSourceGraphDataProviderIntTest {
     @Test
     @Throws(Exception::class)
     fun shouldFetchDataWithQuery() {
-
         // given
 
         // when
@@ -61,7 +60,6 @@ class OrientDB3DataSourceGraphDataProviderIntTest {
     @Test
     @Throws(Exception::class)
     fun shouldFetchDataWithGremlinQuery() {
-
         // given
 
         // when
@@ -197,7 +195,6 @@ class OrientDB3DataSourceGraphDataProviderIntTest {
         val orientDB = OrientDB(getServerUrl(OrientDB3Container.getContainer()), OrientDBConfig.defaultConfig())
         orientDB.open(dataSource.database, "admin", "admin")
             .use {
-
                 return it.execute("sql", "SELECT from Person")
                     .asSequence()
                     .take(count)

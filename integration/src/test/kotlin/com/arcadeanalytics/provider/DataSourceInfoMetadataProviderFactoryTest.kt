@@ -44,7 +44,7 @@ internal class DataSourceInfoMetadataProviderFactoryTest {
             Arguments.of("RDBMS_MSSQLSERVER", "RDBMSMetadataProvider"),
             Arguments.of("RDBMS_ORACLE", "RDBMSMetadataProvider"),
             Arguments.of("RDBMS_HSQL", "RDBMSMetadataProvider"),
-            Arguments.of("RDBMS_DATA_WORLD", "RDBMSMetadataProvider")
+            Arguments.of("RDBMS_DATA_WORLD", "RDBMSMetadataProvider"),
         )
     }
 
@@ -73,7 +73,7 @@ internal class DataSourceInfoMetadataProviderFactoryTest {
                 "RDBMS_MSSQLSERVER",
                 "RDBMS_HSQL",
                 "RDBMS_ORACLE",
-                "RDBMS_DATA_WORLD"
+                "RDBMS_DATA_WORLD",
             )
     }
 
@@ -81,9 +81,8 @@ internal class DataSourceInfoMetadataProviderFactoryTest {
     @MethodSource("types2implementation")
     internal fun `should create right data provider for given data source type`(
         type: String,
-        impl: String
+        impl: String,
     ) {
-
         val dataSource = DataSourceInfo(
             id = 1L,
             type = type,
@@ -92,7 +91,7 @@ internal class DataSourceInfoMetadataProviderFactoryTest {
             port = 1234,
             username = "admin",
             password = "admin",
-            database = "testDb"
+            database = "testDb",
         )
 
         val provider = factory.create(dataSource)

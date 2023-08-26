@@ -33,7 +33,6 @@ class CosmosDBGremlinDataProviderIntTest {
 
     @BeforeEach
     fun setup() {
-
         dataSource = DataSourceInfo(
             id = 1L,
             type = "GREMLIN_COSMOSDB",
@@ -42,7 +41,7 @@ class CosmosDBGremlinDataProviderIntTest {
             port = 443,
             username = "USERNAME",
             password = "PASSWORD",
-            database = "N/A"
+            database = "N/A",
         )
 
         provider = CosmosDBGremlinDataProvider()
@@ -51,7 +50,6 @@ class CosmosDBGremlinDataProviderIntTest {
     @Test
     @Disabled
     fun shouldFetchVertices() {
-
         val query = "g.V().limit(50) "
 
         val data = provider.fetchData(dataSource, query, 10)
@@ -72,7 +70,6 @@ class CosmosDBGremlinDataProviderIntTest {
     @Test
     @Disabled
     fun shouldLoadVerticesByIds() {
-
         assertThat(provider.testConnection(dataSource)).isTrue()
 
         val query = "g.V().limit(5) "
@@ -93,7 +90,6 @@ class CosmosDBGremlinDataProviderIntTest {
     @Test
     @Disabled
     fun shouldTraverse() {
-
         val query = "g.V().limit(10) "
 
         val data = provider.fetchData(dataSource, query, 10)
@@ -117,7 +113,6 @@ class CosmosDBGremlinDataProviderIntTest {
     @Test
     @Disabled
     fun shouldTraverseAll() {
-
         val query = "g.V().limit(10) "
 
         val data = provider.fetchData(dataSource, query, 10)
@@ -135,7 +130,6 @@ class CosmosDBGremlinDataProviderIntTest {
     @Test
     @Disabled
     fun testFetchVerticesAndEdges() {
-
         val query = "g.V().bothE().limit(10)"
 
         val data = provider.fetchData(dataSource, query, 10)
@@ -155,7 +149,6 @@ class CosmosDBGremlinDataProviderIntTest {
     @Test
     @Disabled
     fun shouldLoadFromClassLimited() {
-
         val graphData = provider.loadFromClass(dataSource, "Person", 1)
 
         assertThat(graphData.nodes).hasSize(1)

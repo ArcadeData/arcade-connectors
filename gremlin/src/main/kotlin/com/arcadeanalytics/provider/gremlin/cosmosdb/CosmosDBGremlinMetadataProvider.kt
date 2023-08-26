@@ -39,7 +39,6 @@ class CosmosDBGremlinMetadataProvider() : DataSourceMetadataProvider {
     override fun supportedDataSourceTypes(): Set<String> = setOf("GREMLIN_COSMOSDB")
 
     override fun fetchMetadata(datasource: DataSourceInfo): DataSourceMetadata {
-
         log.info("fetching metadata for dataSource {} ", datasource)
 
         val serializer = createSerializer(datasource)
@@ -54,7 +53,6 @@ class CosmosDBGremlinMetadataProvider() : DataSourceMetadataProvider {
 
         val client = cluster.connect<Client>().init()
         try {
-
             val nodeClasses = mapNodeClasses(client)
             val edgesClasses = mapEdgesClasses(client)
 
@@ -75,7 +73,6 @@ class CosmosDBGremlinMetadataProvider() : DataSourceMetadataProvider {
     }
 
     private fun mapNodeProperties(label: String, client: Client): TypeProperties {
-
         return client.submit("g.V().hasLabel('$label').limit(1)")
             .asSequence()
             .map { it -> it.`object` as Map<String, Any> }
@@ -98,7 +95,6 @@ class CosmosDBGremlinMetadataProvider() : DataSourceMetadataProvider {
     }
 
     private fun mapEdgeProperties(label: String, client: Client): TypeProperties {
-
         return client.submit("g.E().hasLabel('$label').limit(1)")
             .asSequence()
             .map { it -> it.`object` as Map<String, Any> }

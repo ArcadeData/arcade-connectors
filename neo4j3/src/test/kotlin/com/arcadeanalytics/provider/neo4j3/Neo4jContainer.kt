@@ -47,7 +47,7 @@ object Neo4jContainer {
             port = container.firstMappedPort,
             username = "neo4j",
             password = "arcade",
-            database = "empty"
+            database = "empty",
         )
         getDriver(dataSource).use { driver ->
 
@@ -59,7 +59,6 @@ object Neo4jContainer {
 }
 
 fun fillDatabase(session: Session) {
-
     session.run("CREATE (a:Person {name: 'rob'})")
 
     session.run("CREATE (a:Person {name: 'frank'})")
@@ -72,26 +71,26 @@ fun fillDatabase(session: Session) {
         """MATCH (a:Person),(b:Person)
                 WHERE a.name = 'rob' AND b.name = 'frank'
                 CREATE (a)-[r:FriendOf { kind: 'fraternal' }]->(b)
-                RETURN r"""
+                RETURN r""",
     )
     session.run(
         """MATCH (a:Person),(b:Person)
                 WHERE a.name = 'john' AND b.name = 'jane'
                 CREATE (a)-[r:FriendOf { kind: 'fraternal' }]->(b)
-                RETURN r"""
+                RETURN r""",
     )
 
     session.run(
         """MATCH (a:Person),(b:Person)
                 WHERE a.name = 'jane' AND b.name = 'rob'
                 CREATE (a)-[r:HaterOf { kind: 'killer' }]->(b)
-                RETURN r"""
+                RETURN r""",
     )
     session.run(
         """MATCH (a:Person),(b:Person)
                 WHERE a.name = 'frank' AND b.name = 'john'
                 CREATE (a)-[r:HaterOf { kind: 'killer' }]->(b)
-                RETURN r"""
+                RETURN r""",
     )
 
     session.run("CREATE (a:Car {name: 'gt40'})")

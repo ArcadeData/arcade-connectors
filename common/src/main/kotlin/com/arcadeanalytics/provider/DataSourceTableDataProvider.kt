@@ -39,12 +39,12 @@ interface DataSourceTableDataProvider : DataSourceProvider {
         dataSource: DataSourceInfo,
         query: String,
         params: QueryParams,
-        limit: Int
+        limit: Int,
     ): GraphData
 
     fun fetchData(
         dataSource: DataSourceInfo,
         query: String,
-        limit: Int
+        limit: Int,
     ): GraphData
 }

@@ -44,7 +44,6 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
     private val log = LoggerFactory.getLogger(GremlinDataProvider::class.java)
 
     override fun fetchData(dataSource: DataSourceInfo, query: String, limit: Int): GraphData {
-
         val cluster = getCluster(dataSource)
 
         val client = cluster.connect<Client>().init()
@@ -59,7 +58,6 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
     }
 
     private fun getGraphData(dataSource: DataSourceInfo, query: String, limit: Int, client: Client): GraphData {
-
         val cytoNodes = HashSet<CytoData>()
         val cytoEdges = HashSet<CytoData>()
         val edgeClasses = HashMap<String, Map<String, Any>>()
@@ -129,7 +127,7 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
                         .map { r1 -> r1.edge }
                         .map { e1 -> e1.label() }
                         .groupingBy { it }
-                        .eachCount()
+                        .eachCount(),
                 )
 
                 ins.putAll(
@@ -137,7 +135,7 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
                         .map { r1 -> r1.edge }
                         .map { e1 -> e1.label() }
                         .groupingBy { it }
-                        .eachCount()
+                        .eachCount(),
                 )
 
                 var edgeCount = ins.values.asSequence().map { o -> o as Int }.sum()
@@ -148,7 +146,6 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
                 CytoData(classes = element.label(), data = data, group = "nodes")
             }
             is Edge -> {
-
                 val sourceId = element.outVertex().id().toString()
                 val source = nativeIdToArcadeId(dataSource, sourceId)
 
@@ -175,7 +172,6 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
     }
 
     private fun populateProperties(classes: Map<String, Map<String, Any>>, element: CytoData) {
-
         val properties = classes[element.classes]
 
         element.data.record.keys.asSequence()
@@ -197,14 +193,12 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
     }
 
     override fun load(dataSource: DataSourceInfo, ids: Array<String>): GraphData {
-
         val query = loadQuery(dataSource, ids)
 
         return fetchData(dataSource, query, ids.size)
     }
 
     private fun load(dataSource: DataSourceInfo, ids: Array<String>, client: Client): GraphData {
-
         val query = loadQuery(dataSource, ids)
 
         return getGraphData(dataSource, query, ids.size, client)
@@ -233,7 +227,7 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
 
     private fun cleanIds(
         dataSource: DataSourceInfo,
-        ids: Array<String>
+        ids: Array<String>,
     ): String = ids.asSequence()
         .map { id -> arcadeIdToNativeId(dataSource, id) }
         .map { id -> """ '$id' """ }
@@ -241,7 +235,7 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
 
     private fun nativeIdToArcadeId(
         dataSource: DataSourceInfo,
-        id: String
+        id: String,
     ): String = when (dataSource.type) {
         "GREMLIN_ORIENTDB" -> "${dataSource.id}_${id.removePrefix("#").replace(":", "_")}"
         else -> "${dataSource.id}_$id"
@@ -249,7 +243,7 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
 
     private fun arcadeIdToNativeId(
         dataSource: DataSourceInfo,
-        id: String
+        id: String,
     ): String = when (dataSource.type) {
         "GREMLIN_ORIENTDB" -> id.removePrefix("${dataSource.id}_").prefixIfAbsent("#").replace("_", ":")
         else -> id.removePrefix("${dataSource.id}_")
@@ -260,7 +254,7 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
         roots: Array<String>,
         direction: String,
         edgeLabel: String,
-        maxTraversal: Int
+        maxTraversal: Int,
     ): GraphData {
         var edgeLabel = edgeLabel
 
@@ -281,9 +275,8 @@ class GremlinDataProvider : DataSourceGraphDataProvider {
         dataSource: DataSourceInfo,
         fromIds: Array<String>,
         edgesLabel: Array<String>,
-        toIds: Array<String>
+        toIds: Array<String>,
     ): GraphData {
-
         val cleanLabels = edgesLabel.joinToString("','", "'", "'")
 
         val query =

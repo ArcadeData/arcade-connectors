@@ -43,7 +43,6 @@ class PostgreSQLMetadataProviderTest {
     @BeforeEach
     @Throws(Exception::class)
     fun setUp() {
-
         dataSourceNoAggregation = DataSourceInfo(
             id = 1L,
             type = "RDBMS_POSTGRESQL",
@@ -53,7 +52,7 @@ class PostgreSQLMetadataProviderTest {
             username = container.username,
             password = container.password,
             database = container.databaseName,
-            aggregationEnabled = false
+            aggregationEnabled = false,
         )
         dataSourceWithAggregation = DataSourceInfo(
             id = 1L,
@@ -64,7 +63,7 @@ class PostgreSQLMetadataProviderTest {
             username = container.username,
             password = container.password,
             database = container.databaseName,
-            aggregationEnabled = true
+            aggregationEnabled = true,
         )
 
         providerNoAggregation = RDBMSMetadataProvider()
@@ -73,7 +72,6 @@ class PostgreSQLMetadataProviderTest {
 
     @Test
     fun shouldFetchMetadata() {
-
         val metadata = providerNoAggregation.fetchMetadata(dataSourceNoAggregation)
 
         assertThat(metadata.nodesClasses).isNotEmpty
@@ -84,7 +82,6 @@ class PostgreSQLMetadataProviderTest {
 
     @Test
     fun fetchMetadataWithoutAggregation() {
-
         val metadata = providerNoAggregation.fetchMetadata(dataSourceNoAggregation)
 
         println("metadata = $metadata")
@@ -351,7 +348,6 @@ class PostgreSQLMetadataProviderTest {
 
     @Test
     fun fetchMetadataWithAggregation() {
-
         val metadata = providerWithAggregation.fetchMetadata(dataSourceWithAggregation)
 
         println("metadata = $metadata")

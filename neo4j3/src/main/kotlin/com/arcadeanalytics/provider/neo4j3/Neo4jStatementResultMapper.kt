@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory
 class Neo4jStatementResultMapper(private val dataSource: DataSourceInfo, private val maxTraversal: Int) {
 
     private fun countInOut(cyto: CytoData): CytoData {
-
         val inAndOutCountByEdgeType: MutableMap<String, Map<String, Int>> = mutableMapOf()
         inAndOutCountByEdgeType.putIfAbsent("@in", mutableMapOf())
         inAndOutCountByEdgeType.putIfAbsent("@out", mutableMapOf())
@@ -44,7 +43,6 @@ class Neo4jStatementResultMapper(private val dataSource: DataSourceInfo, private
     }
 
     private fun toCytoData(node: Node): CytoData {
-
         val id = toArcadeId(dataSource, Neo4jType.NODE, node.id())
 
         val record = Sprite()
@@ -59,7 +57,6 @@ class Neo4jStatementResultMapper(private val dataSource: DataSourceInfo, private
     }
 
     private fun toCytoData(rel: Relationship): CytoData {
-
         val id = toArcadeId(dataSource, Neo4jType.EDGE, rel.id())
         val source = toArcadeId(dataSource, Neo4jType.NODE, rel.startNodeId())
         val target = toArcadeId(dataSource, Neo4jType.NODE, rel.endNodeId())
@@ -75,7 +72,6 @@ class Neo4jStatementResultMapper(private val dataSource: DataSourceInfo, private
     }
 
     fun map(result: StatementResult): GraphData {
-
         log.info("mapping result max {} ", maxTraversal)
         val nodesClasses = mutableMapOf<String, MutableMap<String, Any>>()
         val edgeClasses = mutableMapOf<String, MutableMap<String, Any>>()
@@ -153,7 +149,6 @@ class Neo4jStatementResultMapper(private val dataSource: DataSourceInfo, private
     }
 
     private fun mapProperties(nodesClasses: MutableMap<String, MutableMap<String, Any>>, node: Node): Node {
-
         val className = node.labels().joinToString("_")
 
         nodesClasses.putIfAbsent(className, HashMap())
@@ -167,7 +162,6 @@ class Neo4jStatementResultMapper(private val dataSource: DataSourceInfo, private
     }
 
     private fun mapProperties(nodesClasses: MutableMap<String, MutableMap<String, Any>>, rel: Relationship): Relationship {
-
         nodesClasses.putIfAbsent(rel.type(), HashMap())
 
         val properties = nodesClasses[rel.type()]

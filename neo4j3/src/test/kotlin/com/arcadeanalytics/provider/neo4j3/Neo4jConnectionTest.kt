@@ -59,7 +59,7 @@ class Neo4jConnectionTest {
             port = container.firstMappedPort,
             username = "neo4j",
             password = "arcade",
-            database = Neo4jDataProviderIntTest::class.java.simpleName
+            database = Neo4jDataProviderIntTest::class.java.simpleName,
         )
         getDriver(dataSource).use { driver ->
 

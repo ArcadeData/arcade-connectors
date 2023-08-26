@@ -34,7 +34,6 @@ internal class OrientDB3DataSourceTableDataProviderTest {
     @Test
     @Throws(Exception::class)
     fun shouldFetchDataWithAggregateQuery() {
-
         // when
 
         val query = "select avg(age) as age, count(name) as count from Person group by age order by count desc"
@@ -72,11 +71,11 @@ internal class OrientDB3DataSourceTableDataProviderTest {
 
         assertThat(record).containsOnlyKeys("count", "age")
     }
+
     @Test
     @Throws(Exception::class)
     @Disabled
     fun shouldFetchDataWithAggregateGremlinQuery() {
-
         // when
 
         val query = "gremlin: select avg(age) as age, count(name) as count from Person group by age order by count desc"
@@ -118,14 +117,13 @@ internal class OrientDB3DataSourceTableDataProviderTest {
     @Test
     @Throws(Exception::class)
     fun shouldFetchDataWithAggregateParametrizedQuery() {
-
         // when
 
         var query = "select avg(age) as age, count(name) as count from Person  where age < :age   group by age order by count desc limit :limit "
 
         val params: QueryParams = listOf(
             QueryParam("age", "query", "(SELECT age FROM Person WHERE name ='rob')"),
-            QueryParam("limit", "single", "1")
+            QueryParam("limit", "single", "1"),
         )
 
         val data = provider.fetchData(OrientDB3Container.dataSource, query, params, 20)
@@ -165,7 +163,6 @@ internal class OrientDB3DataSourceTableDataProviderTest {
     @Test
     @Throws(Exception::class)
     fun shouldFetchDataWithQuery() {
-
         // when
 
         val query = "select from Person "

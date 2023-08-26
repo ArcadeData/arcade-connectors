@@ -32,7 +32,6 @@ fun createConnectionUrl(dataSource: DataSourceInfo): String {
 }
 
 fun open(dataSource: DataSourceInfo): ODatabaseDocumentTx {
-
     val connectionUrl = createConnectionUrl(dataSource)
     val db = ODatabaseDocumentTx(connectionUrl)
     return db.open<ODatabaseDocumentTx>(dataSource.username, dataSource.password)

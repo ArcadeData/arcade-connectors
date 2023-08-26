@@ -24,7 +24,7 @@ import com.orientechnologies.orient.core.record.impl.ODocument
 
 internal class OrientDBResultListener(
     private val documentCollector: OrientDBDocumentCollector,
-    private val limit: Int
+    private val limit: Int,
 ) :
     OCommandResultListener {
 
@@ -33,7 +33,6 @@ internal class OrientDBResultListener(
     private var edges: Int = 0
 
     override fun result(record: Any): Boolean {
-
         // it is an ODocument
         val document = record as ODocument
 

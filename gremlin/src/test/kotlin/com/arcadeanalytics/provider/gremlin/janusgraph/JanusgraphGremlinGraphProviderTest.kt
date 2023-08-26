@@ -37,7 +37,6 @@ internal class JanusgraphGremlinGraphProviderTest {
 
     @Test
     fun shouldFetchAllVertexesAndEdges() {
-
         val nodes = ArrayList<Sprite>()
         val edges = ArrayList<Sprite>()
 
@@ -51,7 +50,6 @@ internal class JanusgraphGremlinGraphProviderTest {
             }
 
             override fun play(sprite: Sprite) {
-
                 when (sprite.valueOf(ARCADE_TYPE)) {
                     ARCADE_NODE_TYPE -> nodes.add(sprite)
                     ARCADE_EDGE_TYPE -> edges.add(sprite)

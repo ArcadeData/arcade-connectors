@@ -27,7 +27,6 @@ class SshGraphProviderDecorator(private val provider: DataSourceGraphProvider) :
     private val log = LoggerFactory.getLogger(SshGraphProviderDecorator::class.java)
 
     override fun provideTo(dataSource: DataSourceInfo, player: SpritePlayer) {
-
         val (session, wrapper) = buildTunnel(dataSource)
 
         provider.provideTo(wrapper, player)

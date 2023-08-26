@@ -30,7 +30,6 @@ class OrientDBDataSourceMetadataProviderTest {
 
     @Test
     fun shouldFetchMetadata() {
-
         val metadata = provider.fetchMetadata(dataSource)
 
         assertThat(metadata.nodesClasses)

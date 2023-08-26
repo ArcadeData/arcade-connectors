@@ -47,13 +47,12 @@ class SpriteShould {
         assertThat(sprite.entries()).contains(
             entry("field1", "value1"),
             entry("field2", 10),
-            entry("field3", false)
+            entry("field3", false),
         )
     }
 
     @Test
     internal fun `flat collection value`() {
-
         val values = mutableListOf<String>("value1", "value2", "value3")
 
         sprite.add("field1", values)
@@ -68,7 +67,7 @@ class SpriteShould {
             entry("field1", "value2"),
             entry("field1", "value3"),
             entry("field2", 10),
-            entry("field3", false)
+            entry("field3", false),
         )
     }
 
@@ -119,7 +118,7 @@ class SpriteShould {
 
         assertThat(sprite.entries()).contains(
             entry("field", "value"),
-            entry("copyOfField", "value")
+            entry("copyOfField", "value"),
 
         )
     }
@@ -142,7 +141,7 @@ class SpriteShould {
             entry("copyOfField", "value1"),
             entry("copyOfField", "value2"),
             entry("copyOfField", "value3"),
-            entry("copyOfField", "value4")
+            entry("copyOfField", "value4"),
         )
     }
 
@@ -169,7 +168,7 @@ class SpriteShould {
             entry("renamed", "value1"),
             entry("renamed", "value2"),
             entry("renamed", "value3"),
-            entry("renamed", "value4")
+            entry("renamed", "value4"),
         )
     }
 
@@ -199,7 +198,8 @@ class SpriteShould {
                     |value2
                     |value3
                     |value4
-                    |END""".trimMargin()
+                    |END
+                """.trimMargin(),
             )
     }
 
@@ -312,7 +312,7 @@ class SpriteShould {
         val input = mapOf(
             "field1" to "value1",
             "field2" to "value2",
-            "field3" to now
+            "field3" to now,
         )
 
         sprite.load(input)
@@ -408,7 +408,6 @@ class SpriteShould {
 
     @Test
     internal fun `answer about field's size`() {
-
         sprite.add("field", "value")
             .add("field", "value2")
             .add("field", "value3")
@@ -447,7 +446,6 @@ class SpriteShould {
 
     @Test
     internal fun `show an ETL example`() {
-
         val data = Sprite()
             .add("age", 90)
             .add("name", "rob")

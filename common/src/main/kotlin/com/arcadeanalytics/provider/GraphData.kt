@@ -26,7 +26,7 @@ data class Data(
     val parent: String = "",
     val source: String = "",
     val target: String = "",
-    val record: MutableMap<String, Any> = mutableMapOf()
+    val record: MutableMap<String, Any> = mutableMapOf(),
 )
 
 data class CytoData(
@@ -37,7 +37,7 @@ data class CytoData(
     val selected: String = "",
     val selectable: String = "",
     val locked: String = "",
-    val grabbable: String = ""
+    val grabbable: String = "",
 )
 
 data class GraphData(
@@ -45,7 +45,7 @@ data class GraphData(
     val edgesClasses: Map<String, Map<String, Any>> = emptyMap(),
     val nodes: Set<CytoData>,
     val edges: Set<CytoData>,
-    val truncated: Boolean = false
+    val truncated: Boolean = false,
 ) {
 
     companion object {
@@ -59,7 +59,7 @@ data class GraphData(
             emptyMap(),
             emptySet(),
             emptySet(),
-            false
+            false,
         )
     }
 }

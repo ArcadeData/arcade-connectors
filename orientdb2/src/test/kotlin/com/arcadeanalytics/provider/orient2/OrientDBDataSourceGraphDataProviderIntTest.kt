@@ -35,7 +35,6 @@ class OrientDBDataSourceGraphDataProviderIntTest {
     @Test
     @Throws(Exception::class)
     fun shouldFetchDataWithQuery() {
-
         val query = "select from Person limit 20"
         val data = provider.fetchData(dataSource, query, 20)
 
@@ -166,7 +165,6 @@ class OrientDBDataSourceGraphDataProviderIntTest {
     private fun getPersonsIdentity(limit: Int): Array<String> {
         ODatabaseDocumentTx(dbUrl).open<ODatabaseDocumentTx>("admin", "admin")
             .use {
-
                 return it.query<List<ODocument>>(OSQLSynchQuery<ODocument>("""SELECT from Person limit $limit"""))
                     .asSequence()
                     .map { doc -> doc.identity }

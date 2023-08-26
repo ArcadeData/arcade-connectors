@@ -35,21 +35,21 @@ fun mapType(type: String): String = when (
     "char varying", "character varying", "ntext", "nchar",
     "national char", "national character", "nvarchar", "national char varying",
     "national character varying", "longvarchar", "character large object",
-    "mediumtext", "longtext", "tinytext"
+    "mediumtext", "longtext", "tinytext",
     -> "String"
 
     "decimal", "dec", "numeric", "real", "integer",
     "int", "int2", "int4", "tinyint",
     "smallint unsigned", "tinyint unsigned", "mediumint unsigned",
     "float", "double precision",
-    "long", "smallint", "money", "smallmoney", "double"
+    "long", "smallint", "money", "smallmoney", "double",
     -> "Numeric"
 
     "date", "datetime", "datetime2", "timestamp", "year",
-    "smalldatetime", "datetimeoffset", "time with time zone"
+    "smalldatetime", "datetimeoffset", "time with time zone",
     -> "Date"
 
-    "bool", "boolean"
+    "bool", "boolean",
     -> "Boolean"
     else -> {
         if (log.isDebugEnabled) log.debug("type not mapped:: {} ", type)

@@ -36,7 +36,6 @@ class SshDataProviderDecorator(private val provider: DataSourceGraphDataProvider
     }
 
     override fun fetchData(dataSource: DataSourceInfo, query: String, limit: Int): GraphData {
-
         val (session, wrapper) = buildTunnel(dataSource)
 
         val graphData = provider.fetchData(wrapper, query, limit)
@@ -77,7 +76,6 @@ class SshDataProviderDecorator(private val provider: DataSourceGraphDataProvider
     }
 
     override fun loadFromClass(dataSource: DataSourceInfo, className: String, limit: Int): GraphData {
-
         val (session, wrapper) = buildTunnel(dataSource)
 
         val graphData = provider.loadFromClass(wrapper, className, limit)

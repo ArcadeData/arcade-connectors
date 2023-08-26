@@ -44,11 +44,10 @@ class RDBMSMetadataProvider : DataSourceMetadataProvider {
         "RDBMS_MSSQLSERVER",
         "RDBMS_HSQL",
         "RDBMS_ORACLE",
-        "RDBMS_DATA_WORLD"
+        "RDBMS_DATA_WORLD",
     )
 
     override fun fetchMetadata(dataSource: DataSourceInfo): DataSourceMetadata {
-
         val dbQueryEngine: DBQueryEngine = DBQueryEngine(dataSource, 300)
 
         val mapper: ER2GraphMapper = getMapper(dbQueryEngine, dataSource)
@@ -63,7 +62,6 @@ class RDBMSMetadataProvider : DataSourceMetadataProvider {
 
                 var cardinality: Long = 0
                 if (dataSource.aggregationEnabled) {
-
                     if (!it.isFromJoinTable) {
                         mapper.vertexType2EVClassMappers.get(it)?.get(0)?.entity?.name?.let { tableName ->
                             val queryResult: QueryResult = dbQueryEngine.countTableRecords(tableName)
@@ -101,7 +99,6 @@ class RDBMSMetadataProvider : DataSourceMetadataProvider {
                 var cardinality: Long = 0
 
                 if (dataSource.aggregationEnabled) {
-
                     if (edgeType.isAggregatorEdge) {
                         mapper.getJoinVertexTypeByAggregatorEdgeName(edgeTypeName)?.run {
                             val joinTable = mapper.getEntityByVertexType(this, 0) // join vertex has always 1-1 mapping with the join table, so I always get the first mapping
@@ -146,7 +143,6 @@ class RDBMSMetadataProvider : DataSourceMetadataProvider {
     }
 
     private fun getMapper(dbQueryEngine: DBQueryEngine, dataSource: DataSourceInfo): ER2GraphMapper {
-
         val statistics = Statistics()
 
         val aggregate = dataSource.aggregationEnabled
@@ -174,7 +170,7 @@ class RDBMSMetadataProvider : DataSourceMetadataProvider {
                 null,
                 chosenStrategy,
                 dbQueryEngine,
-                statistics
+                statistics,
             )
 
         return mapper as ER2GraphMapper

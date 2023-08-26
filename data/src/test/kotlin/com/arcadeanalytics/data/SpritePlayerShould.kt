@@ -26,7 +26,6 @@ class SpritePlayerShould {
 
     @Test
     internal fun `mark the sprite with a new field `() {
-
         val player: SpritePlayer = object : SpritePlayer {
             override fun end() {
             }
@@ -48,7 +47,6 @@ class SpritePlayerShould {
 
     @Test
     internal fun `accept empty sprite`() {
-
         val player: SpritePlayer = object : SpritePlayer {
             override fun begin() {
             }

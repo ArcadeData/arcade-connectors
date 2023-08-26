@@ -54,7 +54,6 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
     override fun supportedDataSourceTypes(): Set<String> = setOf("ORIENTDB3")
 
     override fun testConnection(dataSource: DataSourceInfo): Boolean {
-
         log.info("testing connection to :: '{}' ", dataSource.id)
 
         try {
@@ -71,7 +70,6 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
     }
 
     override fun fetchData(dataSource: DataSourceInfo, query: String, limit: Int): GraphData {
-
         log.info("fetching data from '{}' with query '{}' ", dataSource.id, query)
 
         open(dataSource)
@@ -89,7 +87,6 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
     }
 
     private fun toCytoData(element: OElement): CytoData {
-
         var record: MutableMap<String, Any> = when {
             element.isVertex -> transformToMap(element as OVertexDocument)
             else -> transformToMap(element as OEdgeDocument)
@@ -116,7 +113,7 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
                 .map { e ->
                     outs[removeFirst(e.key, "out_")] = e.value
                     e.key
-                }.toSet()
+                }.toSet(),
         )
 
         keys.asSequence()
@@ -141,7 +138,6 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
     }
 
     private fun cleanRecord(record: MutableMap<String, Any>) {
-
         record.remove("@type")
         record.remove("@rid")
         record.remove("@id")
@@ -161,33 +157,37 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
                 propertyType == OType.LINKLIST ||
                 propertyType == OType.LINKSET ||
                 propertyType == OType.LINKMAP
-            ) continue
+            ) {
+                continue
+            }
 
             var value = doc.field<Any>(property)
 
             if (value == null) continue
 
-            if (value is ODocument)
+            if (value is ODocument) {
                 value = transformToMap(value)
-            else if (value is ORID)
+            } else if (value is ORID) {
                 value = value.toString()
+            }
 
             map[property] = value
         }
 
         val id = doc.identity
-        if (id.isValid)
+        if (id.isValid) {
             map[ODocumentHelper.ATTRIBUTE_RID] = id.toString()
+        }
 
         val className = doc.schemaType
-        if (className != null)
+        if (className != null) {
             map[ODocumentHelper.ATTRIBUTE_CLASS] = className
+        }
 
         return map
     }
 
     private fun mapField(doc: ODocument, fieldName: String): Any {
-
         val type = doc.fieldType(fieldName)
 
         if (type.isEmbedded) {
@@ -198,7 +198,6 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
     }
 
     fun mapResultSet(dataSource: DataSourceInfo, resultSet: OResultSet): GraphData {
-
         // DIVIDE VERTICES FROM EDGES
         val nodes = mutableSetOf<OVertex>()
         val edges = mutableSetOf<OEdge>()
@@ -272,8 +271,9 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
     private fun mapInAndOut(dataSource: DataSourceInfo, element: OElement): OElement {
         element as OEdgeDocument
 
-        if (!element.containsField("out"))
+        if (!element.containsField("out")) {
             return element
+        }
 
         val outRid = (element.rawField<Any>("out") as OIdentifiable).identity
         element.field("@outId", "${dataSource.id}_${outRid.clusterId}_${outRid.clusterPosition}")
@@ -295,7 +295,6 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
     }
 
     private fun populateClasses(classes: MutableMap<String, Map<String, Any>>, element: OElement): OElement {
-
         classes.putIfAbsent(element.schemaType.get().toString(), Maps.newHashMap())
 
         populateProperties(classes, element as ODocument)
@@ -304,7 +303,6 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
     }
 
     private fun populateProperties(classes: Map<String, Map<String, Any>>, vertex: ODocument) {
-
         val properties = classes[vertex.schemaType.get().toString()]
 
         vertex.propertyNames
@@ -322,8 +320,9 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
             }
             .forEach { f ->
                 val type = vertex.fieldType(f)
-                if (type != null)
+                if (type != null) {
                     (properties as MutableMap<String, Any>).putIfAbsent(f, mapType(type.name))
+                }
             }
     }
 
@@ -332,9 +331,8 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
         ids: Array<String>,
         direction: String,
         edgeLabel: String,
-        maxTraversal: Int
+        maxTraversal: Int,
     ): GraphData {
-
         val cleanedEdgeLabel = wrap(trimToEmpty(edgeLabel), "`")
 
         var query = "SELECT FROM (TRAVERSE "
@@ -358,7 +356,7 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
         dataSource: DataSourceInfo,
         fromIds: Array<String>,
         edgesLabel: Array<String>,
-        toIds: Array<String>
+        toIds: Array<String>,
     ): GraphData {
         val cleanedFromIds = cleanIds(dataSource, fromIds)
         val cleanedToIds = cleanIds(dataSource, toIds)
@@ -369,13 +367,12 @@ class OrientDB3DataSourceGraphDataProvider : DataSourceGraphDataProvider {
                     |.bothE($cleanLabels ) { AS: rel }
                     |.bothV() { AS: target, WHERE: ( @rid IN [$cleanedToIds] ) }
                     | RETURN ${'$'}pathElements
-                    """.trimMargin()
+            """.trimMargin()
 
         return fetchData(dataSource, query, 10000)
     }
 
     override fun load(dataSource: DataSourceInfo, ids: Array<String>): GraphData {
-
         var query = "SELECT FROM ["
 
         query += cleanIds(dataSource, ids)

@@ -44,7 +44,7 @@ interface DataSourceGraphDataProvider : DataSourceProvider {
     fun fetchData(
         dataSource: DataSourceInfo,
         query: String,
-        limit: Int
+        limit: Int,
     ): GraphData
 
     /**
@@ -63,7 +63,7 @@ interface DataSourceGraphDataProvider : DataSourceProvider {
         ids: Array<String>,
         direction: String,
         edgeLabel: String,
-        maxTraversal: Int
+        maxTraversal: Int,
     ): GraphData
 
     /**
@@ -80,7 +80,7 @@ interface DataSourceGraphDataProvider : DataSourceProvider {
         dataSource: DataSourceInfo,
         fromIds: Array<String>,
         edgesLabel: Array<String>,
-        toIds: Array<String>
+        toIds: Array<String>,
     ): GraphData
 
     /**
@@ -91,7 +91,7 @@ interface DataSourceGraphDataProvider : DataSourceProvider {
      */
     fun load(
         dataSource: DataSourceInfo,
-        ids: Array<String>
+        ids: Array<String>,
     ): GraphData
 
     /**
@@ -104,7 +104,7 @@ interface DataSourceGraphDataProvider : DataSourceProvider {
     fun loadFromClass(
         dataSource: DataSourceInfo,
         className: String,
-        limit: Int
+        limit: Int,
     ): GraphData
 
     /**
@@ -123,6 +123,6 @@ interface DataSourceGraphDataProvider : DataSourceProvider {
         className: String,
         propertyName: String,
         propertyValue: String,
-        limit: Int
+        limit: Int,
     ): GraphData
 }

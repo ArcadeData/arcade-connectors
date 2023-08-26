@@ -29,7 +29,7 @@ class CosmosDBGremlinGraphProviderTest {
             port = 443,
             username = "\"/dbs/arcade/colls/arcade-graph\"",
             password = "arcade",
-            database = this::class.java.simpleName
+            database = this::class.java.simpleName,
         )
 
         provider = CosmosDBGremlinGraphProvider()
@@ -38,7 +38,6 @@ class CosmosDBGremlinGraphProviderTest {
     @Test
     @Disabled
     fun shouldFetchAllVertexes() {
-
         val nodes = ArrayList<Sprite>()
         val edges = ArrayList<Sprite>()
 
@@ -52,7 +51,6 @@ class CosmosDBGremlinGraphProviderTest {
             }
 
             override fun play(document: Sprite) {
-
                 when (document.valueOf(ARCADE_TYPE)) {
                     ARCADE_NODE_TYPE -> nodes.add(document)
                     ARCADE_EDGE_TYPE -> edges.add(document)

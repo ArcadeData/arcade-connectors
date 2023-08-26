@@ -48,7 +48,6 @@ class CosmosDBGremlinGraphProvider : DataSourceGraphProvider {
     }
 
     override fun provideTo(dataSource: DataSourceInfo, player: SpritePlayer) {
-
         val cluster = Cluster.build(dataSource.server)
             .port(dataSource.port)
             .serializer(createSerializer(dataSource))
@@ -76,15 +75,12 @@ class CosmosDBGremlinGraphProvider : DataSourceGraphProvider {
 
         log.info("start indexing of data-source {} - total nodes:: {} ", dataSource.id, nodes)
         while (fetched < nodes) {
-
             val resultSet = client.submit("g.V().range($skip , $limit)")
 
             for (r in resultSet) {
-
                 val res = r.getObject() as MutableMap<String, Any>
 
                 if (res.containsKey("properties")) {
-
                     val props = res["properties"] as Map<String, List<Map<String, Any>>>
 
                     props.forEach { k, v -> if (v is List<*>) res.put(k, v[0]["value"]!!) }
@@ -119,17 +115,14 @@ class CosmosDBGremlinGraphProvider : DataSourceGraphProvider {
 
         log.info("start indexing of data-source {} - total edges:: {} ", dataSource.id, edges)
         while (fetched < edges - 1) {
-
             log.info("query:: g.E().range($skip , $limit)")
 
             val resultSet = client.submit("g.E().range($skip , $limit)")
 
             for (r in resultSet) {
-
                 val res = r.getObject() as MutableMap<String, Any>
 
                 if (res.containsKey("properties")) {
-
                     val props = res["properties"] as Map<String, Any>
                     props.forEach { k, v -> res.put(k, v) }
                     res.remove("properties")

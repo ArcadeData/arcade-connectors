@@ -45,7 +45,7 @@ object JanusgraphContainer {
         port = container.firstMappedPort,
         username = "",
         password = "",
-        database = ""
+        database = "",
     )
 
     init {

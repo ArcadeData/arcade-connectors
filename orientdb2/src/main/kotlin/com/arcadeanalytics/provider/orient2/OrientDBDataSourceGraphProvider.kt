@@ -52,7 +52,6 @@ class OrientDBDataSourceGraphProvider : DataSourceGraphProvider {
     }
 
     override fun provideTo(dataSource: DataSourceInfo, player: SpritePlayer) {
-
         open(dataSource).use { db ->
 
             queries.asSequence()
@@ -64,7 +63,6 @@ class OrientDBDataSourceGraphProvider : DataSourceGraphProvider {
                     var resultset = db.query<List<*>>(query)
 
                     while (!resultset.isEmpty()) {
-
                         resultset.asSequence()
                             .map { res -> res as ODocument }
                             .filter { doc -> doc.fields() > 0 }
@@ -89,7 +87,7 @@ class OrientDBDataSourceGraphProvider : DataSourceGraphProvider {
                     .allSuperClasses
                     .asSequence()
                     .map { c -> c.name }
-                    .toList()
+                    .toList(),
             )
             .apply<Any, String>(allFields) { v -> v.toString() }
             .remove("@class", "V")

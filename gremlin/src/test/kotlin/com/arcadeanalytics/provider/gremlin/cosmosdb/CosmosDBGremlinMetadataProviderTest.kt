@@ -43,7 +43,7 @@ class CosmosDBGremlinMetadataProviderTest {
             port = 443,
             username = "\"/dbs/arcade/colls/arcade-graph\"",
             password = "arcade",
-            database = JanusgraphGremlinDataProviderIntTest::class.java.simpleName
+            database = JanusgraphGremlinDataProviderIntTest::class.java.simpleName,
         )
 
         provider = CosmosDBGremlinMetadataProvider()
@@ -51,7 +51,6 @@ class CosmosDBGremlinMetadataProviderTest {
 
     @Test
     @Disabled
-
     fun fetchMetadata() {
         val metadata = provider.fetchMetadata(dataSource)
 

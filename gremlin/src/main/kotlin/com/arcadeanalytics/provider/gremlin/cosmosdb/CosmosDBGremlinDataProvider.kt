@@ -46,7 +46,6 @@ class CosmosDBGremlinDataProvider : DataSourceGraphDataProvider {
     }
 
     override fun fetchData(dataSource: DataSourceInfo, query: String, limit: Int): GraphData {
-
         val cluster = getCluster(dataSource)
 
         log.info("fetching data from '{}' with query '{}' ", dataSource.id, query)
@@ -64,7 +63,6 @@ class CosmosDBGremlinDataProvider : DataSourceGraphDataProvider {
     }
 
     private fun getCluster(dataSource: DataSourceInfo): Cluster {
-
         val serializer = createSerializer(dataSource)
 
         return Cluster.build(dataSource.server)
@@ -115,7 +113,6 @@ class CosmosDBGremlinDataProvider : DataSourceGraphDataProvider {
     }
 
     private fun toData(dataSource: DataSourceInfo, result: Result, client: Client): CytoData {
-
         log.info("result:: {}", result)
 
         val record = transformToMap(result)
@@ -136,14 +133,13 @@ class CosmosDBGremlinDataProvider : DataSourceGraphDataProvider {
         }
 
         val cyto = when (record["type"]) {
-
             "vertex" -> {
                 outs.putAll(
                     client.submit("g.V('${record["id"]}').outE()").asSequence()
                         .map { r1 -> r1.getObject() as Map<String, Any> }
                         .map { e1 -> e1["label"].toString() }
                         .groupingBy { it }
-                        .eachCount()
+                        .eachCount(),
                 )
 
                 ins.putAll(
@@ -151,7 +147,7 @@ class CosmosDBGremlinDataProvider : DataSourceGraphDataProvider {
                         .map { r1 -> r1.getObject() as Map<String, Any> }
                         .map { e1 -> e1["label"].toString() }
                         .groupingBy { it }
-                        .eachCount()
+                        .eachCount(),
                 )
 
                 var edgeCount = ins.values.stream().mapToLong { o -> o as Long }.sum()
@@ -163,7 +159,6 @@ class CosmosDBGremlinDataProvider : DataSourceGraphDataProvider {
             }
 
             "edge" -> {
-
                 val sourceId = record["inV"].toString()
                 val source = dataSource.id.toString() + "_" + cleanOrientId(sourceId)
                 val targetId = record["outV"].toString()
@@ -197,11 +192,9 @@ class CosmosDBGremlinDataProvider : DataSourceGraphDataProvider {
     }
 
     private fun transformToMap(result: Result): MutableMap<String, Any> {
-
         val res = result.getObject() as MutableMap<String, Any>
 
         if (res.containsKey("properties")) {
-
             if (res["type"].toString() == "vertex") {
                 val props = res["properties"] as Map<String, List<Map<String, Any>>>
                 props.forEach { k, v -> if (v is List<*>) res.put(k, v[0]["value"]!!) }
@@ -224,7 +217,6 @@ class CosmosDBGremlinDataProvider : DataSourceGraphDataProvider {
         log.info("fetching data from '{}' with query '{}' ", cluster.availableHosts()[0], query)
 
         try {
-
             return load(dataSource, ids, client)
         } catch (e: Exception) {
             throw RuntimeException(e)
@@ -274,7 +266,7 @@ class CosmosDBGremlinDataProvider : DataSourceGraphDataProvider {
         roots: Array<String>,
         direction: String,
         edgeLabel: String,
-        maxTraversal: Int
+        maxTraversal: Int,
     ): GraphData {
         var edgeLabel = edgeLabel
         var query = "g.V("

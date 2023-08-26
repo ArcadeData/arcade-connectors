@@ -47,13 +47,12 @@ class Neo4jMetadataProvider : DataSourceMetadataProvider {
         "NEO4J::EDGES" to "CALL db.relationshipTypes() YIELD relationshipType",
 
         "NEO4J_MEMGRAPH::LABELS" to "MATCH (n) UNWIND labels(n) AS label RETURN DISTINCT label",
-        "NEO4J_MEMGRAPH::EDGES" to "MATCH ()-[r]->() RETURN DISTINCT type(r) AS relationshipType"
+        "NEO4J_MEMGRAPH::EDGES" to "MATCH ()-[r]->() RETURN DISTINCT type(r) AS relationshipType",
     )
 
     override fun supportedDataSourceTypes(): Set<String> = setOf("NEO4J", "NEO4J_MEMGRAPH")
 
     override fun fetchMetadata(dataSource: DataSourceInfo): DataSourceMetadata {
-
         val connectionUrl = createConnectionUrl(dataSource)
 
         log.info("fetching metadata for dataSource {} ", dataSource.id)

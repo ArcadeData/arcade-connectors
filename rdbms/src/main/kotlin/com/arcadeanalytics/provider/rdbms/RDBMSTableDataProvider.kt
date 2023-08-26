@@ -17,7 +17,6 @@ import java.sql.ResultSetMetaData
 class RDBMSTableDataProvider : DataSourceTableDataProvider {
 
     override fun fetchData(dataSource: DataSourceInfo, query: String, limit: Int): GraphData {
-
         DBSourceConnection.getConnection(dataSource).use { conn ->
 
             conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY).use { stmt ->
@@ -71,7 +70,6 @@ class RDBMSTableDataProvider : DataSourceTableDataProvider {
         val nodesProperties = mutableMapOf<String, TypeProperty>()
 
         for (i in 1..columns) {
-
             val columnName = md.getColumnName(i)
             val columnTypeName = md.getColumnTypeName(i)
 
@@ -94,7 +92,7 @@ class RDBMSTableDataProvider : DataSourceTableDataProvider {
             val cytoData = CytoData(
                 classes = TABLE_CLASS,
                 group = "nodes",
-                data = data
+                data = data,
             )
 
             cytoNodes.add(cytoData)
@@ -116,6 +114,6 @@ class RDBMSTableDataProvider : DataSourceTableDataProvider {
         "RDBMS_MSSQLSERVER",
         "RDBMS_HSQL",
         "RDBMS_ORACLE",
-        "RDBMS_DATA_WORLD"
+        "RDBMS_DATA_WORLD",
     )
 }

@@ -45,11 +45,11 @@ class Neo4jDataProviderIntTest {
                     """MATCH (a)-[r]->(o)
                                         WITH a, o, type(r) as type
                                         RETURN a, type, count(type) as in_count
-                                        ORDER BY a""".trimMargin()
+                                        ORDER BY a
+                    """.trimMargin()
                 println("query = $query")
 
                 for (record in session.run(query)) {
-
                     println("record = $record")
                 }
             }
@@ -59,7 +59,6 @@ class Neo4jDataProviderIntTest {
     @Test
     @Throws(Exception::class)
     fun testFetchData() {
-
         // given
 
         // when
@@ -89,7 +88,6 @@ class Neo4jDataProviderIntTest {
     @Test
     @Throws(Exception::class)
     fun testFetchNodes() {
-
         // given
 
         // when

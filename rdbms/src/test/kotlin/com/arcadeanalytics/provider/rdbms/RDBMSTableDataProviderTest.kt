@@ -39,7 +39,6 @@ internal class RDBMSTableDataProviderTest {
     @BeforeEach
     @Throws(Exception::class)
     fun setUp() {
-
         dataSourceInfo = DataSourceInfo(
             id = 1L,
             type = "RDBMS_POSTGRESQL",
@@ -49,7 +48,7 @@ internal class RDBMSTableDataProviderTest {
             username = container.username,
             password = container.password,
             database = container.databaseName,
-            aggregationEnabled = true
+            aggregationEnabled = true,
         )
 
         provider = RDBMSTableDataProvider()
@@ -57,15 +56,15 @@ internal class RDBMSTableDataProviderTest {
 
     @Test
     fun fetchData() {
-
         val data = provider.fetchData(
             dataSourceInfo,
             """SELECT customer_id, SUM (amount) total_amount
             | FROM  payment
             | GROUP BY customer_id
             | ORDER BY total_amount DESC
-            | """.trimMargin(),
-            100
+            |
+            """.trimMargin(),
+            100,
         )
 
         val tableClass = data.nodesClasses[TABLE_CLASS]

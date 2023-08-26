@@ -44,7 +44,7 @@ internal class DataSourceGraphDataProviderFactoryTest {
             Arguments.of("RDBMS_MSSQLSERVER", "RDBMSDataProvider"),
             Arguments.of("RDBMS_ORACLE", "RDBMSDataProvider"),
             Arguments.of("RDBMS_HSQL", "RDBMSDataProvider"),
-            Arguments.of("RDBMS_DATA_WORLD", "RDBMSDataProvider")
+            Arguments.of("RDBMS_DATA_WORLD", "RDBMSDataProvider"),
 
         )
     }
@@ -74,7 +74,7 @@ internal class DataSourceGraphDataProviderFactoryTest {
                 "RDBMS_MSSQLSERVER",
                 "RDBMS_HSQL",
                 "RDBMS_ORACLE",
-                "RDBMS_DATA_WORLD"
+                "RDBMS_DATA_WORLD",
             )
     }
 
@@ -82,9 +82,8 @@ internal class DataSourceGraphDataProviderFactoryTest {
     @MethodSource("types2implementation")
     internal fun `should create right data provider for given data source type`(
         type: String,
-        impl: String
+        impl: String,
     ) {
-
         val dataSource = DataSourceInfo(
             id = 1L,
             type = type,
@@ -93,7 +92,7 @@ internal class DataSourceGraphDataProviderFactoryTest {
             port = 1234,
             username = "admin",
             password = "admin",
-            database = "testDb"
+            database = "testDb",
         )
 
         val provider = factory.create(dataSource)
@@ -106,9 +105,8 @@ internal class DataSourceGraphDataProviderFactoryTest {
     @MethodSource("types2implementation")
     internal fun `should decorate with ssh tunnel when remote`(
         type: String,
-        impl: String
+        impl: String,
     ) {
-
         val dataSource = DataSourceInfo(
             id = 1L,
             type = type,
@@ -121,7 +119,7 @@ internal class DataSourceGraphDataProviderFactoryTest {
             remote = true,
             gateway = "192.168.1.12",
             sshPort = 22,
-            sshUser = "sshUser"
+            sshUser = "sshUser",
         )
 
         val provider = factory.create(dataSource)

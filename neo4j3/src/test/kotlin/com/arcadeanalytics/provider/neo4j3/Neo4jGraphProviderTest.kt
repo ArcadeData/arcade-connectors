@@ -34,7 +34,6 @@ class Neo4jGraphProviderTest {
 
     @Test
     fun shouldFetchAllElements() {
-
         val docs = ArrayList<Sprite>()
 
         val indexer = object : SpritePlayer {
@@ -59,7 +58,7 @@ class Neo4jGraphProviderTest {
         assertThat(
             docs.asSequence()
                 .map { s -> s.valueOf("@class") }
-                .any { c -> c == "Person" || c == "Car" || c == "fraternal" || c == "killer" }
+                .any { c -> c == "Person" || c == "Car" || c == "fraternal" || c == "killer" },
         ).isTrue()
     }
 }

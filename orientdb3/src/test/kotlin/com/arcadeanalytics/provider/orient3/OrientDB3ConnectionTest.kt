@@ -46,7 +46,7 @@ class OrientDB3ConnectionTest {
             port = container.firstMappedPort,
             username = "admin",
             password = "admin",
-            database = OrientDB3DataSourceGraphDataProviderIntTest::class.java.simpleName
+            database = OrientDB3DataSourceGraphDataProviderIntTest::class.java.simpleName,
         )
 
         val dbUrl = createTestDatabase(container.serverUrl, dataSource.database)

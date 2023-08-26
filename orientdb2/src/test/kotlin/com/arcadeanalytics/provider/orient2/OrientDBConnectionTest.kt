@@ -50,7 +50,7 @@ class OrientDBConnectionTest {
             port = container.firstMappedPort,
             username = "admin",
             password = "admin",
-            database = OrientDBDataSourceGraphDataProviderIntTest::class.java.simpleName
+            database = OrientDBDataSourceGraphDataProviderIntTest::class.java.simpleName,
         )
 
         val serverUrl = getServerUrl(container)

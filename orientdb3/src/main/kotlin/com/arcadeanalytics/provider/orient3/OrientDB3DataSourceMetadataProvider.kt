@@ -37,7 +37,6 @@ class OrientDB3DataSourceMetadataProvider() : DataSourceMetadataProvider {
     private val log = LoggerFactory.getLogger(OrientDB3DataSourceMetadataProvider::class.java)
 
     override fun fetchMetadata(dataSource: DataSourceInfo): DataSourceMetadata {
-
         log.info("fetching metadata for dataSource {} ", dataSource.id)
 
         open(dataSource).use {

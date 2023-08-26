@@ -46,16 +46,15 @@ class Neo4jGraphProvider : DataSourceGraphProvider {
         "NEO4J::EDGES" to "CALL db.relationshipTypes() YIELD relationshipType",
 
         "NEO4J_MEMGRAPH::LABELS" to "MATCH (n) UNWIND labels(n) AS label RETURN DISTINCT label",
-        "NEO4J_MEMGRAPH::EDGES" to "MATCH ()-[r]->() RETURN DISTINCT type(r) AS relationshipType"
+        "NEO4J_MEMGRAPH::EDGES" to "MATCH ()-[r]->() RETURN DISTINCT type(r) AS relationshipType",
     )
 
     private val allFields: Pattern = Pattern.compile(".*")
 
     override fun provideTo(
         dataSource: DataSourceInfo,
-        player: SpritePlayer
+        player: SpritePlayer,
     ) {
-
         getDriver(dataSource).use { driver ->
 
             driver.session(AccessMode.READ).use { session ->
@@ -70,9 +69,8 @@ class Neo4jGraphProvider : DataSourceGraphProvider {
     private fun indexNodes(
         dataSource: DataSourceInfo,
         processor: SpritePlayer,
-        session: Session
+        session: Session,
     ) {
-
         val labels = session.run(queries["${dataSource.type}::LABELS"])
 
         labels.list()
@@ -84,9 +82,8 @@ class Neo4jGraphProvider : DataSourceGraphProvider {
     private fun indexRelationships(
         dataSource: DataSourceInfo,
         processor: SpritePlayer,
-        session: Session
+        session: Session,
     ) {
-
         val edges = countEdges(session)
 
         var skip = 0
@@ -94,7 +91,6 @@ class Neo4jGraphProvider : DataSourceGraphProvider {
 
         var fetched = 0
         while (fetched < edges) {
-
             val params = ImmutableMap.of<String, Any>("skip", skip, "limit", limit)
 
             log.info("fetching edges from '{}' with query '{}' and params {} - {}", session, "MATCH ()-[r]->() RETURN r SKIP \$skip LIMIT \$limit", skip, limit)
@@ -129,7 +125,7 @@ class Neo4jGraphProvider : DataSourceGraphProvider {
         dataSource: DataSourceInfo,
         processor: SpritePlayer,
         session: Session,
-        label: String
+        label: String,
     ) {
         val nodes = countNodes(session, label)
         log.info("fetching data from '{}' - for label {} total nodes '{}' ", session, label, nodes)
@@ -139,7 +135,6 @@ class Neo4jGraphProvider : DataSourceGraphProvider {
 
         var fetched = 0
         while (fetched < nodes) {
-
             log.info("fetching data from '{}' with query ' {} ' ", session, """MATCH (n:$label) RETURN n SKIP $skip LIMIT $limit""")
 
             val result = session.run("""MATCH (n:$label) RETURN n SKIP $skip LIMIT $limit""")
