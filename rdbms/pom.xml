@@ -22,7 +22,7 @@
         <orientdb.version>3.1.8</orientdb.version>
         <mysql-connector-java.version>8.0.30</mysql-connector-java.version>
         <postgresql.version>42.3.8</postgresql.version>
-        <hsqldb.version>2.6.0</hsqldb.version>
+        <hsqldb.version>2.7.1</hsqldb.version>
         <dw-jdbc.version>0.4.4</dw-jdbc.version>
         <jackson-databind.version>2.12.7.1</jackson-databind.version>
         <jsqlparser.version>4.0</jsqlparser.version>
