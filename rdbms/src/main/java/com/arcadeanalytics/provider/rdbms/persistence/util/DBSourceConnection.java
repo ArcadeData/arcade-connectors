@@ -23,12 +23,14 @@ package com.arcadeanalytics.provider.rdbms.persistence.util;
 import com.arcadeanalytics.provider.DataSourceInfo;
 import com.arcadeanalytics.provider.rdbms.exception.RDBMSProviderRuntimeException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +71,8 @@ public class DBSourceConnection {
 
         try {
             Map<String, String> connectionAdditionalProperties = new ObjectMapper()
-            .readValue(Optional.ofNullable(datasource.getConnectionProperties()).orElse("{}"), HashMap.class);
+                    .readValue(Optional.ofNullable(datasource.getConnectionProperties())
+                            .orElse("{}"), HashMap.class);
 
             if (connectionAdditionalProperties.size() > 0) {
                 for (String connectionProp : connectionAdditionalProperties.keySet()) {
@@ -86,9 +89,9 @@ public class DBSourceConnection {
 
     public static String createConnectionUrl(DataSourceInfo datasource) {
         return type2template
-            .get(datasource.getType())
-            .replace("{server}", datasource.getServer())
-            .replace("{port}", String.valueOf(datasource.getPort()))
-            .replace("{database}", datasource.getDatabase());
+                .get(datasource.getType())
+                .replace("{server}", datasource.getServer())
+                .replace("{port}", String.valueOf(datasource.getPort()))
+                .replace("{database}", datasource.getDatabase());
     }
 }
