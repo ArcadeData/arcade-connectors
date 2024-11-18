@@ -27,28 +27,29 @@ import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.utility.DockerImageName
 
 object Neo4jContainer {
-
-    private val container: KGenericContainer = KGenericContainer(DockerImageName.parse("neo4j:3.5"))
-        .apply {
-            withExposedPorts(7687, 7474)
-            withEnv("NEO4J_AUTH", "neo4j/arcade")
-            waitingFor(Wait.forListeningPort())
-            start()
-        }
+    private val container: KGenericContainer =
+        KGenericContainer(DockerImageName.parse("neo4j:3.5"))
+            .apply {
+                withExposedPorts(7687, 7474)
+                withEnv("NEO4J_AUTH", "neo4j/arcade")
+                waitingFor(Wait.forListeningPort())
+                start()
+            }
 
     val dataSource: DataSourceInfo
 
     init {
-        dataSource = DataSourceInfo(
-            id = 1L,
-            type = "NEO4J",
-            name = "testDataSource",
-            server = container.containerIpAddress,
-            port = container.firstMappedPort,
-            username = "neo4j",
-            password = "arcade",
-            database = "empty",
-        )
+        dataSource =
+            DataSourceInfo(
+                id = 1L,
+                type = "NEO4J",
+                name = "testDataSource",
+                server = container.containerIpAddress,
+                port = container.firstMappedPort,
+                username = "neo4j",
+                password = "arcade",
+                database = "empty",
+            )
         getDriver(dataSource).use { driver ->
 
             driver.session().use {

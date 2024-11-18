@@ -25,5 +25,4 @@ package com.arcadeanalytics.provider.rdbms.model;
  *
  * @author Gabriele Ponzi
  */
-
 public interface DataSourceSchemaInfo {}

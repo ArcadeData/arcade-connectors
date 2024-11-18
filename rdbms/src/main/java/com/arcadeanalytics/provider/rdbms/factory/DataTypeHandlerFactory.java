@@ -28,28 +28,27 @@ import com.arcadeanalytics.provider.rdbms.persistence.handler.PostgreSQLDataType
 import com.arcadeanalytics.provider.rdbms.persistence.handler.SQLServerDataTypeHandler;
 
 /**
- * Factory used to instantiate a specific DataTypeHandler according to the driver of the
- * DBMS from which the import is performed.
+ * Factory used to instantiate a specific DataTypeHandler according to the driver of the DBMS from
+ * which the import is performed.
  *
  * @author Gabriele Ponzi
  */
-
 public class DataTypeHandlerFactory {
 
-    public DBMSDataTypeHandler buildDataTypeHandler(String type) {
-        switch (type) {
-            case "RDBMS_ORACLE":
-                return new OracleDataTypeHandler();
-            case "RDBMS_MSQSLSERVER":
-                return new SQLServerDataTypeHandler();
-            case "RDBMS_MYSQL":
-                return new MySQLDataTypeHandler();
-            case "RDBMS_POSTGRESQL":
-                return new PostgreSQLDataTypeHandler();
-            case "RDBMS_HSQL":
-                return new HSQLDBDataTypeHandler();
-            default:
-                return new DBMSDataTypeHandler();
-        }
+  public DBMSDataTypeHandler buildDataTypeHandler(String type) {
+    switch (type) {
+      case "RDBMS_ORACLE":
+        return new OracleDataTypeHandler();
+      case "RDBMS_MSQSLSERVER":
+        return new SQLServerDataTypeHandler();
+      case "RDBMS_MYSQL":
+        return new MySQLDataTypeHandler();
+      case "RDBMS_POSTGRESQL":
+        return new PostgreSQLDataTypeHandler();
+      case "RDBMS_HSQL":
+        return new HSQLDBDataTypeHandler();
+      default:
+        return new DBMSDataTypeHandler();
     }
+  }
 }

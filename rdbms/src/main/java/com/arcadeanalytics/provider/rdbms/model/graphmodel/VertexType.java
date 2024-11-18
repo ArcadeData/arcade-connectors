@@ -27,143 +27,149 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * It represents an Orient class of a specific type that extends the Orient Vertex Class.
- * It's a simple vertex-type in the graph model.
+ * It represents an Orient class of a specific type that extends the Orient Vertex Class. It's a
+ * simple vertex-type in the graph model.
  *
  * @author Gabriele Ponzi
  */
-
 public class VertexType extends ElementType {
 
-    private List<EdgeType> inEdgesType;
-    private List<EdgeType> outEdgesType;
-    private boolean isFromJoinTable;
-    private Set<String> externalKey;
-    private boolean analyzedInLastMigration;
+  private List<EdgeType> inEdgesType;
+  private List<EdgeType> outEdgesType;
+  private boolean isFromJoinTable;
+  private Set<String> externalKey;
+  private boolean analyzedInLastMigration;
 
-    public VertexType(String vertexType) {
-        super(vertexType);
-        this.inEdgesType = new ArrayList<EdgeType>();
-        this.outEdgesType = new ArrayList<EdgeType>();
-        this.externalKey = new LinkedHashSet<String>();
-        this.analyzedInLastMigration = false;
+  public VertexType(String vertexType) {
+    super(vertexType);
+    this.inEdgesType = new ArrayList<EdgeType>();
+    this.outEdgesType = new ArrayList<EdgeType>();
+    this.externalKey = new LinkedHashSet<String>();
+    this.analyzedInLastMigration = false;
+  }
+
+  public List<EdgeType> getInEdgesType() {
+    return this.inEdgesType;
+  }
+
+  public void setInEdgesType(List<EdgeType> inEdgesType) {
+    this.inEdgesType = inEdgesType;
+  }
+
+  public List<EdgeType> getOutEdgesType() {
+    return this.outEdgesType;
+  }
+
+  public void setOutEdgesType(List<EdgeType> outEdgesType) {
+    this.outEdgesType = outEdgesType;
+  }
+
+  public Set<String> getExternalKey() {
+    return this.externalKey;
+  }
+
+  public void setExternalKey(Set<String> externalKey) {
+    this.externalKey = externalKey;
+  }
+
+  public boolean isAnalyzedInLastMigration() {
+    return this.analyzedInLastMigration;
+  }
+
+  public void setAnalyzedInLastMigration(boolean analyzedInLastMigration) {
+    this.analyzedInLastMigration = analyzedInLastMigration;
+  }
+
+  public EdgeType getEdgeByName(String edgeName) {
+    for (EdgeType currentEdgeType : this.inEdgesType) {
+      if (currentEdgeType.getName().equals(edgeName)) return currentEdgeType;
     }
 
-    public List<EdgeType> getInEdgesType() {
-        return this.inEdgesType;
+    for (EdgeType currentEdgeType : this.outEdgesType) {
+      if (currentEdgeType.getName().equals(edgeName)) return currentEdgeType;
     }
 
-    public void setInEdgesType(List<EdgeType> inEdgesType) {
-        this.inEdgesType = inEdgesType;
+    return null;
+  }
+
+  public EdgeType getEdgeByName(String name, Direction direction) {
+    if (direction.equals(Direction.IN)) {
+      for (EdgeType currentEdgeType : this.inEdgesType) {
+        if (currentEdgeType.getName().equals(name)) return currentEdgeType;
+      }
+    } else if (direction.equals(Direction.OUT)) {
+      for (EdgeType currentEdgeType : this.outEdgesType) {
+        if (currentEdgeType.getName().equals(name)) return currentEdgeType;
+      }
+    } else if (direction.equals(Direction.BOTH)) {
+      return this.getEdgeByName(name);
     }
 
-    public List<EdgeType> getOutEdgesType() {
-        return this.outEdgesType;
+    return null;
+  }
+
+  public boolean isFromJoinTable() {
+    return this.isFromJoinTable;
+  }
+
+  public void setFromJoinTable(boolean fromJoinTable) {
+    isFromJoinTable = fromJoinTable;
+  }
+
+  public void setIsFromJoinTable(boolean isFromJoinTable) {
+    this.isFromJoinTable = isFromJoinTable;
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((super.name == null) ? 0 : super.name.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    VertexType that = (VertexType) obj;
+
+    // check on type and many-to-many variables
+    if (!(super.name.equals(that.getName()) && this.isFromJoinTable == that.isFromJoinTable()))
+      return false;
+
+    // check on properties
+    if (!(this.properties.equals(that.getProperties()))) return false;
+
+    // in&out edges
+    if (!(this.inEdgesType.equals(that.getInEdgesType())
+        && this.outEdgesType.equals(that.getOutEdgesType()))) return false;
+
+    return true;
+  }
+
+  public String toString() {
+    String s =
+        "Vertex-type [type = "
+            + super.name
+            + ", # attributes = "
+            + this.properties.size()
+            + ", # inEdges: "
+            + this.inEdgesType.size()
+            + ", # outEdges: "
+            + this.outEdgesType.size()
+            + "]\nAttributes:\n";
+
+    for (ModelProperty currentProperty : this.properties) {
+      s +=
+          currentProperty.getOrdinalPosition()
+              + ": "
+              + currentProperty.getName()
+              + " --> "
+              + currentProperty.toString();
+
+      if (currentProperty.isFromPrimaryKey()) s += "(from PK)";
+
+      s += "\t";
     }
-
-    public void setOutEdgesType(List<EdgeType> outEdgesType) {
-        this.outEdgesType = outEdgesType;
-    }
-
-    public Set<String> getExternalKey() {
-        return this.externalKey;
-    }
-
-    public void setExternalKey(Set<String> externalKey) {
-        this.externalKey = externalKey;
-    }
-
-    public boolean isAnalyzedInLastMigration() {
-        return this.analyzedInLastMigration;
-    }
-
-    public void setAnalyzedInLastMigration(boolean analyzedInLastMigration) {
-        this.analyzedInLastMigration = analyzedInLastMigration;
-    }
-
-    public EdgeType getEdgeByName(String edgeName) {
-        for (EdgeType currentEdgeType : this.inEdgesType) {
-            if (currentEdgeType.getName().equals(edgeName)) return currentEdgeType;
-        }
-
-        for (EdgeType currentEdgeType : this.outEdgesType) {
-            if (currentEdgeType.getName().equals(edgeName)) return currentEdgeType;
-        }
-
-        return null;
-    }
-
-    public EdgeType getEdgeByName(String name, Direction direction) {
-        if (direction.equals(Direction.IN)) {
-            for (EdgeType currentEdgeType : this.inEdgesType) {
-                if (currentEdgeType.getName().equals(name)) return currentEdgeType;
-            }
-        } else if (direction.equals(Direction.OUT)) {
-            for (EdgeType currentEdgeType : this.outEdgesType) {
-                if (currentEdgeType.getName().equals(name)) return currentEdgeType;
-            }
-        } else if (direction.equals(Direction.BOTH)) {
-            return this.getEdgeByName(name);
-        }
-
-        return null;
-    }
-
-    public boolean isFromJoinTable() {
-        return this.isFromJoinTable;
-    }
-
-    public void setFromJoinTable(boolean fromJoinTable) {
-        isFromJoinTable = fromJoinTable;
-    }
-
-    public void setIsFromJoinTable(boolean isFromJoinTable) {
-        this.isFromJoinTable = isFromJoinTable;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((super.name == null) ? 0 : super.name.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        VertexType that = (VertexType) obj;
-
-        // check on type and many-to-many variables
-        if (!(super.name.equals(that.getName()) && this.isFromJoinTable == that.isFromJoinTable())) return false;
-
-        // check on properties
-        if (!(this.properties.equals(that.getProperties()))) return false;
-
-        // in&out edges
-        if (!(this.inEdgesType.equals(that.getInEdgesType()) && this.outEdgesType.equals(that.getOutEdgesType()))) return false;
-
-        return true;
-    }
-
-    public String toString() {
-        String s =
-            "Vertex-type [type = " +
-            super.name +
-            ", # attributes = " +
-            this.properties.size() +
-            ", # inEdges: " +
-            this.inEdgesType.size() +
-            ", # outEdges: " +
-            this.outEdgesType.size() +
-            "]\nAttributes:\n";
-
-        for (ModelProperty currentProperty : this.properties) {
-            s += currentProperty.getOrdinalPosition() + ": " + currentProperty.getName() + " --> " + currentProperty.toString();
-
-            if (currentProperty.isFromPrimaryKey()) s += "(from PK)";
-
-            s += "\t";
-        }
-        return s;
-    }
+    return s;
+  }
 }

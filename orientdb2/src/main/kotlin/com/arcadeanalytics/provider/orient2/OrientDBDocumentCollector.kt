@@ -23,7 +23,6 @@ import com.orientechnologies.orient.core.record.impl.ODocument
 import java.util.ArrayList
 
 class OrientDBDocumentCollector {
-
     private val documents = ArrayList<ODocument>()
     internal var isTruncated = false
 
@@ -31,13 +30,9 @@ class OrientDBDocumentCollector {
         documents.add(document)
     }
 
-    fun size(): Int {
-        return documents.size
-    }
+    fun size(): Int = documents.size
 
-    fun collected(): List<ODocument> {
-        return documents
-    }
+    fun collected(): List<ODocument> = documents
 
     fun truncated(truncated: Boolean) {
         this.isTruncated = truncated

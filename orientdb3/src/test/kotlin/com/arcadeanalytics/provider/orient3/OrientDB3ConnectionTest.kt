@@ -25,12 +25,12 @@ import org.junit.jupiter.api.Test
 import org.testcontainers.containers.OrientDBContainer
 
 class OrientDB3ConnectionTest {
-
-    private val container = OrientDBContainer(ORIENTDB_DOCKER_IMAGE)
-        .withServerPassword(ORIENTDB_ROOT_PASSWORD)
-        .apply {
-            start()
-        }
+    private val container =
+        OrientDBContainer(ORIENTDB_DOCKER_IMAGE)
+            .withServerPassword(ORIENTDB_ROOT_PASSWORD)
+            .apply {
+                start()
+            }
 
     private val provider: OrientDB3DataSourceGraphDataProvider
 
@@ -38,16 +38,17 @@ class OrientDB3ConnectionTest {
 
     init {
 
-        dataSource = DataSourceInfo(
-            id = 1L,
-            type = "ORIENTDB",
-            name = "testDataSource",
-            server = container.containerIpAddress,
-            port = container.firstMappedPort,
-            username = "admin",
-            password = "admin",
-            database = OrientDB3DataSourceGraphDataProviderIntTest::class.java.simpleName,
-        )
+        dataSource =
+            DataSourceInfo(
+                id = 1L,
+                type = "ORIENTDB",
+                name = "testDataSource",
+                server = container.containerIpAddress,
+                port = container.firstMappedPort,
+                username = "admin",
+                password = "admin",
+                database = OrientDB3DataSourceGraphDataProviderIntTest::class.java.simpleName,
+            )
 
         val dbUrl = createTestDatabase(container.serverUrl, dataSource.database)
 
@@ -62,7 +63,8 @@ class OrientDB3ConnectionTest {
 
         container.stop()
 
-        Assertions.assertThatExceptionOfType(RuntimeException::class.java)
+        Assertions
+            .assertThatExceptionOfType(RuntimeException::class.java)
             .isThrownBy { provider.testConnection(dataSource) }
     }
 }

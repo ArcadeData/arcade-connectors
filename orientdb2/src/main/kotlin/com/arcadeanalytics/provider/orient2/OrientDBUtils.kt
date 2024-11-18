@@ -25,11 +25,11 @@ import com.orientechnologies.orient.core.record.impl.ODocument
 
 private val connectionTemplate = "remote:{server}:{port}/{database}"
 
-fun createConnectionUrl(dataSource: DataSourceInfo): String {
-    return connectionTemplate.replace("{server}", dataSource.server)
+fun createConnectionUrl(dataSource: DataSourceInfo): String =
+    connectionTemplate
+        .replace("{server}", dataSource.server)
         .replace("{port}", dataSource.port.toString())
         .replace("{database}", dataSource.database)
-}
 
 fun open(dataSource: DataSourceInfo): ODatabaseDocumentTx {
     val connectionUrl = createConnectionUrl(dataSource)
@@ -37,16 +37,13 @@ fun open(dataSource: DataSourceInfo): ODatabaseDocumentTx {
     return db.open<ODatabaseDocumentTx>(dataSource.username, dataSource.password)
 }
 
-fun ODocument.isEdgeType(): Boolean {
-    return this.schemaClass.isEdgeType
-}
+fun ODocument.isEdgeType(): Boolean = this.schemaClass.isEdgeType
 
-fun ODocument.isVertexType(): Boolean {
-    return this.schemaClass.isVertexType
-}
+fun ODocument.isVertexType(): Boolean = this.schemaClass.isVertexType
 
-fun ODocument.type(): String = when {
-    isEdgeType() -> "edge"
-    isVertexType() -> "node"
-    else -> "document"
-}
+fun ODocument.type(): String =
+    when {
+        isEdgeType() -> "edge"
+        isVertexType() -> "node"
+        else -> "document"
+    }

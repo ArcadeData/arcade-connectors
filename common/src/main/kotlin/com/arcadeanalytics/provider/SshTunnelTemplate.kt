@@ -37,7 +37,6 @@ import java.util.function.Consumer
  * Template class to be extended if an ssh tunnel should be created
  */
 abstract class SshTunnelTemplate : DataSourceProvider {
-
     protected fun buildTunnel(dataSourceInfo: DataSourceInfo): Pair<Session, DataSourceInfo> {
         JSch.setLogger(JschSlf4jLogger())
         val jsch = JSch()
@@ -92,8 +91,11 @@ abstract class SshTunnelTemplate : DataSourceProvider {
         throw IllegalStateException("Could not find a free TCP/IP port to open the ssh tunnel")
     }
 
-    private fun createLocalhostDataSource(dataSourceInfo: DataSourceInfo, localPort: Int): DataSourceInfo {
-        return DataSourceInfo(
+    private fun createLocalhostDataSource(
+        dataSourceInfo: DataSourceInfo,
+        localPort: Int,
+    ): DataSourceInfo =
+        DataSourceInfo(
             dataSourceInfo.id,
             dataSourceInfo.type,
             dataSourceInfo.name,
@@ -111,11 +113,8 @@ abstract class SshTunnelTemplate : DataSourceProvider {
             localPort,
             "",
         )
-    }
 
-    override fun supportedDataSourceTypes(): Set<String> {
-        return Sets.newHashSet("SSH")
-    }
+    override fun supportedDataSourceTypes(): Set<String> = Sets.newHashSet("SSH")
 
     class JschSlf4jLogger : com.jcraft.jsch.Logger {
         private val logMap = HashMap<Int, Consumer<String>>()
@@ -136,17 +135,17 @@ abstract class SshTunnelTemplate : DataSourceProvider {
             enabledMap[com.jcraft.jsch.Logger.WARN] = BooleanSupplier { log.isWarnEnabled }
         }
 
-        override fun log(level: Int, message: String) {
+        override fun log(
+            level: Int,
+            message: String,
+        ) {
             logMap[level]?.accept(message)
         }
 
-        override fun isEnabled(level: Int): Boolean {
-            return enabledMap[level]!!.getAsBoolean()
-        }
+        override fun isEnabled(level: Int): Boolean = enabledMap[level]!!.getAsBoolean()
     }
 
     companion object {
-
         private val log = LoggerFactory.getLogger(SshTunnelTemplate::class.java)
 
         private val DEFAULT_SSH_USER = "player"

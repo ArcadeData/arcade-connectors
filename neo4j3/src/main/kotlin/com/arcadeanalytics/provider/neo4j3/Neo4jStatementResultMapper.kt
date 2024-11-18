@@ -30,8 +30,10 @@ import org.neo4j.driver.v1.types.Node
 import org.neo4j.driver.v1.types.Relationship
 import org.slf4j.LoggerFactory
 
-class Neo4jStatementResultMapper(private val dataSource: DataSourceInfo, private val maxTraversal: Int) {
-
+class Neo4jStatementResultMapper(
+    private val dataSource: DataSourceInfo,
+    private val maxTraversal: Int,
+) {
     private fun countInOut(cyto: CytoData): CytoData {
         val inAndOutCountByEdgeType: MutableMap<String, Map<String, Int>> = mutableMapOf()
         inAndOutCountByEdgeType.putIfAbsent("@in", mutableMapOf())
@@ -45,9 +47,10 @@ class Neo4jStatementResultMapper(private val dataSource: DataSourceInfo, private
     private fun toCytoData(node: Node): CytoData {
         val id = toArcadeId(dataSource, Neo4jType.NODE, node.id())
 
-        val record = Sprite()
-            .load(node.asMap())
-            .rename("id", "_id_")
+        val record =
+            Sprite()
+                .load(node.asMap())
+                .rename("id", "_id_")
 
         val data = Data(id = id, record = record.asMap() as MutableMap<String, Any>)
 
@@ -60,9 +63,10 @@ class Neo4jStatementResultMapper(private val dataSource: DataSourceInfo, private
         val id = toArcadeId(dataSource, Neo4jType.EDGE, rel.id())
         val source = toArcadeId(dataSource, Neo4jType.NODE, rel.startNodeId())
         val target = toArcadeId(dataSource, Neo4jType.NODE, rel.endNodeId())
-        val record = Sprite()
-            .load(rel.asMap())
-            .rename("id", "_id_")
+        val record =
+            Sprite()
+                .load(rel.asMap())
+                .rename("id", "_id_")
 
         val data = Data(id = id, record = record.asMap() as MutableMap<String, Any>, source = source, target = target)
 
@@ -82,7 +86,8 @@ class Neo4jStatementResultMapper(private val dataSource: DataSourceInfo, private
         while (result.hasNext() && fetchMore) {
             val record = result.next()
 
-            record.values()
+            record
+                .values()
                 .asSequence()
                 .forEach { f ->
                     when (f.type().name()) {
@@ -109,37 +114,43 @@ class Neo4jStatementResultMapper(private val dataSource: DataSourceInfo, private
         }
 
         log.info("fethced:: {} - nodes:: {} -  rels:: {} ", fetched, nodes.size, rels.size)
-        val relsWithEachEnds = rels.asSequence()
-            .filter { rel ->
+        val relsWithEachEnds =
+            rels
+                .asSequence()
+                .filter { rel ->
 
-                val endNodeId = rel.endNodeId()
+                    val endNodeId = rel.endNodeId()
 
-                val startNodeId = rel.startNodeId()
+                    val startNodeId = rel.startNodeId()
 
-                var foundStart = false
-                var foundEnd = false
+                    var foundStart = false
+                    var foundEnd = false
 
-                for (node in nodes) {
-                    if (node.id() == endNodeId) {
-                        foundEnd = true
-                    } else if (node.id() == startNodeId) {
-                        foundStart = true
+                    for (node in nodes) {
+                        if (node.id() == endNodeId) {
+                            foundEnd = true
+                        } else if (node.id() == startNodeId) {
+                            foundStart = true
+                        }
                     }
-                }
 
-                foundStart && foundEnd
-            }.toSet()
+                    foundStart && foundEnd
+                }.toSet()
 
-        val cytoNodes = nodes.asSequence()
-            .map { c -> mapProperties(nodesClasses, c) }
-            .map { n -> toCytoData(n) }
-            .map { c -> countInOut(c) }
-            .toSet()
+        val cytoNodes =
+            nodes
+                .asSequence()
+                .map { c -> mapProperties(nodesClasses, c) }
+                .map { n -> toCytoData(n) }
+                .map { c -> countInOut(c) }
+                .toSet()
 
-        val edges = rels.asSequence()
-            .map { c -> mapProperties(edgeClasses, c) }
-            .map { r -> toCytoData(r) }
-            .toSet()
+        val edges =
+            rels
+                .asSequence()
+                .map { c -> mapProperties(edgeClasses, c) }
+                .map { r -> toCytoData(r) }
+                .toSet()
 
         val graphData = GraphData(nodesClasses, edgeClasses, cytoNodes, edges, !fetchMore)
 
@@ -148,32 +159,39 @@ class Neo4jStatementResultMapper(private val dataSource: DataSourceInfo, private
         return graphData
     }
 
-    private fun mapProperties(nodesClasses: MutableMap<String, MutableMap<String, Any>>, node: Node): Node {
+    private fun mapProperties(
+        nodesClasses: MutableMap<String, MutableMap<String, Any>>,
+        node: Node,
+    ): Node {
         val className = node.labels().joinToString("_")
 
         nodesClasses.putIfAbsent(className, HashMap())
 
         val properties = nodesClasses[className]
 
-        node.keys()
+        node
+            .keys()
             .forEach { k -> properties?.putIfAbsent(k, mapType(node.get(k).type().name())) }
 
         return node
     }
 
-    private fun mapProperties(nodesClasses: MutableMap<String, MutableMap<String, Any>>, rel: Relationship): Relationship {
+    private fun mapProperties(
+        nodesClasses: MutableMap<String, MutableMap<String, Any>>,
+        rel: Relationship,
+    ): Relationship {
         nodesClasses.putIfAbsent(rel.type(), HashMap())
 
         val properties = nodesClasses[rel.type()]
 
-        rel.keys()
+        rel
+            .keys()
             .forEach { k -> properties?.putIfAbsent(k, rel.get(k).type().name()) }
 
         return rel
     }
 
     companion object {
-
         private val log = LoggerFactory.getLogger(Neo4jDataProvider::class.java)
     }
 }

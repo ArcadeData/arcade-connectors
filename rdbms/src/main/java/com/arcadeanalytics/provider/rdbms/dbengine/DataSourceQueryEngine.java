@@ -45,5 +45,4 @@ package com.arcadeanalytics.provider.rdbms.dbengine;
  *
  * @author Gabriele Ponzi
  */
-
 public interface DataSourceQueryEngine {}

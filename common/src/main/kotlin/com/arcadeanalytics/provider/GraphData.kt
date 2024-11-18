@@ -19,7 +19,10 @@
  */
 package com.arcadeanalytics.provider
 
-data class Position(private val x: Double, private val y: Double)
+data class Position(
+    private val x: Double,
+    private val y: Double,
+)
 
 data class Data(
     val id: String,
@@ -47,19 +50,18 @@ data class GraphData(
     val edges: Set<CytoData>,
     val truncated: Boolean = false,
 ) {
-
     companion object {
-
         /**
          * Null object
          */
         @JvmStatic
-        val EMPTY = GraphData(
-            emptyMap(),
-            emptyMap(),
-            emptySet(),
-            emptySet(),
-            false,
-        )
+        val EMPTY =
+            GraphData(
+                emptyMap(),
+                emptyMap(),
+                emptySet(),
+                emptySet(),
+                false,
+            )
     }
 }

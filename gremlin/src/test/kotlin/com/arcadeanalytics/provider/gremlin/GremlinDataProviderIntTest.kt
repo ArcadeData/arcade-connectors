@@ -26,7 +26,6 @@ import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GremlinDataProviderIntTest {
-
     private val provider: GremlinDataProvider = GremlinDataProvider()
 
     @Test
@@ -42,7 +41,8 @@ class GremlinDataProviderIntTest {
         assertThat(cytoData.data.target).isNullOrEmpty()
 
         val record = cytoData.data.record
-        assertThat(record).isNotNull
+        assertThat(record)
+            .isNotNull
             .containsKeys("@in", "@out", "Name", "@edgeCount")
     }
 
@@ -73,9 +73,11 @@ class GremlinDataProviderIntTest {
 
         val data = provider.fetchData(dataSource, query, 10)
 
-        val ids = data.nodes.asSequence()
-            .map { it.data.id }
-            .toList()
+        val ids =
+            data.nodes
+                .asSequence()
+                .map { it.data.id }
+                .toList()
 
         val load = provider.load(dataSource, ids.toTypedArray())
 
@@ -88,15 +90,19 @@ class GremlinDataProviderIntTest {
 
         val data = provider.fetchData(dataSource, query, 10)
 
-        val ids = data.nodes.asSequence()
-            .map { it.data.id }
-            .toList()
+        val ids =
+            data.nodes
+                .asSequence()
+                .map { it.data.id }
+                .toList()
 
-        val label: String = data.nodes.asSequence()
-            .map { it.data.record["@in"] as Map<String, Any> }
-            .map { ins -> ins.keys }
-            .flatMap { k -> k.asSequence() }
-            .first()
+        val label: String =
+            data.nodes
+                .asSequence()
+                .map { it.data.record["@in"] as Map<String, Any> }
+                .map { ins -> ins.keys }
+                .flatMap { k -> k.asSequence() }
+                .first()
 
         val load = provider.expand(dataSource, ids.toTypedArray(), "in", label, 300)
 
@@ -114,9 +120,11 @@ class GremlinDataProviderIntTest {
 
         val data = provider.fetchData(dataSource, query, 10)
 
-        val ids = data.nodes.asSequence()
-            .map { it.data.id }
-            .toList()
+        val ids =
+            data.nodes
+                .asSequence()
+                .map { it.data.id }
+                .toList()
 
         val load = provider.expand(dataSource, ids.toTypedArray(), "both", "", 300)
 
@@ -140,7 +148,8 @@ class GremlinDataProviderIntTest {
         assertThat(cytoData.data.target).isNotNull()
 
         val record = cytoData.data.record
-        assertThat(record).isNotNull
+        assertThat(record)
+            .isNotNull
             .containsKeys("@in", "@out")
 
         assertThat(data.nodes).isNotEmpty
@@ -157,10 +166,12 @@ class GremlinDataProviderIntTest {
         val firstNode = firstDataSet.nodes.first().data
         val secondNode = secondDataSet.nodes.first().data
 
-        val edgeClasses = (firstNode.record["@in"] as Map<String, Int>).keys
-            .union((firstNode.record["@out"] as Map<String, Int>).keys)
-            .union((secondNode.record["@in"] as Map<String, Int>).keys)
-            .union((secondNode.record["@out"] as Map<String, Int>).keys)
+        val edgeClasses =
+            (firstNode.record["@in"] as Map<String, Int>)
+                .keys
+                .union((firstNode.record["@out"] as Map<String, Int>).keys)
+                .union((secondNode.record["@in"] as Map<String, Int>).keys)
+                .union((secondNode.record["@out"] as Map<String, Int>).keys)
 
         val data = provider.edges(dataSource, arrayOf(firstNode.id), edgeClasses.toTypedArray(), arrayOf(secondNode.id))
 

@@ -27,10 +27,9 @@ import java.util.List;
  *
  * @author Gabriele Ponzi
  */
-
 public class ForeignKey extends Key {
 
-    public ForeignKey(Entity belongingEntity, List<Attribute> involvedAttributes) {
-        super(belongingEntity, involvedAttributes);
-    }
+  public ForeignKey(Entity belongingEntity, List<Attribute> involvedAttributes) {
+    super(belongingEntity, involvedAttributes);
+  }
 }

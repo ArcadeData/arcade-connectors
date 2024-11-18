@@ -30,7 +30,6 @@ class DataSourceProviderFactory<T : DataSourceProvider>(
     private val clazz: Class<T>,
     pluginPath: String = "./plugins",
 ) {
-
     private val log = LoggerFactory.getLogger(this::class.java)
 
     private val dataProviders: MutableMap<String, T> = mutableMapOf()
@@ -38,7 +37,8 @@ class DataSourceProviderFactory<T : DataSourceProvider>(
     init {
         log.info("services for:: {}", clazz.simpleName)
 
-        Files.walk(Paths.get(pluginPath))
+        Files
+            .walk(Paths.get(pluginPath))
             .asSequence()
             .filter { path -> Files.isRegularFile(path) }
             .map { path ->
@@ -69,13 +69,12 @@ class DataSourceProviderFactory<T : DataSourceProvider>(
 
     fun provides(): Set<String> = dataProviders.keys
 
-    private fun decorate(provider: T): T {
-        return when (provider) {
+    private fun decorate(provider: T): T =
+        when (provider) {
             is DataSourceMetadataProvider -> SshMetadataProviderDecorator(provider as DataSourceMetadataProvider) as T
             is DataSourceGraphDataProvider -> SshDataProviderDecorator(provider as DataSourceGraphDataProvider) as T
             is DataSourceGraphProvider -> SshGraphProviderDecorator(provider as DataSourceGraphProvider) as T
             is DataSourceTableDataProvider -> SshTableDataProviderDecorator(provider as DataSourceTableDataProvider) as T
             else -> provider
         }
-    }
 }

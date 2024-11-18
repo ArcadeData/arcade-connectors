@@ -25,9 +25,7 @@ import com.orientechnologies.orient.core.record.impl.ODocument
 internal class OrientDBResultListener(
     private val documentCollector: OrientDBDocumentCollector,
     private val limit: Int,
-) :
-    OCommandResultListener {
-
+) : OCommandResultListener {
     // state
     private var nodes: Int = 0
     private var edges: Int = 0
@@ -52,7 +50,5 @@ internal class OrientDBResultListener(
     override fun end() {
     }
 
-    override fun getResult(): Any? {
-        return null
-    }
+    override fun getResult(): Any? = null
 }

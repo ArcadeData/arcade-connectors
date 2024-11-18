@@ -25,7 +25,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class OrientDBDataSourceMetadataProviderTest {
-
     private val provider: OrientDBDataSourceMetadataProvider = OrientDBDataSourceMetadataProvider()
 
     @Test

@@ -39,15 +39,14 @@ import java.util.regex.Pattern
  */
 
 class Neo4jGraphProvider : DataSourceGraphProvider {
-
     private val log = LoggerFactory.getLogger(Neo4jGraphProvider::class.java)
-    private val queries = mapOf(
-        "NEO4J::LABELS" to "CALL db.labels() YIELD label",
-        "NEO4J::EDGES" to "CALL db.relationshipTypes() YIELD relationshipType",
-
-        "NEO4J_MEMGRAPH::LABELS" to "MATCH (n) UNWIND labels(n) AS label RETURN DISTINCT label",
-        "NEO4J_MEMGRAPH::EDGES" to "MATCH ()-[r]->() RETURN DISTINCT type(r) AS relationshipType",
-    )
+    private val queries =
+        mapOf(
+            "NEO4J::LABELS" to "CALL db.labels() YIELD label",
+            "NEO4J::EDGES" to "CALL db.relationshipTypes() YIELD relationshipType",
+            "NEO4J_MEMGRAPH::LABELS" to "MATCH (n) UNWIND labels(n) AS label RETURN DISTINCT label",
+            "NEO4J_MEMGRAPH::EDGES" to "MATCH ()-[r]->() RETURN DISTINCT type(r) AS relationshipType",
+        )
 
     private val allFields: Pattern = Pattern.compile(".*")
 
@@ -73,7 +72,8 @@ class Neo4jGraphProvider : DataSourceGraphProvider {
     ) {
         val labels = session.run(queries["${dataSource.type}::LABELS"])
 
-        labels.list()
+        labels
+            .list()
             .asSequence()
             .map { res -> res.get("label").asString() }
             .forEach { label -> indexLabel(dataSource, processor, session, label) }
@@ -93,25 +93,33 @@ class Neo4jGraphProvider : DataSourceGraphProvider {
         while (fetched < edges) {
             val params = ImmutableMap.of<String, Any>("skip", skip, "limit", limit)
 
-            log.info("fetching edges from '{}' with query '{}' and params {} - {}", session, "MATCH ()-[r]->() RETURN r SKIP \$skip LIMIT \$limit", skip, limit)
+            log.info(
+                "fetching edges from '{}' with query '{}' and params {} - {}",
+                session,
+                "MATCH ()-[r]->() RETURN r SKIP \$skip LIMIT \$limit",
+                skip,
+                limit,
+            )
 
             val rels = session.run("MATCH ()-[r]->() RETURN r SKIP \$skip LIMIT \$limit", params)
             while (rels.hasNext()) {
                 val record = rels.next()
 
-                record.fields().asSequence()
+                record
+                    .fields()
+                    .asSequence()
                     .map { p -> p.value() }
                     .filter { v -> v.type().name() == "RELATIONSHIP" }
                     .map { v -> v.asRelationship() }
                     .filter { r -> r.size() > 0 }
                     .map { n ->
-                        Sprite().load(n.asMap())
+                        Sprite()
+                            .load(n.asMap())
                             .add("@class", n.type())
                             .add(ARCADE_ID, toArcadeId(dataSource, Neo4jType.EDGE, n.id()))
                             .add(ARCADE_TYPE, "edge")
                             .apply<Any, String>(allFields) { v -> v.toString() }
-                    }
-                    .forEach { s -> processor.play(s) }
+                    }.forEach { s -> processor.play(s) }
                 fetched++
             }
             skip = limit
@@ -142,18 +150,20 @@ class Neo4jGraphProvider : DataSourceGraphProvider {
             while (result.hasNext()) {
                 val record = result.next()
 
-                record.fields().asSequence()
+                record
+                    .fields()
+                    .asSequence()
                     .map { p -> p.value() }
                     .filter { v -> v.type().name() == "NODE" }
                     .map { v -> v.asNode() }
                     .map { n ->
-                        Sprite().load(n.asMap())
+                        Sprite()
+                            .load(n.asMap())
                             .addAll("@class", n.labels())
                             .add(ARCADE_ID, toArcadeId(dataSource, Neo4jType.NODE, n.id()))
                             .add(ARCADE_TYPE, "node")
                             .apply(allFields, Any::toString)
-                    }
-                    .forEach { s -> processor.play(s) }
+                    }.forEach { s -> processor.play(s) }
 
                 fetched++
             }
@@ -166,21 +176,30 @@ class Neo4jGraphProvider : DataSourceGraphProvider {
         processor.end()
     }
 
-    private fun countNodes(session: Session, label: String): Int {
-        val count = session.run("MATCH (n:$label) RETURN count(*) AS count")
-            .single().get("count").asInt()
+    private fun countNodes(
+        session: Session,
+        label: String,
+    ): Int {
+        val count =
+            session
+                .run("MATCH (n:$label) RETURN count(*) AS count")
+                .single()
+                .get("count")
+                .asInt()
         log.info("nodes for label '{}' : {}", label, count)
         return count
     }
 
     private fun countEdges(session: Session): Int {
-        val count = session.run("MATCH ()-[r]->() RETURN count(*) AS count")
-            .single().get("count").asInt()
+        val count =
+            session
+                .run("MATCH ()-[r]->() RETURN count(*) AS count")
+                .single()
+                .get("count")
+                .asInt()
         log.info("edges count: {}", count)
         return count
     }
 
-    override fun supportedDataSourceTypes(): Set<String> {
-        return setOf(NEO4J.name, NEO4J_MEMGRAPH.name)
-    }
+    override fun supportedDataSourceTypes(): Set<String> = setOf(NEO4J.name, NEO4J_MEMGRAPH.name)
 }

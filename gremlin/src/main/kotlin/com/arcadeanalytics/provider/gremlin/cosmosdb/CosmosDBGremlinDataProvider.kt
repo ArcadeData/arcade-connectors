@@ -38,14 +38,15 @@ import java.util.HashMap
 import java.util.HashSet
 
 class CosmosDBGremlinDataProvider : DataSourceGraphDataProvider {
-
     private val log = LoggerFactory.getLogger(CosmosDBGremlinDataProvider::class.java)
 
-    override fun supportedDataSourceTypes(): Set<String> {
-        return Sets.newHashSet("GREMLIN_COSMOSDB")
-    }
+    override fun supportedDataSourceTypes(): Set<String> = Sets.newHashSet("GREMLIN_COSMOSDB")
 
-    override fun fetchData(dataSource: DataSourceInfo, query: String, limit: Int): GraphData {
+    override fun fetchData(
+        dataSource: DataSourceInfo,
+        query: String,
+        limit: Int,
+    ): GraphData {
         val cluster = getCluster(dataSource)
 
         log.info("fetching data from '{}' with query '{}' ", dataSource.id, query)
@@ -65,7 +66,8 @@ class CosmosDBGremlinDataProvider : DataSourceGraphDataProvider {
     private fun getCluster(dataSource: DataSourceInfo): Cluster {
         val serializer = createSerializer(dataSource)
 
-        return Cluster.build(dataSource.server)
+        return Cluster
+            .build(dataSource.server)
             .port(dataSource.port)
             .serializer(serializer)
             .enableSsl(dataSource.type == "GREMLIN_COSMOSDB")
@@ -74,7 +76,12 @@ class CosmosDBGremlinDataProvider : DataSourceGraphDataProvider {
             .create()
     }
 
-    private fun getGraphData(dataSource: DataSourceInfo, query: String, limit: Int, client: Client): GraphData {
+    private fun getGraphData(
+        dataSource: DataSourceInfo,
+        query: String,
+        limit: Int,
+        client: Client,
+    ): GraphData {
         val nodes = HashSet<CytoData>()
         val edges = HashSet<CytoData>()
         val edgeClasses = HashMap<String, Map<String, Any>>()
@@ -82,7 +89,8 @@ class CosmosDBGremlinDataProvider : DataSourceGraphDataProvider {
 
         //        final Contract contract = dataSource.getWorkspace().getUser().getCompany().getContract();
 
-        client.submit(query)
+        client
+            .submit(query)
             .stream()
             .limit(limit.toLong())
             .map { r -> toData(dataSource, r, client) }
@@ -112,7 +120,11 @@ class CosmosDBGremlinDataProvider : DataSourceGraphDataProvider {
         return graphData
     }
 
-    private fun toData(dataSource: DataSourceInfo, result: Result, client: Client): CytoData {
+    private fun toData(
+        dataSource: DataSourceInfo,
+        result: Result,
+        client: Client,
+    ): CytoData {
         log.info("result:: {}", result)
 
         val record = transformToMap(result)
@@ -132,58 +144,73 @@ class CosmosDBGremlinDataProvider : DataSourceGraphDataProvider {
             record.remove("id")
         }
 
-        val cyto = when (record["type"]) {
-            "vertex" -> {
-                outs.putAll(
-                    client.submit("g.V('${record["id"]}').outE()").asSequence()
-                        .map { r1 -> r1.getObject() as Map<String, Any> }
-                        .map { e1 -> e1["label"].toString() }
-                        .groupingBy { it }
-                        .eachCount(),
-                )
+        val cyto =
+            when (record["type"]) {
+                "vertex" -> {
+                    outs.putAll(
+                        client
+                            .submit("g.V('${record["id"]}').outE()")
+                            .asSequence()
+                            .map { r1 -> r1.getObject() as Map<String, Any> }
+                            .map { e1 -> e1["label"].toString() }
+                            .groupingBy { it }
+                            .eachCount(),
+                    )
 
-                ins.putAll(
-                    client.submit("g.V('${record["id"]}').inE()").asSequence()
-                        .map { r1 -> r1.getObject() as Map<String, Any> }
-                        .map { e1 -> e1["label"].toString() }
-                        .groupingBy { it }
-                        .eachCount(),
-                )
+                    ins.putAll(
+                        client
+                            .submit("g.V('${record["id"]}').inE()")
+                            .asSequence()
+                            .map { r1 -> r1.getObject() as Map<String, Any> }
+                            .map { e1 -> e1["label"].toString() }
+                            .groupingBy { it }
+                            .eachCount(),
+                    )
 
-                var edgeCount = ins.values.stream().mapToLong { o -> o as Long }.sum()
-                edgeCount += outs.values.stream().mapToLong { o -> o as Long }.sum()
-                record["@edgeCount"] = edgeCount
+                    var edgeCount =
+                        ins.values
+                            .stream()
+                            .mapToLong { o -> o as Long }
+                            .sum()
+                    edgeCount +=
+                        outs.values
+                            .stream()
+                            .mapToLong { o -> o as Long }
+                            .sum()
+                    record["@edgeCount"] = edgeCount
 
-                val data = Data(id = id, record = record)
-                CytoData(classes = record["label"].toString(), data = data, group = "nodes")
+                    val data = Data(id = id, record = record)
+                    CytoData(classes = record["label"].toString(), data = data, group = "nodes")
+                }
+
+                "edge" -> {
+                    val sourceId = record["inV"].toString()
+                    val source = dataSource.id.toString() + "_" + cleanOrientId(sourceId)
+                    val targetId = record["outV"].toString()
+                    val target = dataSource.id.toString() + "_" + cleanOrientId(targetId)
+
+                    record.remove("outV")
+                    record.remove("inV")
+
+                    val data = Data(id = id, source = source, target = target, record = record)
+                    CytoData(classes = record["label"].toString(), data = data, group = "edges")
+                }
+                else -> {
+                    log.info("element not mappable:: $record")
+                    CytoData(classes = record["label"].toString(), data = Data(id), group = "unk")
+                }
             }
-
-            "edge" -> {
-                val sourceId = record["inV"].toString()
-                val source = dataSource.id.toString() + "_" + cleanOrientId(sourceId)
-                val targetId = record["outV"].toString()
-                val target = dataSource.id.toString() + "_" + cleanOrientId(targetId)
-
-                record.remove("outV")
-                record.remove("inV")
-
-                val data = Data(id = id, source = source, target = target, record = record)
-                CytoData(classes = record["label"].toString(), data = data, group = "edges")
-            }
-            else -> {
-                log.info("element not mappable:: $record")
-                CytoData(classes = record["label"].toString(), data = Data(id), group = "unk")
-            }
-        }
         return cyto
     }
 
-    private fun cleanOrientId(id: String): String {
-        return removeStart(id, "#")
+    private fun cleanOrientId(id: String): String =
+        removeStart(id, "#")
             .replace(":", "_")
-    }
 
-    protected fun populateClasses(classes: MutableMap<String, Map<String, Any>>, element: CytoData): CytoData {
+    protected fun populateClasses(
+        classes: MutableMap<String, Map<String, Any>>,
+        element: CytoData,
+    ): CytoData {
         if (classes[element.classes] == null) {
             classes[element.classes] = Maps.newHashMap()
         }
@@ -208,7 +235,10 @@ class CosmosDBGremlinDataProvider : DataSourceGraphDataProvider {
         return res
     }
 
-    override fun load(dataSource: DataSourceInfo, ids: Array<String>): GraphData {
+    override fun load(
+        dataSource: DataSourceInfo,
+        ids: Array<String>,
+    ): GraphData {
         val query = loadQuery(dataSource, ids)
 
         val cluster = getCluster(dataSource)
@@ -226,40 +256,60 @@ class CosmosDBGremlinDataProvider : DataSourceGraphDataProvider {
         }
     }
 
-    private fun load(dataSource: DataSourceInfo, ids: Array<String>, client: Client): GraphData {
+    private fun load(
+        dataSource: DataSourceInfo,
+        ids: Array<String>,
+        client: Client,
+    ): GraphData {
         val query = loadQuery(dataSource, ids)
 
         return getGraphData(dataSource, query, ids.size, client)
     }
 
-    override fun loadFromClass(dataSource: DataSourceInfo, className: String, limit: Int): GraphData {
+    override fun loadFromClass(
+        dataSource: DataSourceInfo,
+        className: String,
+        limit: Int,
+    ): GraphData {
         val query = "g.V().hasLabel('$className').limit($limit)"
         return this.fetchData(dataSource, query, limit)
     }
 
-    override fun loadFromClass(dataSource: DataSourceInfo, className: String, propName: String, propertyValue: String, limit: Int): GraphData {
+    override fun loadFromClass(
+        dataSource: DataSourceInfo,
+        className: String,
+        propName: String,
+        propertyValue: String,
+        limit: Int,
+    ): GraphData {
         val query = "g.V().hasLabel('$className').has('$propName', eq('$propertyValue')).limit($limit)"
         return this.fetchData(dataSource, query, limit)
     }
 
-    private fun loadQuery(dataSource: DataSourceInfo, ids: Array<String>): String {
+    private fun loadQuery(
+        dataSource: DataSourceInfo,
+        ids: Array<String>,
+    ): String {
         var query = "g.V("
 
         log.debug("load ids {} ", *ids)
 
-        query += ids.asSequence()
-            .map { id -> removeStart(id, dataSource.id.toString() + "_") }
-            .map { id -> arcadeIdToNativeId(dataSource, id) }
-            .map { id -> """"$id"""" }
-            .joinToString(",")
+        query +=
+            ids
+                .asSequence()
+                .map { id -> removeStart(id, dataSource.id.toString() + "_") }
+                .map { id -> arcadeIdToNativeId(dataSource, id) }
+                .map { id -> """"$id"""" }
+                .joinToString(",")
 
         query += ") "
         return query
     }
 
-    private fun arcadeIdToNativeId(dataSource: DataSourceInfo, id: String): String {
-        return if (dataSource.type == "GREMLIN_ORIENTDB") StringUtils.prependIfMissing(id, "#").replace("_", ":") else id
-    }
+    private fun arcadeIdToNativeId(
+        dataSource: DataSourceInfo,
+        id: String,
+    ): String = if (dataSource.type == "GREMLIN_ORIENTDB") StringUtils.prependIfMissing(id, "#").replace("_", ":") else id
 
     override fun expand(
         dataSource: DataSourceInfo,
@@ -271,41 +321,53 @@ class CosmosDBGremlinDataProvider : DataSourceGraphDataProvider {
         var edgeLabel = edgeLabel
         var query = "g.V("
 
-        query += roots.asSequence()
-            .map { id -> removeStart(id, dataSource.id.toString() + "_") }
-            .map { id -> arcadeIdToNativeId(dataSource, id) }
-            .map { id -> wrap(id, '"') }
-            .joinToString(",")
+        query +=
+            roots
+                .asSequence()
+                .map { id -> removeStart(id, dataSource.id.toString() + "_") }
+                .map { id -> arcadeIdToNativeId(dataSource, id) }
+                .map { id -> wrap(id, '"') }
+                .joinToString(",")
         query += ")"
 
         if (StringUtils.isNotEmpty(edgeLabel)) edgeLabel = wrap(edgeLabel, '"')
 
-        query += when (direction.toLowerCase()) {
-            "out" -> """.outE($edgeLabel) """
-            "in" -> """.inE($edgeLabel) """
-            else -> """.bothE($edgeLabel) """
-        }
+        query +=
+            when (direction.toLowerCase()) {
+                "out" -> """.outE($edgeLabel) """
+                "in" -> """.inE($edgeLabel) """
+                else -> """.bothE($edgeLabel) """
+            }
 
         return fetchData(dataSource, query, maxTraversal)
     }
 
-    override fun edges(dataSource: DataSourceInfo, fromIds: Array<String>, edgesLabel: Array<String>, toIds: Array<String>): GraphData {
+    override fun edges(
+        dataSource: DataSourceInfo,
+        fromIds: Array<String>,
+        edgesLabel: Array<String>,
+        toIds: Array<String>,
+    ): GraphData {
         TODO("Not yet implemented")
     }
 
     override fun testConnection(dataSource: DataSourceInfo): Boolean {
         try {
             log.info("testing connection to :: '{}' ", dataSource.server)
-            val cluster = Cluster.build(dataSource.server)
-                .port(dataSource.port)
-                .enableSsl(true)
-                .serializer(createSerializer(dataSource))
-                .credentials(dataSource.username, dataSource.password)
-                .maxWaitForConnection(10000)
-                .create()
+            val cluster =
+                Cluster
+                    .build(dataSource.server)
+                    .port(dataSource.port)
+                    .enableSsl(true)
+                    .serializer(createSerializer(dataSource))
+                    .credentials(dataSource.username, dataSource.password)
+                    .maxWaitForConnection(10000)
+                    .create()
 
-            cluster.availableHosts()
-                .stream().forEach { h -> log.info("gremlin host:: {} ", h) }
+            cluster
+                .availableHosts()
+                .stream()
+                .forEach { h -> log.info("gremlin host:: {} ", h) }
 
             val client = cluster.connect<Client>().init()
 

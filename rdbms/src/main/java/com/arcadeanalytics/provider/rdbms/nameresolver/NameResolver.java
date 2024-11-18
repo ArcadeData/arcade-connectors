@@ -23,16 +23,15 @@ package com.arcadeanalytics.provider.rdbms.nameresolver;
 import com.arcadeanalytics.provider.rdbms.model.dbschema.CanonicalRelationship;
 
 /**
- * Interface that performs name transformations on the elements
- * of the data source according to a specific convention.
+ * Interface that performs name transformations on the elements of the data source according to a
+ * specific convention.
  *
  * @author Gabriele Ponzi
  */
-
 public interface NameResolver {
-    String resolveVertexName(String candidateName);
+  String resolveVertexName(String candidateName);
 
-    String resolveVertexProperty(String candidateName);
+  String resolveVertexProperty(String candidateName);
 
-    String resolveEdgeName(CanonicalRelationship relationship);
+  String resolveEdgeName(CanonicalRelationship relationship);
 }

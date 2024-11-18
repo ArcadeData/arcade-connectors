@@ -20,7 +20,6 @@
 package com.arcadeanalytics.data
 
 interface SpritePlayer {
-
     fun begin()
 
     fun accept(sprite: Sprite): Boolean = true

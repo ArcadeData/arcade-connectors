@@ -29,122 +29,136 @@ import java.util.List;
  *
  * @author Gabriele Ponzi
  */
-
 public class GraphModel {
 
-    private List<VertexType> verticesType;
-    private List<EdgeType> edgesType;
+  private List<VertexType> verticesType;
+  private List<EdgeType> edgesType;
 
-    public GraphModel() {
-        this.verticesType = new ArrayList<>();
-        this.edgesType = new ArrayList<>();
+  public GraphModel() {
+    this.verticesType = new ArrayList<>();
+    this.edgesType = new ArrayList<>();
+  }
+
+  public VertexType getVertexTypeByName(String name) {
+    VertexType vertex = null;
+
+    for (VertexType currentVertex : this.verticesType) {
+      if (currentVertex.getName().equals(name)) {
+        vertex = currentVertex;
+        break;
+      }
     }
+    return vertex;
+  }
 
-    public VertexType getVertexTypeByName(String name) {
-        VertexType vertex = null;
+  public VertexType getVertexTypeByNameIgnoreCase(String name) {
+    VertexType vertex = null;
 
-        for (VertexType currentVertex : this.verticesType) {
-            if (currentVertex.getName().equals(name)) {
-                vertex = currentVertex;
-                break;
-            }
-        }
-        return vertex;
+    for (VertexType currentVertex : this.verticesType) {
+      if (currentVertex.getName().equalsIgnoreCase(name)) {
+        vertex = currentVertex;
+        break;
+      }
     }
+    return vertex;
+  }
 
-    public VertexType getVertexTypeByNameIgnoreCase(String name) {
-        VertexType vertex = null;
+  public List<VertexType> getVerticesType() {
+    return this.verticesType;
+  }
 
-        for (VertexType currentVertex : this.verticesType) {
-            if (currentVertex.getName().equalsIgnoreCase(name)) {
-                vertex = currentVertex;
-                break;
-            }
-        }
-        return vertex;
+  public List<EdgeType> getEdgesType() {
+    return this.edgesType;
+  }
+
+  public EdgeType getEdgeTypeByName(String name) {
+    for (EdgeType currentEdgetype : this.edgesType) {
+      if (currentEdgetype.getName().equals(name)) {
+        return currentEdgetype;
+      }
     }
+    return null;
+  }
 
-    public List<VertexType> getVerticesType() {
-        return this.verticesType;
+  public EdgeType getEdgeTypeByNameIgnoreCase(String name) {
+    for (EdgeType currentEdgetype : this.edgesType) {
+      if (currentEdgetype.getName().equalsIgnoreCase(name)) {
+        return currentEdgetype;
+      }
     }
+    return null;
+  }
 
-    public List<EdgeType> getEdgesType() {
-        return this.edgesType;
-    }
+  public boolean removeVertexTypeByName(String vertexName) {
+    Iterator<VertexType> iterator = this.verticesType.iterator();
 
-    public EdgeType getEdgeTypeByName(String name) {
-        for (EdgeType currentEdgetype : this.edgesType) {
-            if (currentEdgetype.getName().equals(name)) {
-                return currentEdgetype;
-            }
-        }
-        return null;
-    }
-
-    public EdgeType getEdgeTypeByNameIgnoreCase(String name) {
-        for (EdgeType currentEdgetype : this.edgesType) {
-            if (currentEdgetype.getName().equalsIgnoreCase(name)) {
-                return currentEdgetype;
-            }
-        }
-        return null;
-    }
-
-    public boolean removeVertexTypeByName(String vertexName) {
-        Iterator<VertexType> iterator = this.verticesType.iterator();
-
-        while (iterator.hasNext()) {
-            VertexType currVertexType = iterator.next();
-            if (currVertexType.getName().equals(vertexName)) {
-                // removing references from the in edges
-                for (EdgeType currInEdgeType : currVertexType.getInEdgesType()) {
-                    currInEdgeType.setInVertexType(null);
-                }
-
-                // removing the vertex
-                iterator.remove();
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public boolean removeEdgeTypeByName(String vertexName) {
-        Iterator<EdgeType> iterator = this.edgesType.iterator();
-
-        while (iterator.hasNext()) {
-            EdgeType currEdgeType = iterator.next();
-            if (currEdgeType.getName().equals(vertexName)) {
-                iterator.remove();
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public String toString() {
-        String s = "\n\n\n------------------------------ MODEL GRAPH DESCRIPTION ------------------------------\n\n\n";
-
-        s += "Number of Vertex-type: " + this.verticesType.size() + ".\nNumber of Edge-type: " + this.edgesType.size() + ".\n\n";
-
-        // info about vertices
-        s += "Vertex-type:\n\n";
-        for (VertexType v : this.verticesType) s += v.toString() + "\n\n";
-
-        s += "\n\n";
-
-        // info about edges
-        s += "Edge-type:\n\n";
-        for (EdgeType e : this.edgesType) s += e.toString() + "\n";
-
-        s += "\n\n";
-
-        // graph structure
-        s += "Graph structure:\n\n";
-        for (VertexType v : this.verticesType) {
-            for (EdgeType e : v.getOutEdgesType()) s += v.getName() + " -----------[" + e.getName() + "]-----------> " + e.getInVertexType().getName() + "\n";
+    while (iterator.hasNext()) {
+      VertexType currVertexType = iterator.next();
+      if (currVertexType.getName().equals(vertexName)) {
+        // removing references from the in edges
+        for (EdgeType currInEdgeType : currVertexType.getInEdgesType()) {
+          currInEdgeType.setInVertexType(null);
         }
 
-        return s;
+        // removing the vertex
+        iterator.remove();
+        return true;
+      }
     }
+    return false;
+  }
+
+  public boolean removeEdgeTypeByName(String vertexName) {
+    Iterator<EdgeType> iterator = this.edgesType.iterator();
+
+    while (iterator.hasNext()) {
+      EdgeType currEdgeType = iterator.next();
+      if (currEdgeType.getName().equals(vertexName)) {
+        iterator.remove();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public String toString() {
+    String s =
+        "\n\n\n"
+            + "------------------------------ MODEL GRAPH DESCRIPTION"
+            + " ------------------------------\n\n\n";
+
+    s +=
+        "Number of Vertex-type: "
+            + this.verticesType.size()
+            + ".\nNumber of Edge-type: "
+            + this.edgesType.size()
+            + ".\n\n";
+
+    // info about vertices
+    s += "Vertex-type:\n\n";
+    for (VertexType v : this.verticesType) s += v.toString() + "\n\n";
+
+    s += "\n\n";
+
+    // info about edges
+    s += "Edge-type:\n\n";
+    for (EdgeType e : this.edgesType) s += e.toString() + "\n";
+
+    s += "\n\n";
+
+    // graph structure
+    s += "Graph structure:\n\n";
+    for (VertexType v : this.verticesType) {
+      for (EdgeType e : v.getOutEdgesType())
+        s +=
+            v.getName()
+                + " -----------["
+                + e.getName()
+                + "]-----------> "
+                + e.getInVertexType().getName()
+                + "\n";
+    }
+
+    return s;
+  }
 }

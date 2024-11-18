@@ -32,8 +32,7 @@ import com.orientechnologies.orient.core.metadata.schema.OClass
 import com.orientechnologies.orient.core.metadata.schema.OSchema
 import org.slf4j.LoggerFactory
 
-class OrientDB3DataSourceMetadataProvider() : DataSourceMetadataProvider {
-
+class OrientDB3DataSourceMetadataProvider : DataSourceMetadataProvider {
     private val log = LoggerFactory.getLogger(OrientDB3DataSourceMetadataProvider::class.java)
 
     override fun fetchMetadata(dataSource: DataSourceInfo): DataSourceMetadata {
@@ -50,27 +49,37 @@ class OrientDB3DataSourceMetadataProvider() : DataSourceMetadataProvider {
         }
     }
 
-    private fun edgeClasses(schema: OSchema, db: ODatabaseSession): EdgesClasses {
-        return schema.classes
+    private fun edgeClasses(
+        schema: OSchema,
+        db: ODatabaseSession,
+    ): EdgesClasses =
+        schema.classes
             .asSequence()
             .filter { isEdgeType(it) }
             .map { mapToType(it, db) }
             .map { it.name to it }
             .toMap()
-    }
 
-    private fun nodeClasses(schema: OSchema, db: ODatabaseSession): NodesClasses {
-        return schema.classes
+    private fun nodeClasses(
+        schema: OSchema,
+        db: ODatabaseSession,
+    ): NodesClasses =
+        schema.classes
             .asSequence()
             .filter { isVertexType(it) }
             .map { mapToType(it, db) }
-            .map { it.name to it }.toMap()
-    }
-
-    private fun mapToType(oClass: OClass, db: ODatabaseSession): TypeClass {
-        val props: TypeProperties = oClass.properties()
-            .map { prop -> prop.name to TypeProperty(prop.name, prop.type.name) }
+            .map { it.name to it }
             .toMap()
+
+    private fun mapToType(
+        oClass: OClass,
+        db: ODatabaseSession,
+    ): TypeClass {
+        val props: TypeProperties =
+            oClass
+                .properties()
+                .map { prop -> prop.name to TypeProperty(prop.name, prop.type.name) }
+                .toMap()
 
         return TypeClass(oClass.name, db.countClass(oClass.name, true), props)
     }

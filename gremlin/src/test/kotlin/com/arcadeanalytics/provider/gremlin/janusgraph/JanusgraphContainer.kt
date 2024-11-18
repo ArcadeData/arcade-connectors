@@ -28,7 +28,6 @@ import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.utility.DockerImageName
 
 object JanusgraphContainer {
-
     private val container: KGenericContainer =
         KGenericContainer(DockerImageName.parse("janusgraph/janusgraph:${JanusGraph.version()}"))
             .apply {
@@ -37,16 +36,17 @@ object JanusgraphContainer {
                 start()
             }
 
-    val dataSource: DataSourceInfo = DataSourceInfo(
-        id = 1L,
-        type = "GREMLIN_JANUSGRAPH",
-        name = "testDataSource",
-        server = container.containerIpAddress,
-        port = container.firstMappedPort,
-        username = "",
-        password = "",
-        database = "",
-    )
+    val dataSource: DataSourceInfo =
+        DataSourceInfo(
+            id = 1L,
+            type = "GREMLIN_JANUSGRAPH",
+            name = "testDataSource",
+            server = container.containerIpAddress,
+            port = container.firstMappedPort,
+            username = "",
+            password = "",
+            database = "",
+        )
 
     init {
 

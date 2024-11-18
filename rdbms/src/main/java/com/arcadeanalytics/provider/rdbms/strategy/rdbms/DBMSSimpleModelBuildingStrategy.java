@@ -33,28 +33,27 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Gabriele Ponzi
  */
-
 public class DBMSSimpleModelBuildingStrategy extends AbstractDBMSModelBuildingStrategy {
 
-    private static final Logger log = LoggerFactory.getLogger(DBMSSimpleModelBuildingStrategy.class);
+  private static final Logger log = LoggerFactory.getLogger(DBMSSimpleModelBuildingStrategy.class);
 
-    public DBMSSimpleModelBuildingStrategy() {}
+  public DBMSSimpleModelBuildingStrategy() {}
 
-    @Override
-    public ER2GraphMapper createSchemaMapper(
-        DataSourceInfo dataSource,
-        String outOrientGraphUri,
-        String chosenMapper,
-        String xmlPath,
-        NameResolver nameResolver,
-        DBMSDataTypeHandler handler,
-        List<String> includedTables,
-        List<String> excludedTables,
-        String executionStrategy,
-        DBQueryEngine queryEngine,
-        Statistics statistics
-    ) {
-        ER2GraphMapper mapper = new ER2GraphMapper(
+  @Override
+  public ER2GraphMapper createSchemaMapper(
+      DataSourceInfo dataSource,
+      String outOrientGraphUri,
+      String chosenMapper,
+      String xmlPath,
+      NameResolver nameResolver,
+      DBMSDataTypeHandler handler,
+      List<String> includedTables,
+      List<String> excludedTables,
+      String executionStrategy,
+      DBQueryEngine queryEngine,
+      Statistics statistics) {
+    ER2GraphMapper mapper =
+        new ER2GraphMapper(
             dataSource,
             includedTables,
             excludedTables,
@@ -62,17 +61,16 @@ public class DBMSSimpleModelBuildingStrategy extends AbstractDBMSModelBuildingSt
             handler,
             executionStrategy,
             nameResolver,
-            statistics
-        );
+            statistics);
 
-        // Step 1: DataBase schema building
-        mapper.buildSourceDatabaseSchema();
-        log.debug("{}", mapper.getDataBaseSchema().toString());
+    // Step 1: DataBase schema building
+    mapper.buildSourceDatabaseSchema();
+    log.debug("{}", mapper.getDataBaseSchema().toString());
 
-        // Step 2: Graph model building
-        mapper.buildGraphModel(nameResolver);
-        log.debug("{}", mapper.getGraphModel().toString());
+    // Step 2: Graph model building
+    mapper.buildGraphModel(nameResolver);
+    log.debug("{}", mapper.getGraphModel().toString());
 
-        return mapper;
-    }
+    return mapper;
+  }
 }

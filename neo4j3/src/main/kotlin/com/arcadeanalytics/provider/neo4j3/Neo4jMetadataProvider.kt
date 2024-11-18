@@ -42,13 +42,13 @@ import java.util.concurrent.TimeUnit
 class Neo4jMetadataProvider : DataSourceMetadataProvider {
     private val log = LoggerFactory.getLogger(Neo4jMetadataProvider::class.java)
 
-    private val queries = mapOf(
-        "NEO4J::LABELS" to "CALL db.labels() YIELD label",
-        "NEO4J::EDGES" to "CALL db.relationshipTypes() YIELD relationshipType",
-
-        "NEO4J_MEMGRAPH::LABELS" to "MATCH (n) UNWIND labels(n) AS label RETURN DISTINCT label",
-        "NEO4J_MEMGRAPH::EDGES" to "MATCH ()-[r]->() RETURN DISTINCT type(r) AS relationshipType",
-    )
+    private val queries =
+        mapOf(
+            "NEO4J::LABELS" to "CALL db.labels() YIELD label",
+            "NEO4J::EDGES" to "CALL db.relationshipTypes() YIELD relationshipType",
+            "NEO4J_MEMGRAPH::LABELS" to "MATCH (n) UNWIND labels(n) AS label RETURN DISTINCT label",
+            "NEO4J_MEMGRAPH::EDGES" to "MATCH ()-[r]->() RETURN DISTINCT type(r) AS relationshipType",
+        )
 
     override fun supportedDataSourceTypes(): Set<String> = setOf("NEO4J", "NEO4J_MEMGRAPH")
 
@@ -57,14 +57,18 @@ class Neo4jMetadataProvider : DataSourceMetadataProvider {
 
         log.info("fetching metadata for dataSource {} ", dataSource.id)
 
-        val config = Config.build()
-            .withConnectionTimeout(5, TimeUnit.SECONDS)
-            .withConnectionLivenessCheckTimeout(1L, TimeUnit.SECONDS)
-            .toConfig()
+        val config =
+            Config
+                .build()
+                .withConnectionTimeout(5, TimeUnit.SECONDS)
+                .withConnectionLivenessCheckTimeout(1L, TimeUnit.SECONDS)
+                .toConfig()
 
-        GraphDatabase.driver(connectionUrl, AuthTokens.basic(dataSource.username, dataSource.password), config)
+        GraphDatabase
+            .driver(connectionUrl, AuthTokens.basic(dataSource.username, dataSource.password), config)
             .use {
-                it.session(AccessMode.READ)
+                it
+                    .session(AccessMode.READ)
                     .use { session ->
 
                         val nodesClasses = nodeClasses(session, dataSource.type)
@@ -76,7 +80,10 @@ class Neo4jMetadataProvider : DataSourceMetadataProvider {
             }
     }
 
-    private fun nodeClasses(session: Session, type: String): NodesClasses {
+    private fun nodeClasses(
+        session: Session,
+        type: String,
+    ): NodesClasses {
         log.info("get metadata for nodes")
         return session
             .run(queries["$type::LABELS"])
@@ -88,21 +95,30 @@ class Neo4jMetadataProvider : DataSourceMetadataProvider {
             }.toMap()
     }
 
-    private fun countLabel(label: String, session: Session): Long {
+    private fun countLabel(
+        label: String,
+        session: Session,
+    ): Long {
         val count = session.run("MATCH (n:$label) RETURN count(*) AS count")
         return count.single().get("count").asLong()
     }
 
-    private fun mapNodeProperties(nodeClass: String, session: Session): TypeProperties {
-        return session.run("MATCH (n:$nodeClass) RETURN distinct(keys(n))")
+    private fun mapNodeProperties(
+        nodeClass: String,
+        session: Session,
+    ): TypeProperties =
+        session
+            .run("MATCH (n:$nodeClass) RETURN distinct(keys(n))")
             .asSequence()
             .flatMap { record -> record.get("(keys(n))").asList().asSequence() }
             .map { property -> TypeProperty(property.toString(), "STRING") }
             .map { it.name to it }
             .toMap()
-    }
 
-    private fun edgeClasses(session: Session, type: String): EdgesClasses {
+    private fun edgeClasses(
+        session: Session,
+        type: String,
+    ): EdgesClasses {
         log.info("get metadata for edges")
         return session
             .run(queries["$type::EDGES"])
@@ -114,13 +130,20 @@ class Neo4jMetadataProvider : DataSourceMetadataProvider {
             }.toMap()
     }
 
-    private fun countRelType(relType: String, session: Session): Long {
+    private fun countRelType(
+        relType: String,
+        session: Session,
+    ): Long {
         val count = session.run("MATCH ()-[r:$relType]->() RETURN count(*) AS count")
         return count.single().get("count").asLong()
     }
 
-    private fun mapRelationshipProperties(edgeClass: String, session: Session): TypeProperties {
-        return session.run("MATCH ()-[r:$edgeClass]->() RETURN distinct(keys(r))")
+    private fun mapRelationshipProperties(
+        edgeClass: String,
+        session: Session,
+    ): TypeProperties =
+        session
+            .run("MATCH ()-[r:$edgeClass]->() RETURN distinct(keys(r))")
             .asSequence()
             .map { record -> record.get("(keys(n))") }
             .filter { value -> !value.isNull }
@@ -128,5 +151,4 @@ class Neo4jMetadataProvider : DataSourceMetadataProvider {
             .map { property -> TypeProperty(property.toString(), "STRING") }
             .map { it.name to it }
             .toMap()
-    }
 }

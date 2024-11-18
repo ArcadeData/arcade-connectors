@@ -23,20 +23,20 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 
 class SpritePlayerShould {
-
     @Test
     internal fun `mark the sprite with a new field `() {
-        val player: SpritePlayer = object : SpritePlayer {
-            override fun end() {
-            }
+        val player: SpritePlayer =
+            object : SpritePlayer {
+                override fun end() {
+                }
 
-            override fun begin() {
-            }
+                override fun begin() {
+                }
 
-            override fun play(sprite: Sprite) {
-                sprite.add("mark", "marked")
+                override fun play(sprite: Sprite) {
+                    sprite.add("mark", "marked")
+                }
             }
-        }
 
         val sprite = Sprite()
         player.play(sprite)
@@ -47,21 +47,20 @@ class SpritePlayerShould {
 
     @Test
     internal fun `accept empty sprite`() {
-        val player: SpritePlayer = object : SpritePlayer {
-            override fun begin() {
-            }
+        val player: SpritePlayer =
+            object : SpritePlayer {
+                override fun begin() {
+                }
 
-            override fun end() {
-            }
+                override fun end() {
+                }
 
-            override fun accept(sprite: Sprite): Boolean {
-                return sprite.isEmpty()
-            }
+                override fun accept(sprite: Sprite): Boolean = sprite.isEmpty()
 
-            override fun play(sprite: Sprite) {
-                sprite.add("mark", "marked")
+                override fun play(sprite: Sprite) {
+                    sprite.add("mark", "marked")
+                }
             }
-        }
 
         val sprite = Sprite()
 

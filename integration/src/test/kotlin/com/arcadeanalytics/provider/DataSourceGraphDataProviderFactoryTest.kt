@@ -27,26 +27,25 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 
 internal class DataSourceGraphDataProviderFactoryTest {
-
     companion object {
         @JvmStatic
-        fun types2implementation() = listOf(
-            Arguments.of("ORIENTDB", "OrientDBDataSourceGraphDataProvider"),
-            Arguments.of("ORIENTDB3", "OrientDB3DataSourceGraphDataProvider"),
-            Arguments.of("GREMLIN_ORIENTDB", "GremlinDataProvider"),
-            Arguments.of("GREMLIN_NEPTUNE", "GremlinDataProvider"),
-            Arguments.of("GREMLIN_JANUSGRAPH", "GremlinDataProvider"),
-            Arguments.of("GREMLIN_COSMOSDB", "CosmosDBGremlinDataProvider"),
-            Arguments.of("NEO4J", "Neo4jDataProvider"),
-            Arguments.of("NEO4J_MEMGRAPH", "Neo4jDataProvider"),
-            Arguments.of("RDBMS_POSTGRESQL", "RDBMSDataProvider"),
-            Arguments.of("RDBMS_MYSQL", "RDBMSDataProvider"),
-            Arguments.of("RDBMS_MSSQLSERVER", "RDBMSDataProvider"),
-            Arguments.of("RDBMS_ORACLE", "RDBMSDataProvider"),
-            Arguments.of("RDBMS_HSQL", "RDBMSDataProvider"),
-            Arguments.of("RDBMS_DATA_WORLD", "RDBMSDataProvider"),
-
-        )
+        fun types2implementation() =
+            listOf(
+                Arguments.of("ORIENTDB", "OrientDBDataSourceGraphDataProvider"),
+                Arguments.of("ORIENTDB3", "OrientDB3DataSourceGraphDataProvider"),
+                Arguments.of("GREMLIN_ORIENTDB", "GremlinDataProvider"),
+                Arguments.of("GREMLIN_NEPTUNE", "GremlinDataProvider"),
+                Arguments.of("GREMLIN_JANUSGRAPH", "GremlinDataProvider"),
+                Arguments.of("GREMLIN_COSMOSDB", "CosmosDBGremlinDataProvider"),
+                Arguments.of("NEO4J", "Neo4jDataProvider"),
+                Arguments.of("NEO4J_MEMGRAPH", "Neo4jDataProvider"),
+                Arguments.of("RDBMS_POSTGRESQL", "RDBMSDataProvider"),
+                Arguments.of("RDBMS_MYSQL", "RDBMSDataProvider"),
+                Arguments.of("RDBMS_MSSQLSERVER", "RDBMSDataProvider"),
+                Arguments.of("RDBMS_ORACLE", "RDBMSDataProvider"),
+                Arguments.of("RDBMS_HSQL", "RDBMSDataProvider"),
+                Arguments.of("RDBMS_DATA_WORLD", "RDBMSDataProvider"),
+            )
     }
 
     private lateinit var factory: DataSourceProviderFactory<DataSourceGraphDataProvider>
@@ -84,16 +83,17 @@ internal class DataSourceGraphDataProviderFactoryTest {
         type: String,
         impl: String,
     ) {
-        val dataSource = DataSourceInfo(
-            id = 1L,
-            type = type,
-            name = "testDataSource",
-            server = "1.2.3.4",
-            port = 1234,
-            username = "admin",
-            password = "admin",
-            database = "testDb",
-        )
+        val dataSource =
+            DataSourceInfo(
+                id = 1L,
+                type = type,
+                name = "testDataSource",
+                server = "1.2.3.4",
+                port = 1234,
+                username = "admin",
+                password = "admin",
+                database = "testDb",
+            )
 
         val provider = factory.create(dataSource)
         assertThat(provider).isNotNull
@@ -107,20 +107,21 @@ internal class DataSourceGraphDataProviderFactoryTest {
         type: String,
         impl: String,
     ) {
-        val dataSource = DataSourceInfo(
-            id = 1L,
-            type = type,
-            name = "testDataSource",
-            server = "1.2.3.4",
-            port = 1234,
-            username = "admin",
-            password = "admin",
-            database = "testDb",
-            remote = true,
-            gateway = "192.168.1.12",
-            sshPort = 22,
-            sshUser = "sshUser",
-        )
+        val dataSource =
+            DataSourceInfo(
+                id = 1L,
+                type = type,
+                name = "testDataSource",
+                server = "1.2.3.4",
+                port = 1234,
+                username = "admin",
+                password = "admin",
+                database = "testDb",
+                remote = true,
+                gateway = "192.168.1.12",
+                sshPort = 22,
+                sshUser = "sshUser",
+            )
 
         val provider = factory.create(dataSource)
         assertThat(provider).isNotNull

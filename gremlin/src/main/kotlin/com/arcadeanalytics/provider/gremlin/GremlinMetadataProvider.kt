@@ -32,7 +32,6 @@ import org.apache.tinkerpop.gremlin.driver.Client
 import org.slf4j.LoggerFactory
 
 class GremlinMetadataProvider : DataSourceMetadataProvider {
-
     private val log = LoggerFactory.getLogger(GremlinMetadataProvider::class.java)
 
     override fun supportedDataSourceTypes() = setOf("GREMLIN_ORIENTDB", "GREMLIN_NEPTUNE", "GREMLIN_JANUSGRAPH")
@@ -54,8 +53,9 @@ class GremlinMetadataProvider : DataSourceMetadataProvider {
         }
     }
 
-    fun mapNodeClasses(client: Client): NodesClasses {
-        return client.submit("g.V().label().groupCount()")
+    fun mapNodeClasses(client: Client): NodesClasses =
+        client
+            .submit("g.V().label().groupCount()")
             .asSequence()
             .onEach { tc -> println("tc = $tc") }
             .map { r -> r.`object` as Map<String, Long> }
@@ -64,42 +64,56 @@ class GremlinMetadataProvider : DataSourceMetadataProvider {
             .map {
                 it.name to it
             }.toMap()
-    }
 
-    private fun mapNodeProperties(label: String, client: Client): TypeProperties {
-        return client.submit("""g.V().hasLabel(${splitMultilabel(label)}).limit(1).next()""")
+    private fun mapNodeProperties(
+        label: String,
+        client: Client,
+    ): TypeProperties =
+        client
+            .submit("""g.V().hasLabel(${splitMultilabel(label)}).limit(1).next()""")
             .asSequence()
             .flatMap { r -> r.element.properties<Any>().asSequence() }
             .map { property -> TypeProperty(property.key(), mapType(property.value().javaClass.simpleName)) }
             .map { it.name to it }
             .toMap()
-    }
 
-    private fun mapEdgesClasses(client: Client): EdgesClasses {
-        return client.submit("g.E().label().dedup()").asSequence()
+    private fun mapEdgesClasses(client: Client): EdgesClasses =
+        client
+            .submit("g.E().label().dedup()")
+            .asSequence()
             .map { r -> r.`object`.toString() }
             .map { TypeClass(it, countEdgeLabel(it, client), mapEdgeProperties(it, client)) }
             .map {
                 it.name to it
             }.toMap()
-    }
 
-    private fun mapEdgeProperties(label: String, client: Client): TypeProperties {
-        return client.submit("""g.E().hasLabel(${splitMultilabel(label)} ).limit(1).next()""")
+    private fun mapEdgeProperties(
+        label: String,
+        client: Client,
+    ): TypeProperties =
+        client
+            .submit("""g.E().hasLabel(${splitMultilabel(label)} ).limit(1).next()""")
             .asSequence()
             .flatMap { r -> r.element.properties<Any>().asSequence() }
             .map { property -> TypeProperty(property.key(), mapType(property.value().javaClass.simpleName)) }
             .map { it.name to it }
             .toMap()
-    }
 
-    private fun countNodeLabel(label: String, client: Client): Long {
-        return client.submit("""g.V().hasLabel(${splitMultilabel(label)}).count()""")
-            .one().long
-    }
+    private fun countNodeLabel(
+        label: String,
+        client: Client,
+    ): Long =
+        client
+            .submit("""g.V().hasLabel(${splitMultilabel(label)}).count()""")
+            .one()
+            .long
 
-    private fun countEdgeLabel(label: String, client: Client): Long {
-        return client.submit("""g.E().hasLabel(${splitMultilabel(label)}).count()""")
-            .one().long
-    }
+    private fun countEdgeLabel(
+        label: String,
+        client: Client,
+    ): Long =
+        client
+            .submit("""g.E().hasLabel(${splitMultilabel(label)}).count()""")
+            .one()
+            .long
 }

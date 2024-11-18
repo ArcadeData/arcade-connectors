@@ -25,22 +25,28 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 /**
- * Encapsulates the query results with the correspondent statement and connection as the super class Query Result.
- * This class is used to collect all the info about the query performed to count the navigable connections of each record.
+ * Encapsulates the query results with the correspondent statement and connection as the super class
+ * Query Result. This class is used to collect all the info about the query performed to count the
+ * navigable connections of each record.
  *
  * @author Gabriele Ponzi
  */
-
 public class RelationshipQueryResult extends QueryResult {
 
-    private String relationshipName; // usually corresponds to the name of the correspondent edge class
+  private String
+      relationshipName; // usually corresponds to the name of the correspondent edge class
 
-    public RelationshipQueryResult(Connection connection, Statement statement, ResultSet result, String originalQuery, String relationshipName) {
-        super(connection, statement, result, originalQuery);
-        this.relationshipName = relationshipName;
-    }
+  public RelationshipQueryResult(
+      Connection connection,
+      Statement statement,
+      ResultSet result,
+      String originalQuery,
+      String relationshipName) {
+    super(connection, statement, result, originalQuery);
+    this.relationshipName = relationshipName;
+  }
 
-    public String getRelationshipName() {
-        return this.relationshipName;
-    }
+  public String getRelationshipName() {
+    return this.relationshipName;
+  }
 }

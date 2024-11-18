@@ -29,7 +29,8 @@ import org.apache.tinkerpop.gremlin.structure.io.gryo.GryoMapper
 import org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry
 
 fun getCluster(dataSource: DataSourceInfo): Cluster =
-    Cluster.build(dataSource.server)
+    Cluster
+        .build(dataSource.server)
         .port(dataSource.port)
         .serializer(createSerializer(dataSource))
         .enableSsl(dataSource.enableSsl)
@@ -40,20 +41,23 @@ fun getCluster(dataSource: DataSourceInfo): Cluster =
         .create()
 
 fun splitMultilabel(label: String): String =
-    label.split("::")
+    label
+        .split("::")
         .joinToString("','", "'", "'")
 
-fun createSerializer(dataSource: DataSourceInfo): MessageSerializer {
-    return when (dataSource.type) {
+fun createSerializer(dataSource: DataSourceInfo): MessageSerializer =
+    when (dataSource.type) {
         "GREMLIN_ORIENTDB" ->
             GryoMessageSerializerV3d0(
-                GryoMapper.build()
+                GryoMapper
+                    .build()
                     .addRegistry(OrientIoRegistry.getInstance()),
             )
         "GREMLIN_NEPTUNE" -> GryoMessageSerializerV3d0()
         "GREMLIN_JANUSGRAPH" ->
             GryoMessageSerializerV3d0(
-                GryoMapper.build()
+                GryoMapper
+                    .build()
                     .addRegistry(JanusGraphIoRegistry.getInstance()),
             )
         "GREMLIN_COSMOSDB" -> {
@@ -63,4 +67,3 @@ fun createSerializer(dataSource: DataSourceInfo): MessageSerializer {
         }
         else -> throw RuntimeException("requested type not implemented yet:: ${dataSource.type}")
     }
-}

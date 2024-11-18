@@ -25,23 +25,25 @@ import com.arcadeanalytics.provider.rdbms.model.dbschema.HierarchicalBag;
 import java.util.List;
 
 /**
- * Interface representing the query builder used by the DB Query Engine, hiding specific implementation for each DBMS.
+ * Interface representing the query builder used by the DB Query Engine, hiding specific
+ * implementation for each DBMS.
  *
  * @author Gabriele Ponzi
  */
-
 public interface QueryBuilder {
-    String countTableRecords(String currentTableName, String currentTableSchema);
+  String countTableRecords(String currentTableName, String currentTableSchema);
 
-    String getRecordById(Entity entity, String[] propertyOfKey, String[] valueOfKey);
+  String getRecordById(Entity entity, String[] propertyOfKey, String[] valueOfKey);
 
-    String getRecordsByEntity(Entity entity);
+  String getRecordsByEntity(Entity entity);
 
-    String getRecordsFromMultipleEntities(List<Entity> mappedEntities, String[][] columns);
+  String getRecordsFromMultipleEntities(List<Entity> mappedEntities, String[][] columns);
 
-    String getRecordsFromSingleTableByDiscriminatorValue(String discriminatorColumn, String currentDiscriminatorValue, Entity entity);
+  String getRecordsFromSingleTableByDiscriminatorValue(
+      String discriminatorColumn, String currentDiscriminatorValue, Entity entity);
 
-    String getEntityTypeFromSingleTable(String discriminatorColumn, Entity entity, String[] propertyOfKey, String[] valueOfKey);
+  String getEntityTypeFromSingleTable(
+      String discriminatorColumn, Entity entity, String[] propertyOfKey, String[] valueOfKey);
 
-    String buildAggregateTableFromHierarchicalBag(HierarchicalBag bag);
+  String buildAggregateTableFromHierarchicalBag(HierarchicalBag bag);
 }

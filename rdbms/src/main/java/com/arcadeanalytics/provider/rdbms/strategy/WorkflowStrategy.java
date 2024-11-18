@@ -31,19 +31,17 @@ import java.util.List;
  *
  * @author Gabriele Ponzi
  */
-
 public interface WorkflowStrategy {
-    void executeStrategy(
-        DataSourceInfo dataSource,
-        String outOrientGraphUri,
-        String chosenMapper,
-        String xmlPath,
-        String nameResolverConvention,
-        List<String> includedTables,
-        List<String> excludedTables,
-        ODocument migrationConfig,
-        String executionStrategy,
-        DBQueryEngine queryEngine,
-        Statistics statistics
-    );
+  void executeStrategy(
+      DataSourceInfo dataSource,
+      String outOrientGraphUri,
+      String chosenMapper,
+      String xmlPath,
+      String nameResolverConvention,
+      List<String> includedTables,
+      List<String> excludedTables,
+      ODocument migrationConfig,
+      String executionStrategy,
+      DBQueryEngine queryEngine,
+      Statistics statistics);
 }

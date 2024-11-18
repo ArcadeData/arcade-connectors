@@ -29,34 +29,33 @@ import java.util.ArrayList
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class Neo4jGraphProviderTest {
-
     private val provider: Neo4jGraphProvider = Neo4jGraphProvider()
 
     @Test
     fun shouldFetchAllElements() {
         val docs = ArrayList<Sprite>()
 
-        val indexer = object : SpritePlayer {
-            override fun end() {
-            }
+        val indexer =
+            object : SpritePlayer {
+                override fun end() {
+                }
 
-            override fun begin() {
-            }
+                override fun begin() {
+                }
 
-            override fun processed(): Long {
-                return 0
-            }
+                override fun processed(): Long = 0
 
-            override fun play(document: Sprite) {
-                docs.add(document)
+                override fun play(document: Sprite) {
+                    docs.add(document)
+                }
             }
-        }
 
         provider.provideTo(Neo4jContainer.dataSource, indexer)
 
         assertThat(docs).hasSize(12)
         assertThat(
-            docs.asSequence()
+            docs
+                .asSequence()
                 .map { s -> s.valueOf("@class") }
                 .any { c -> c == "Person" || c == "Car" || c == "fraternal" || c == "killer" },
         ).isTrue()

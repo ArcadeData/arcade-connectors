@@ -29,7 +29,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class OrientDBDataSourceGraphDataProviderIntTest {
-
     private val provider: OrientDBDataSourceGraphDataProvider = OrientDBDataSourceGraphDataProvider()
 
     @Test
@@ -49,7 +48,8 @@ class OrientDBDataSourceGraphDataProviderIntTest {
 
         assertThat(cytoData.data.id).startsWith("${dataSource.id}")
         val record = cytoData.data.record
-        assertThat(record).isNotNull
+        assertThat(record)
+            .isNotNull
             .containsKeys("name", "@out", "@in", "@edgeCount")
     }
 
@@ -59,7 +59,10 @@ class OrientDBDataSourceGraphDataProviderIntTest {
         // given
         val person = provider.loadFromClass(dataSource, "Person", "name", "frank", 1)
 
-        val id = person.nodes.first().data.id
+        val id =
+            person.nodes
+                .first()
+                .data.id
 
         // when
         val data = provider.expand(dataSource, arrayOf(id), "in", "FriendOf", 300)
@@ -84,7 +87,10 @@ class OrientDBDataSourceGraphDataProviderIntTest {
 
         val person = provider.loadFromClass(dataSource, "Person", "name", "frank", 1)
 
-        val id = person.nodes.first().data.id
+        val id =
+            person.nodes
+                .first()
+                .data.id
 
         // when
         val data = provider.expand(dataSource, arrayOf(id), "both", "", 300)
@@ -116,7 +122,11 @@ class OrientDBDataSourceGraphDataProviderIntTest {
         // then
         assertThat(data.nodes).hasSize(2)
 
-        val cytoData = data.nodes.stream().findFirst().get()
+        val cytoData =
+            data.nodes
+                .stream()
+                .findFirst()
+                .get()
         assertThat(cytoData.data.record).isNotNull
         assertThat(cytoData.data.source).isEmpty()
     }
@@ -146,10 +156,12 @@ class OrientDBDataSourceGraphDataProviderIntTest {
         val firstNode = firstDataSet.nodes.first().data
         val secondNode = secondDataSet.nodes.first().data
 
-        val edgeClasses = (firstNode.record["@in"] as Map<String, Int>).keys
-            .union((firstNode.record["@out"] as Map<String, Int>).keys)
-            .union((secondNode.record["@in"] as Map<String, Int>).keys)
-            .union((secondNode.record["@out"] as Map<String, Int>).keys)
+        val edgeClasses =
+            (firstNode.record["@in"] as Map<String, Int>)
+                .keys
+                .union((firstNode.record["@out"] as Map<String, Int>).keys)
+                .union((secondNode.record["@in"] as Map<String, Int>).keys)
+                .union((secondNode.record["@out"] as Map<String, Int>).keys)
 
         val data = provider.edges(dataSource, arrayOf(firstNode.id), edgeClasses.toTypedArray(), arrayOf(secondNode.id))
 
@@ -163,9 +175,11 @@ class OrientDBDataSourceGraphDataProviderIntTest {
     }
 
     private fun getPersonsIdentity(limit: Int): Array<String> {
-        ODatabaseDocumentTx(dbUrl).open<ODatabaseDocumentTx>("admin", "admin")
+        ODatabaseDocumentTx(dbUrl)
+            .open<ODatabaseDocumentTx>("admin", "admin")
             .use {
-                return it.query<List<ODocument>>(OSQLSynchQuery<ODocument>("""SELECT from Person limit $limit"""))
+                return it
+                    .query<List<ODocument>>(OSQLSynchQuery<ODocument>("""SELECT from Person limit $limit"""))
                     .asSequence()
                     .map { doc -> doc.identity }
                     .map { id -> id.clusterId.toString() + "_" + id.clusterPosition }

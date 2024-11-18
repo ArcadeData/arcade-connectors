@@ -24,7 +24,6 @@ package com.arcadeanalytics.provider
  *  @author Roberto Franchini
  */
 interface DataSourceGraphDataProvider : DataSourceProvider {
-
     /**
      * Test the connection to the given {@link DataSourceInfo}
      * @param dataSource to be tested

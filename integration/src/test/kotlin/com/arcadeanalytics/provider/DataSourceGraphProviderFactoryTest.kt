@@ -28,25 +28,24 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 
 internal class DataSourceGraphProviderFactoryTest {
-
     companion object {
         @JvmStatic
-        fun types2implementation() = listOf(
-            Arguments.of("ORIENTDB", "OrientDBDataSourceGraphProvider"),
-            Arguments.of("ORIENTDB3", "OrientDB3DataSourceGraphProvider"),
-            Arguments.of("GREMLIN_ORIENTDB", "GremlinGraphProvider"),
-            Arguments.of("GREMLIN_NEPTUNE", "GremlinGraphProvider"),
-            Arguments.of("GREMLIN_JANUSGRAPH", "GremlinGraphProvider"),
-            Arguments.of("GREMLIN_COSMOSDB", "CosmosDBGremlinGraphProvider"),
-            Arguments.of("NEO4J", "Neo4jGraphProvider"),
-            Arguments.of("NEO4J_MEMGRAPH", "Neo4jGraphProvider"),
-            Arguments.of("RDBMS_MYSQL", "RDBMSGraphProvider"),
-            Arguments.of("RDBMS_MSSQLSERVER", "RDBMSGraphProvider"),
-            Arguments.of("RDBMS_ORACLE", "RDBMSGraphProvider"),
-            Arguments.of("RDBMS_HSQL", "RDBMSGraphProvider"),
-            Arguments.of("RDBMS_DATA_WORLD", "RDBMSGraphProvider"),
-
-        )
+        fun types2implementation() =
+            listOf(
+                Arguments.of("ORIENTDB", "OrientDBDataSourceGraphProvider"),
+                Arguments.of("ORIENTDB3", "OrientDB3DataSourceGraphProvider"),
+                Arguments.of("GREMLIN_ORIENTDB", "GremlinGraphProvider"),
+                Arguments.of("GREMLIN_NEPTUNE", "GremlinGraphProvider"),
+                Arguments.of("GREMLIN_JANUSGRAPH", "GremlinGraphProvider"),
+                Arguments.of("GREMLIN_COSMOSDB", "CosmosDBGremlinGraphProvider"),
+                Arguments.of("NEO4J", "Neo4jGraphProvider"),
+                Arguments.of("NEO4J_MEMGRAPH", "Neo4jGraphProvider"),
+                Arguments.of("RDBMS_MYSQL", "RDBMSGraphProvider"),
+                Arguments.of("RDBMS_MSSQLSERVER", "RDBMSGraphProvider"),
+                Arguments.of("RDBMS_ORACLE", "RDBMSGraphProvider"),
+                Arguments.of("RDBMS_HSQL", "RDBMSGraphProvider"),
+                Arguments.of("RDBMS_DATA_WORLD", "RDBMSGraphProvider"),
+            )
     }
 
     private lateinit var factory: DataSourceProviderFactory<DataSourceGraphProvider>
@@ -84,16 +83,17 @@ internal class DataSourceGraphProviderFactoryTest {
         type: String,
         impl: String,
     ) {
-        val dataSource = DataSourceInfo(
-            id = 1L,
-            type = type,
-            name = "testDataSource",
-            server = "1.2.3.4",
-            port = 1234,
-            username = "admin",
-            password = "admin",
-            database = "testDb",
-        )
+        val dataSource =
+            DataSourceInfo(
+                id = 1L,
+                type = type,
+                name = "testDataSource",
+                server = "1.2.3.4",
+                port = 1234,
+                username = "admin",
+                password = "admin",
+                database = "testDb",
+            )
 
         val provider = factory.create(dataSource)
         Assertions.assertThat(provider).isNotNull

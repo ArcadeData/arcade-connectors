@@ -32,35 +32,35 @@ import org.slf4j.LoggerFactory;
  *
  * @author Gabriele Ponzi
  */
-
 public class StrategyFactory {
 
-    private final Logger log = LoggerFactory.getLogger(StrategyFactory.class);
+  private final Logger log = LoggerFactory.getLogger(StrategyFactory.class);
 
-    public StrategyFactory() {}
+  public StrategyFactory() {}
 
-    public WorkflowStrategy buildStrategy(String chosenStrategy) throws RDBMSProviderIOException {
-        WorkflowStrategy strategy = null;
+  public WorkflowStrategy buildStrategy(String chosenStrategy) throws RDBMSProviderIOException {
+    WorkflowStrategy strategy = null;
 
-        // choosing strategy for migration from RDBSs
+    // choosing strategy for migration from RDBSs
 
-        if (chosenStrategy == null) {
-            strategy = new DBMSSimpleModelBuildingStrategy();
-        } else {
-            switch (chosenStrategy) {
-                case "interactive":
-                    strategy = new DBMSSimpleModelBuildingStrategy();
-                    break;
-                case "interactive-aggr":
-                    strategy = new DBMSModelBuildingAggregationStrategy();
-                    break;
-                default:
-                    log.error("The typed strategy doesn't exist for migration from the chosen RDBMS.\n");
-            }
-        }
-
-        if (strategy == null) throw new RDBMSProviderIOException("Strategy not available for the chosen source.");
-
-        return strategy;
+    if (chosenStrategy == null) {
+      strategy = new DBMSSimpleModelBuildingStrategy();
+    } else {
+      switch (chosenStrategy) {
+        case "interactive":
+          strategy = new DBMSSimpleModelBuildingStrategy();
+          break;
+        case "interactive-aggr":
+          strategy = new DBMSModelBuildingAggregationStrategy();
+          break;
+        default:
+          log.error("The typed strategy doesn't exist for migration from the chosen RDBMS.\n");
+      }
     }
+
+    if (strategy == null)
+      throw new RDBMSProviderIOException("Strategy not available for the chosen source.");
+
+    return strategy;
+  }
 }

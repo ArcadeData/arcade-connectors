@@ -27,39 +27,38 @@ import java.util.List;
  *
  * @author Gabriele Ponzi
  */
-
 public abstract class Relationship {
 
-    protected Entity foreignEntity; // Entity importing the key (starting entity)
-    protected Entity parentEntity; // Entity exporting the key (arrival entity)
-    protected String direction; // represents the direction of the relationship
+  protected Entity foreignEntity; // Entity importing the key (starting entity)
+  protected Entity parentEntity; // Entity exporting the key (arrival entity)
+  protected String direction; // represents the direction of the relationship
 
-    public Entity getForeignEntity() {
-        return this.foreignEntity;
-    }
+  public Entity getForeignEntity() {
+    return this.foreignEntity;
+  }
 
-    public Entity getParentEntity() {
-        return this.parentEntity;
-    }
+  public Entity getParentEntity() {
+    return this.parentEntity;
+  }
 
-    public String getDirection() {
-        return this.direction;
-    }
+  public String getDirection() {
+    return this.direction;
+  }
 
-    public void setDirection(String direction) {
-        this.direction = direction;
-    }
+  public void setDirection(String direction) {
+    this.direction = direction;
+  }
 
-    public abstract List<Attribute> getFromColumns();
+  public abstract List<Attribute> getFromColumns();
 
-    public abstract List<Attribute> getToColumns();
+  public abstract List<Attribute> getToColumns();
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((foreignEntity == null) ? 0 : foreignEntity.hashCode());
-        result = prime * result + ((parentEntity == null) ? 0 : parentEntity.hashCode());
-        return result;
-    }
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((foreignEntity == null) ? 0 : foreignEntity.hashCode());
+    result = prime * result + ((parentEntity == null) ? 0 : parentEntity.hashCode());
+    return result;
+  }
 }

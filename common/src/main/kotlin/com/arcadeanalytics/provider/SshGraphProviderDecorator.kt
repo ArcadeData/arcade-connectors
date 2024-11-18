@@ -22,11 +22,16 @@ package com.arcadeanalytics.provider
 import com.arcadeanalytics.data.SpritePlayer
 import org.slf4j.LoggerFactory
 
-class SshGraphProviderDecorator(private val provider: DataSourceGraphProvider) : SshTunnelTemplate(), DataSourceGraphProvider {
-
+class SshGraphProviderDecorator(
+    private val provider: DataSourceGraphProvider,
+) : SshTunnelTemplate(),
+    DataSourceGraphProvider {
     private val log = LoggerFactory.getLogger(SshGraphProviderDecorator::class.java)
 
-    override fun provideTo(dataSource: DataSourceInfo, player: SpritePlayer) {
+    override fun provideTo(
+        dataSource: DataSourceInfo,
+        player: SpritePlayer,
+    ) {
         val (session, wrapper) = buildTunnel(dataSource)
 
         provider.provideTo(wrapper, player)

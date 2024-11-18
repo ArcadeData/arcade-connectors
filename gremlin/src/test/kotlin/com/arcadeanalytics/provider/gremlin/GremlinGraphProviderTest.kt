@@ -31,7 +31,6 @@ import java.util.ArrayList
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GremlinGraphProviderTest {
-
     private val provider: GremlinGraphProvider = GremlinGraphProvider()
 
     @Test
@@ -39,26 +38,25 @@ class GremlinGraphProviderTest {
         val nodes = ArrayList<Sprite>()
         val edges = ArrayList<Sprite>()
 
-        val indexer = object : SpritePlayer {
-            override fun begin() {
-                TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
-            }
-
-            override fun processed(): Long {
-                return 0
-            }
-
-            override fun play(sprite: Sprite) {
-                when (sprite.valueOf(ARCADE_TYPE)) {
-                    ARCADE_NODE_TYPE -> nodes.add(sprite)
-                    ARCADE_EDGE_TYPE -> edges.add(sprite)
+        val indexer =
+            object : SpritePlayer {
+                override fun begin() {
+                    TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
                 }
-                assertThat(sprite.valueOf("@class")).isNotBlank
-            }
 
-            override fun end() {
+                override fun processed(): Long = 0
+
+                override fun play(sprite: Sprite) {
+                    when (sprite.valueOf(ARCADE_TYPE)) {
+                        ARCADE_NODE_TYPE -> nodes.add(sprite)
+                        ARCADE_EDGE_TYPE -> edges.add(sprite)
+                    }
+                    assertThat(sprite.valueOf("@class")).isNotBlank
+                }
+
+                override fun end() {
+                }
             }
-        }
 
         provider.provideTo(OrientDBGremlinContainer.dataSource, indexer)
         assertThat(nodes).hasSize(7275)

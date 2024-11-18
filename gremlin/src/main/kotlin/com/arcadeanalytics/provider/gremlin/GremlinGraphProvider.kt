@@ -37,12 +37,14 @@ import kotlin.math.min
  */
 
 class GremlinGraphProvider : DataSourceGraphProvider {
-
     private val log = LoggerFactory.getLogger(GremlinGraphProvider::class.java)
 
     private val allFields: Pattern
 
-    override fun provideTo(dataSource: DataSourceInfo, player: SpritePlayer) {
+    override fun provideTo(
+        dataSource: DataSourceInfo,
+        player: SpritePlayer,
+    ) {
         val cluster = getCluster(dataSource)
         val client = cluster.connect<Client>().init()
         try {
@@ -56,7 +58,11 @@ class GremlinGraphProvider : DataSourceGraphProvider {
         }
     }
 
-    private fun provideNodes(dataSource: DataSourceInfo, processor: SpritePlayer, client: Client) {
+    private fun provideNodes(
+        dataSource: DataSourceInfo,
+        processor: SpritePlayer,
+        client: Client,
+    ) {
         val nodes = client.submit("g.V().count()").one().long
         var fetched: Long = 0
         var skip: Long = 0
@@ -67,12 +73,14 @@ class GremlinGraphProvider : DataSourceGraphProvider {
             for (r in resultSet) {
                 val element = r.vertex
                 val sprite = Sprite()
-                element.keys()
+                element
+                    .keys()
                     .asSequence()
                     .flatMap { key: String? -> element.properties<Any>(key).asSequence() }
                     .forEach { v: VertexProperty<Any?> -> sprite.add(v.label(), v.value()) }
 
-                sprite.add(ARCADE_ID, dataSource.id.toString() + "_" + cleanOrientId(element.id().toString()))
+                sprite
+                    .add(ARCADE_ID, dataSource.id.toString() + "_" + cleanOrientId(element.id().toString()))
                     .add(ARCADE_TYPE, ARCADE_NODE_TYPE)
                     .add("@class", element.label())
 
@@ -84,7 +92,11 @@ class GremlinGraphProvider : DataSourceGraphProvider {
         }
     }
 
-    private fun provideEdges(dataSource: DataSourceInfo, processor: SpritePlayer, client: Client) {
+    private fun provideEdges(
+        dataSource: DataSourceInfo,
+        processor: SpritePlayer,
+        client: Client,
+    ) {
         val edges = client.submit("g.E().count()").one().long
         var fetched: Long = 0
         var skip: Long = 0
@@ -96,10 +108,13 @@ class GremlinGraphProvider : DataSourceGraphProvider {
                 val element = r.element
                 if (element.keys().isNotEmpty()) {
                     val sprite = Sprite()
-                    element.keys().asSequence()
+                    element
+                        .keys()
+                        .asSequence()
                         .forEach { k: String? -> sprite.add(k!!, element.value<Any>(k).toString()) }
 
-                    sprite.add(ARCADE_ID, dataSource.id.toString() + "_" + cleanOrientId(element.id().toString()))
+                    sprite
+                        .add(ARCADE_ID, dataSource.id.toString() + "_" + cleanOrientId(element.id().toString()))
                         .add(ARCADE_TYPE, ARCADE_EDGE_TYPE)
                         .add("@class", element.label())
 
@@ -112,14 +127,12 @@ class GremlinGraphProvider : DataSourceGraphProvider {
         }
     }
 
-    private fun cleanOrientId(id: String): String {
-        return StringUtils.removeStart(id, "#")
+    private fun cleanOrientId(id: String): String =
+        StringUtils
+            .removeStart(id, "#")
             .replace(":", "_")
-    }
 
-    override fun supportedDataSourceTypes(): Set<String> {
-        return Sets.newHashSet("GREMLIN_ORIENTDB", "GREMLIN_NEPTUNE", "GREMLIN_JANUSGRAPH")
-    }
+    override fun supportedDataSourceTypes(): Set<String> = Sets.newHashSet("GREMLIN_ORIENTDB", "GREMLIN_NEPTUNE", "GREMLIN_JANUSGRAPH")
 
     init {
         allFields = Pattern.compile(".*")
