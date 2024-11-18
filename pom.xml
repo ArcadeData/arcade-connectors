@@ -87,7 +87,7 @@
     <modules>
         <module>data</module>
         <module>common</module>
-        <module>gremlin</module>
+<!--        <module>gremlin</module>-->
 <!--        <module>neo4j3</module>-->
 <!--        <module>orientdb2</module>-->
 <!--        <module>orientdb3</module>-->
