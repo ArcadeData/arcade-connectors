@@ -23,9 +23,7 @@ package com.arcadeanalytics.provider.rdbms.graphprovider;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.arcadeanalytics.provider.DataSourceInfo;
-import com.arcadeanalytics.provider.rdbms.dataprovider.PostgreSQLDataProviderTest;
 import com.arcadeanalytics.provider.rdbms.dataprovider.RDBMSGraphProvider;
-import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -35,7 +33,7 @@ import org.testcontainers.utility.DockerImageName;
 
 public class MysqlGraphProviderTest extends AbstractRDBMSGraphProvider {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PostgreSQLDataProviderTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MysqlGraphProviderTest.class);
     private static final String driver = "com.mysql.cj.jdbc.Driver";
     private static final String username = "test";
     private static final String password = "test";
@@ -45,7 +43,7 @@ public class MysqlGraphProviderTest extends AbstractRDBMSGraphProvider {
         .withDatabaseName("sakila");
 
     @BeforeAll
-    public static void beforeClass() throws Exception {
+    static void beforeClass() throws Exception {
         container.start();
         container.withDatabaseName("sakila");
     }
@@ -79,8 +77,8 @@ public class MysqlGraphProviderTest extends AbstractRDBMSGraphProvider {
 
         assertThat(player.processed()).isEqualTo(47273);
 
-        Assert.assertEquals(47273, nodes);
-        Assert.assertEquals(0, edges);
+        assertThat(nodes).isEqualTo(47273);
+        assertThat(edges).isEqualTo(0);
     }
 
     @Test
@@ -112,7 +110,7 @@ public class MysqlGraphProviderTest extends AbstractRDBMSGraphProvider {
 
         assertThat(player.processed()).isEqualTo(47273);
 
-        Assert.assertEquals(40811, nodes);
-        Assert.assertEquals(6462, edges);
+        assertThat(nodes).isEqualTo(40811);
+        assertThat(edges).isEqualTo(6462);
     }
 }

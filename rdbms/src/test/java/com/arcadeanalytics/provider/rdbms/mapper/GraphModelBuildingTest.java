@@ -40,11 +40,8 @@ package com.arcadeanalytics.provider.rdbms.mapper;
  * #L%
  */
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import com.arcadeanalytics.provider.DataSourceInfo;
 import com.arcadeanalytics.provider.rdbms.context.Statistics;
@@ -69,7 +66,7 @@ import org.junit.jupiter.api.Test;
  * @author Gabriele Ponzi
  */
 
-public class GraphModelBuildingTest {
+class GraphModelBuildingTest {
 
     private ER2GraphMapper mapper;
     private DBQueryEngine dbQueryEngine;
@@ -84,7 +81,7 @@ public class GraphModelBuildingTest {
     private HSQLDBDataTypeHandler dataTypeHandler;
 
     @BeforeEach
-    public void init() {
+    void init() {
         this.dataSource =
             new DataSourceInfo(
                 1L,
@@ -114,12 +111,12 @@ public class GraphModelBuildingTest {
         dataTypeHandler = new HSQLDBDataTypeHandler();
     }
 
-    @Test
     /*
      *  Two tables Foreign and Parent with a simple primary key imported from the parent table.
      */
 
-    public void buildGraphModelFromTwoTablesWithOneSimplePK() {
+    @Test
+    void buildGraphModelFromTwoTablesWithOneSimplePK() {
         Connection connection = null;
         Statement st = null;
 
@@ -145,10 +142,10 @@ public class GraphModelBuildingTest {
              *  Testing context information
              */
 
-            assertEquals(2, statistics.totalNumberOfModelVertices);
-            assertEquals(2, statistics.builtModelVertexTypes);
-            assertEquals(1, statistics.totalNumberOfModelEdges);
-            assertEquals(1, statistics.builtModelEdgeTypes);
+            assertThat(statistics.totalNumberOfModelVertices).isEqualTo(2);
+            assertThat(statistics.builtModelVertexTypes).isEqualTo(2);
+            assertThat(statistics.totalNumberOfModelEdges).isEqualTo(1);
+            assertThat(statistics.builtModelEdgeTypes).isEqualTo(1);
 
             /*
              *  Testing built graph model
@@ -158,59 +155,59 @@ public class GraphModelBuildingTest {
             EdgeType authorEdgeType = mapper.getGraphModel().getEdgeTypeByName("HasAuthor");
 
             // vertices check
-            assertEquals(2, mapper.getGraphModel().getVerticesType().size());
-            assertNotNull(authorVertexType);
-            assertNotNull(bookVertexType);
+            assertThat(mapper.getGraphModel().getVerticesType().size()).isEqualTo(2);
+            assertThat(authorVertexType).isNotNull();
+            assertThat(bookVertexType).isNotNull();
 
             // properties check
-            assertEquals(3, authorVertexType.getProperties().size());
+            assertThat(authorVertexType.getProperties().size()).isEqualTo(3);
 
-            assertNotNull(authorVertexType.getPropertyByName("id"));
-            assertEquals("id", authorVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", authorVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, authorVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, authorVertexType.getPropertyByName("id").isFromPrimaryKey());
+            assertThat(authorVertexType.getPropertyByName("id")).isNotNull();
+            assertThat(authorVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+            assertThat(authorVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(authorVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+            assertThat(authorVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
 
-            assertNotNull(authorVertexType.getPropertyByName("name"));
-            assertEquals("name", authorVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", authorVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(2, authorVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, authorVertexType.getPropertyByName("name").isFromPrimaryKey());
+            assertThat(authorVertexType.getPropertyByName("name")).isNotNull();
+            assertThat(authorVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+            assertThat(authorVertexType.getPropertyByName("name").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(authorVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(2);
+            assertThat(authorVertexType.getPropertyByName("name").isFromPrimaryKey()).isFalse();
 
-            assertNotNull(authorVertexType.getPropertyByName("age"));
-            assertEquals("age", authorVertexType.getPropertyByName("age").getName());
-            assertEquals("INTEGER", authorVertexType.getPropertyByName("age").getOriginalType());
-            assertEquals(3, authorVertexType.getPropertyByName("age").getOrdinalPosition());
-            assertEquals(false, authorVertexType.getPropertyByName("age").isFromPrimaryKey());
+            assertThat(authorVertexType.getPropertyByName("age")).isNotNull();
+            assertThat(authorVertexType.getPropertyByName("age").getName()).isEqualTo("age");
+            assertThat(authorVertexType.getPropertyByName("age").getOriginalType()).isEqualTo("INTEGER");
+            assertThat(authorVertexType.getPropertyByName("age").getOrdinalPosition()).isEqualTo(3);
+            assertThat(authorVertexType.getPropertyByName("age").isFromPrimaryKey()).isFalse();
 
-            assertEquals(3, bookVertexType.getProperties().size());
+            assertThat(bookVertexType.getProperties().size()).isEqualTo(3);
 
-            assertNotNull(bookVertexType.getPropertyByName("id"));
-            assertEquals("id", bookVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", bookVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, bookVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, bookVertexType.getPropertyByName("id").isFromPrimaryKey());
+            assertThat(bookVertexType.getPropertyByName("id")).isNotNull();
+            assertThat(bookVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+            assertThat(bookVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(bookVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+            assertThat(bookVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
 
-            assertNotNull(bookVertexType.getPropertyByName("title"));
-            assertEquals("title", bookVertexType.getPropertyByName("title").getName());
-            assertEquals("VARCHAR", bookVertexType.getPropertyByName("title").getOriginalType());
-            assertEquals(2, bookVertexType.getPropertyByName("title").getOrdinalPosition());
-            assertEquals(false, bookVertexType.getPropertyByName("title").isFromPrimaryKey());
+            assertThat(bookVertexType.getPropertyByName("title")).isNotNull();
+            assertThat(bookVertexType.getPropertyByName("title").getName()).isEqualTo("title");
+            assertThat(bookVertexType.getPropertyByName("title").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(bookVertexType.getPropertyByName("title").getOrdinalPosition()).isEqualTo(2);
+            assertThat(bookVertexType.getPropertyByName("title").isFromPrimaryKey()).isFalse();
 
-            assertNotNull(bookVertexType.getPropertyByName("authorId"));
-            assertEquals("authorId", bookVertexType.getPropertyByName("authorId").getName());
-            assertEquals("VARCHAR", bookVertexType.getPropertyByName("authorId").getOriginalType());
-            assertEquals(3, bookVertexType.getPropertyByName("authorId").getOrdinalPosition());
-            assertEquals(false, bookVertexType.getPropertyByName("authorId").isFromPrimaryKey());
+            assertThat(bookVertexType.getPropertyByName("authorId")).isNotNull();
+            assertThat(bookVertexType.getPropertyByName("authorId").getName()).isEqualTo("authorId");
+            assertThat(bookVertexType.getPropertyByName("authorId").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(bookVertexType.getPropertyByName("authorId").getOrdinalPosition()).isEqualTo(3);
+            assertThat(bookVertexType.getPropertyByName("authorId").isFromPrimaryKey()).isFalse();
 
             // edges check
-            assertEquals(1, mapper.getGraphModel().getEdgesType().size());
-            assertNotNull(authorEdgeType);
+            assertThat(mapper.getGraphModel().getEdgesType().size()).isEqualTo(1);
+            assertThat(authorEdgeType).isNotNull();
 
-            assertEquals("HasAuthor", authorEdgeType.getName());
-            assertEquals(0, authorEdgeType.getProperties().size());
-            assertEquals("BookAuthor", authorEdgeType.getInVertexType().getName());
-            assertEquals(1, authorEdgeType.getNumberRelationshipsRepresented());
+            assertThat(authorEdgeType.getName()).isEqualTo("HasAuthor");
+            assertThat(authorEdgeType.getProperties().size()).isEqualTo(0);
+            assertThat(authorEdgeType.getInVertexType().getName()).isEqualTo("BookAuthor");
+            assertThat(authorEdgeType.getNumberRelationshipsRepresented()).isEqualTo(1);
 
             /*
              * Rules check
@@ -218,62 +215,62 @@ public class GraphModelBuildingTest {
 
             // Classes Mapping
 
-            assertEquals(2, mapper.getVertexType2EVClassMappers().size());
-            assertEquals(2, mapper.getEntity2EVClassMappers().size());
+            assertThat(mapper.getVertexType2EVClassMappers().size()).isEqualTo(2);
+            assertThat(mapper.getEntity2EVClassMappers().size()).isEqualTo(2);
 
             Entity bookEntity = mapper.getDataBaseSchema().getEntityByName("BOOK");
-            assertEquals(1, mapper.getEVClassMappersByVertex(bookVertexType).size());
+            assertThat(mapper.getEVClassMappersByVertex(bookVertexType).size()).isEqualTo(1);
             EVClassMapper bookClassMapper = mapper.getEVClassMappersByVertex(bookVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(bookEntity).size());
-            assertEquals(bookClassMapper, mapper.getEVClassMappersByEntity(bookEntity).get(0));
-            assertEquals(bookClassMapper.getEntity(), bookEntity);
-            assertEquals(bookClassMapper.getVertexType(), bookVertexType);
+            assertThat(mapper.getEVClassMappersByEntity(bookEntity).size()).isEqualTo(1);
+            assertThat(mapper.getEVClassMappersByEntity(bookEntity).get(0)).isEqualTo(bookClassMapper);
+            assertThat(bookEntity).isEqualTo(bookClassMapper.getEntity());
+            assertThat(bookVertexType).isEqualTo(bookClassMapper.getVertexType());
 
-            assertEquals(3, bookClassMapper.getAttribute2property().size());
-            assertEquals(3, bookClassMapper.getProperty2attribute().size());
-            assertEquals("id", bookClassMapper.getAttribute2property().get("ID"));
-            assertEquals("title", bookClassMapper.getAttribute2property().get("TITLE"));
-            assertEquals("authorId", bookClassMapper.getAttribute2property().get("AUTHOR_ID"));
-            assertEquals("ID", bookClassMapper.getProperty2attribute().get("id"));
-            assertEquals("TITLE", bookClassMapper.getProperty2attribute().get("title"));
-            assertEquals("AUTHOR_ID", bookClassMapper.getProperty2attribute().get("authorId"));
+            assertThat(bookClassMapper.getAttribute2property().size()).isEqualTo(3);
+            assertThat(bookClassMapper.getProperty2attribute().size()).isEqualTo(3);
+            assertThat(bookClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+            assertThat(bookClassMapper.getAttribute2property().get("TITLE")).isEqualTo("title");
+            assertThat(bookClassMapper.getAttribute2property().get("AUTHOR_ID")).isEqualTo("authorId");
+            assertThat(bookClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+            assertThat(bookClassMapper.getProperty2attribute().get("title")).isEqualTo("TITLE");
+            assertThat(bookClassMapper.getProperty2attribute().get("authorId")).isEqualTo("AUTHOR_ID");
 
             Entity bookAuthorEntity = mapper.getDataBaseSchema().getEntityByName("BOOK_AUTHOR");
-            assertEquals(1, mapper.getEVClassMappersByVertex(authorVertexType).size());
+            assertThat(mapper.getEVClassMappersByVertex(authorVertexType).size()).isEqualTo(1);
             EVClassMapper bookAuthorClassMapper = mapper.getEVClassMappersByVertex(authorVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(bookAuthorEntity).size());
-            assertEquals(bookAuthorClassMapper, mapper.getEVClassMappersByEntity(bookAuthorEntity).get(0));
-            assertEquals(bookAuthorClassMapper.getEntity(), bookAuthorEntity);
-            assertEquals(bookAuthorClassMapper.getVertexType(), authorVertexType);
+            assertThat(mapper.getEVClassMappersByEntity(bookAuthorEntity).size()).isEqualTo(1);
+            assertThat(mapper.getEVClassMappersByEntity(bookAuthorEntity).get(0)).isEqualTo(bookAuthorClassMapper);
+            assertThat(bookAuthorEntity).isEqualTo(bookAuthorClassMapper.getEntity());
+            assertThat(authorVertexType).isEqualTo(bookAuthorClassMapper.getVertexType());
 
-            assertEquals(3, bookAuthorClassMapper.getAttribute2property().size());
-            assertEquals(3, bookAuthorClassMapper.getProperty2attribute().size());
-            assertEquals("id", bookAuthorClassMapper.getAttribute2property().get("ID"));
-            assertEquals("name", bookAuthorClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("age", bookAuthorClassMapper.getAttribute2property().get("AGE"));
-            assertEquals("ID", bookAuthorClassMapper.getProperty2attribute().get("id"));
-            assertEquals("NAME", bookAuthorClassMapper.getProperty2attribute().get("name"));
-            assertEquals("AGE", bookAuthorClassMapper.getProperty2attribute().get("age"));
+            assertThat(bookAuthorClassMapper.getAttribute2property().size()).isEqualTo(3);
+            assertThat(bookAuthorClassMapper.getProperty2attribute().size()).isEqualTo(3);
+            assertThat(bookAuthorClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+            assertThat(bookAuthorClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+            assertThat(bookAuthorClassMapper.getAttribute2property().get("AGE")).isEqualTo("age");
+            assertThat(bookAuthorClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+            assertThat(bookAuthorClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
+            assertThat(bookAuthorClassMapper.getProperty2attribute().get("age")).isEqualTo("AGE");
 
             // Relationships-Edges Mapping
 
             Iterator<CanonicalRelationship> it = bookEntity.getOutCanonicalRelationships().iterator();
             CanonicalRelationship hasAuthorRelationship = it.next();
-            assertFalse(it.hasNext());
+            assertThat(it.hasNext()).isFalse();
 
-            assertEquals(1, mapper.getRelationship2edgeType().size());
-            assertEquals(authorEdgeType, mapper.getRelationship2edgeType().get(hasAuthorRelationship));
+            assertThat(mapper.getRelationship2edgeType().size()).isEqualTo(1);
+            assertThat(mapper.getRelationship2edgeType().get(hasAuthorRelationship)).isEqualTo(authorEdgeType);
 
-            assertEquals(1, mapper.getEdgeType2relationships().size());
-            assertEquals(1, mapper.getEdgeType2relationships().get(authorEdgeType).size());
-            assertTrue(mapper.getEdgeType2relationships().get(authorEdgeType).contains(hasAuthorRelationship));
+            assertThat(mapper.getEdgeType2relationships().size()).isEqualTo(1);
+            assertThat(mapper.getEdgeType2relationships().get(authorEdgeType).size()).isEqualTo(1);
+            assertThat(mapper.getEdgeType2relationships().get(authorEdgeType).contains(hasAuthorRelationship)).isTrue();
 
             // JoinVertexes-AggregatorEdges Mapping
 
-            assertEquals(0, mapper.getJoinVertex2aggregatorEdges().size());
+            assertThat(mapper.getJoinVertex2aggregatorEdges().size()).isEqualTo(0);
         } catch (Exception e) {
             e.printStackTrace();
-            fail();
+            fail("");
         } finally {
             try {
                 // Dropping Source DB Schema and OrientGraph
@@ -282,17 +279,17 @@ public class GraphModelBuildingTest {
                 connection.close();
             } catch (Exception e) {
                 e.printStackTrace();
-                fail();
+                fail("");
             }
         }
     }
 
-    @Test
     /*
      *  Three tables and two relationships with two different simple primary keys imported .
      */
 
-    public void buildGraphModelFromThreeTablesWithTwoSimplePK() {
+    @Test
+    void buildGraphModelFromThreeTablesWithTwoSimplePK() {
         Connection connection = null;
         Statement st = null;
 
@@ -323,10 +320,10 @@ public class GraphModelBuildingTest {
              *  Testing context information
              */
 
-            assertEquals(3, statistics.totalNumberOfModelVertices);
-            assertEquals(3, statistics.builtModelVertexTypes);
-            assertEquals(2, statistics.totalNumberOfModelEdges);
-            assertEquals(2, statistics.builtModelEdgeTypes);
+            assertThat(statistics.totalNumberOfModelVertices).isEqualTo(3);
+            assertThat(statistics.builtModelVertexTypes).isEqualTo(3);
+            assertThat(statistics.totalNumberOfModelEdges).isEqualTo(2);
+            assertThat(statistics.builtModelEdgeTypes).isEqualTo(2);
 
             /*
              *  Testing built graph model
@@ -338,85 +335,85 @@ public class GraphModelBuildingTest {
             EdgeType bookEdgeType = mapper.getGraphModel().getEdgeTypeByName("HasBook");
 
             // vertices check
-            assertEquals(3, mapper.getGraphModel().getVerticesType().size());
-            assertNotNull(authorVertexType);
-            assertNotNull(bookVertexType);
+            assertThat(mapper.getGraphModel().getVerticesType().size()).isEqualTo(3);
+            assertThat(authorVertexType).isNotNull();
+            assertThat(bookVertexType).isNotNull();
 
             // properties check
-            assertEquals(3, authorVertexType.getProperties().size());
+            assertThat(authorVertexType.getProperties().size()).isEqualTo(3);
 
-            assertNotNull(authorVertexType.getPropertyByName("id"));
-            assertEquals("id", authorVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", authorVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, authorVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, authorVertexType.getPropertyByName("id").isFromPrimaryKey());
+            assertThat(authorVertexType.getPropertyByName("id")).isNotNull();
+            assertThat(authorVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+            assertThat(authorVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(authorVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+            assertThat(authorVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
 
-            assertNotNull(authorVertexType.getPropertyByName("name"));
-            assertEquals("name", authorVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", authorVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(2, authorVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, authorVertexType.getPropertyByName("name").isFromPrimaryKey());
+            assertThat(authorVertexType.getPropertyByName("name")).isNotNull();
+            assertThat(authorVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+            assertThat(authorVertexType.getPropertyByName("name").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(authorVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(2);
+            assertThat(authorVertexType.getPropertyByName("name").isFromPrimaryKey()).isFalse();
 
-            assertNotNull(authorVertexType.getPropertyByName("age"));
-            assertEquals("age", authorVertexType.getPropertyByName("age").getName());
-            assertEquals("INTEGER", authorVertexType.getPropertyByName("age").getOriginalType());
-            assertEquals(3, authorVertexType.getPropertyByName("age").getOrdinalPosition());
-            assertEquals(false, authorVertexType.getPropertyByName("age").isFromPrimaryKey());
+            assertThat(authorVertexType.getPropertyByName("age")).isNotNull();
+            assertThat(authorVertexType.getPropertyByName("age").getName()).isEqualTo("age");
+            assertThat(authorVertexType.getPropertyByName("age").getOriginalType()).isEqualTo("INTEGER");
+            assertThat(authorVertexType.getPropertyByName("age").getOrdinalPosition()).isEqualTo(3);
+            assertThat(authorVertexType.getPropertyByName("age").isFromPrimaryKey()).isFalse();
 
-            assertEquals(3, bookVertexType.getProperties().size());
+            assertThat(bookVertexType.getProperties().size()).isEqualTo(3);
 
-            assertNotNull(bookVertexType.getPropertyByName("id"));
-            assertEquals("id", bookVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", bookVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, bookVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, bookVertexType.getPropertyByName("id").isFromPrimaryKey());
+            assertThat(bookVertexType.getPropertyByName("id")).isNotNull();
+            assertThat(bookVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+            assertThat(bookVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(bookVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+            assertThat(bookVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
 
-            assertNotNull(bookVertexType.getPropertyByName("title"));
-            assertEquals("title", bookVertexType.getPropertyByName("title").getName());
-            assertEquals("VARCHAR", bookVertexType.getPropertyByName("title").getOriginalType());
-            assertEquals(2, bookVertexType.getPropertyByName("title").getOrdinalPosition());
-            assertEquals(false, bookVertexType.getPropertyByName("title").isFromPrimaryKey());
+            assertThat(bookVertexType.getPropertyByName("title")).isNotNull();
+            assertThat(bookVertexType.getPropertyByName("title").getName()).isEqualTo("title");
+            assertThat(bookVertexType.getPropertyByName("title").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(bookVertexType.getPropertyByName("title").getOrdinalPosition()).isEqualTo(2);
+            assertThat(bookVertexType.getPropertyByName("title").isFromPrimaryKey()).isFalse();
 
-            assertNotNull(bookVertexType.getPropertyByName("authorId"));
-            assertEquals("authorId", bookVertexType.getPropertyByName("authorId").getName());
-            assertEquals("VARCHAR", bookVertexType.getPropertyByName("authorId").getOriginalType());
-            assertEquals(3, bookVertexType.getPropertyByName("authorId").getOrdinalPosition());
-            assertEquals(false, bookVertexType.getPropertyByName("authorId").isFromPrimaryKey());
+            assertThat(bookVertexType.getPropertyByName("authorId")).isNotNull();
+            assertThat(bookVertexType.getPropertyByName("authorId").getName()).isEqualTo("authorId");
+            assertThat(bookVertexType.getPropertyByName("authorId").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(bookVertexType.getPropertyByName("authorId").getOrdinalPosition()).isEqualTo(3);
+            assertThat(bookVertexType.getPropertyByName("authorId").isFromPrimaryKey()).isFalse();
 
-            assertEquals(3, itemVertexType.getProperties().size());
+            assertThat(itemVertexType.getProperties().size()).isEqualTo(3);
 
-            assertNotNull(itemVertexType.getPropertyByName("id"));
-            assertEquals("id", itemVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", itemVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, itemVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, itemVertexType.getPropertyByName("id").isFromPrimaryKey());
+            assertThat(itemVertexType.getPropertyByName("id")).isNotNull();
+            assertThat(itemVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+            assertThat(itemVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(itemVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+            assertThat(itemVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
 
-            assertNotNull(itemVertexType.getPropertyByName("bookId"));
-            assertEquals("bookId", itemVertexType.getPropertyByName("bookId").getName());
-            assertEquals("VARCHAR", itemVertexType.getPropertyByName("bookId").getOriginalType());
-            assertEquals(2, itemVertexType.getPropertyByName("bookId").getOrdinalPosition());
-            assertEquals(false, itemVertexType.getPropertyByName("bookId").isFromPrimaryKey());
+            assertThat(itemVertexType.getPropertyByName("bookId")).isNotNull();
+            assertThat(itemVertexType.getPropertyByName("bookId").getName()).isEqualTo("bookId");
+            assertThat(itemVertexType.getPropertyByName("bookId").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(itemVertexType.getPropertyByName("bookId").getOrdinalPosition()).isEqualTo(2);
+            assertThat(itemVertexType.getPropertyByName("bookId").isFromPrimaryKey()).isFalse();
 
-            assertNotNull(itemVertexType.getPropertyByName("price"));
-            assertEquals("price", itemVertexType.getPropertyByName("price").getName());
-            assertEquals("VARCHAR", itemVertexType.getPropertyByName("price").getOriginalType());
-            assertEquals(3, itemVertexType.getPropertyByName("price").getOrdinalPosition());
-            assertEquals(false, itemVertexType.getPropertyByName("price").isFromPrimaryKey());
+            assertThat(itemVertexType.getPropertyByName("price")).isNotNull();
+            assertThat(itemVertexType.getPropertyByName("price").getName()).isEqualTo("price");
+            assertThat(itemVertexType.getPropertyByName("price").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(itemVertexType.getPropertyByName("price").getOrdinalPosition()).isEqualTo(3);
+            assertThat(itemVertexType.getPropertyByName("price").isFromPrimaryKey()).isFalse();
 
             // edges check
-            assertEquals(2, mapper.getGraphModel().getEdgesType().size());
-            assertNotNull(authorEdgeType);
-            assertNotNull(bookEdgeType);
+            assertThat(mapper.getGraphModel().getEdgesType().size()).isEqualTo(2);
+            assertThat(authorEdgeType).isNotNull();
+            assertThat(bookEdgeType).isNotNull();
 
-            assertEquals("HasAuthor", authorEdgeType.getName());
-            assertEquals(0, authorEdgeType.getProperties().size());
-            assertEquals("Author", authorEdgeType.getInVertexType().getName());
-            assertEquals(1, authorEdgeType.getNumberRelationshipsRepresented());
+            assertThat(authorEdgeType.getName()).isEqualTo("HasAuthor");
+            assertThat(authorEdgeType.getProperties().size()).isEqualTo(0);
+            assertThat(authorEdgeType.getInVertexType().getName()).isEqualTo("Author");
+            assertThat(authorEdgeType.getNumberRelationshipsRepresented()).isEqualTo(1);
 
-            assertEquals("HasBook", bookEdgeType.getName());
-            assertEquals(0, bookEdgeType.getProperties().size());
-            assertEquals("Book", bookEdgeType.getInVertexType().getName());
-            assertEquals(1, bookEdgeType.getNumberRelationshipsRepresented());
+            assertThat(bookEdgeType.getName()).isEqualTo("HasBook");
+            assertThat(bookEdgeType.getProperties().size()).isEqualTo(0);
+            assertThat(bookEdgeType.getInVertexType().getName()).isEqualTo("Book");
+            assertThat(bookEdgeType.getNumberRelationshipsRepresented()).isEqualTo(1);
 
             /*
              * Rules check
@@ -424,85 +421,85 @@ public class GraphModelBuildingTest {
 
             // Classes Mapping
 
-            assertEquals(3, mapper.getVertexType2EVClassMappers().size());
-            assertEquals(3, mapper.getEntity2EVClassMappers().size());
+            assertThat(mapper.getVertexType2EVClassMappers().size()).isEqualTo(3);
+            assertThat(mapper.getEntity2EVClassMappers().size()).isEqualTo(3);
 
             Entity bookEntity = mapper.getDataBaseSchema().getEntityByName("BOOK");
-            assertEquals(1, mapper.getEVClassMappersByVertex(bookVertexType).size());
+            assertThat(mapper.getEVClassMappersByVertex(bookVertexType).size()).isEqualTo(1);
             EVClassMapper bookClassMapper = mapper.getEVClassMappersByVertex(bookVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(bookEntity).size());
-            assertEquals(bookClassMapper, mapper.getEVClassMappersByEntity(bookEntity).get(0));
-            assertEquals(bookClassMapper.getEntity(), bookEntity);
-            assertEquals(bookClassMapper.getVertexType(), bookVertexType);
+            assertThat(mapper.getEVClassMappersByEntity(bookEntity).size()).isEqualTo(1);
+            assertThat(mapper.getEVClassMappersByEntity(bookEntity).get(0)).isEqualTo(bookClassMapper);
+            assertThat(bookEntity).isEqualTo(bookClassMapper.getEntity());
+            assertThat(bookVertexType).isEqualTo(bookClassMapper.getVertexType());
 
-            assertEquals(3, bookClassMapper.getAttribute2property().size());
-            assertEquals(3, bookClassMapper.getProperty2attribute().size());
-            assertEquals("id", bookClassMapper.getAttribute2property().get("ID"));
-            assertEquals("title", bookClassMapper.getAttribute2property().get("TITLE"));
-            assertEquals("authorId", bookClassMapper.getAttribute2property().get("AUTHOR_ID"));
-            assertEquals("ID", bookClassMapper.getProperty2attribute().get("id"));
-            assertEquals("TITLE", bookClassMapper.getProperty2attribute().get("title"));
-            assertEquals("AUTHOR_ID", bookClassMapper.getProperty2attribute().get("authorId"));
+            assertThat(bookClassMapper.getAttribute2property().size()).isEqualTo(3);
+            assertThat(bookClassMapper.getProperty2attribute().size()).isEqualTo(3);
+            assertThat(bookClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+            assertThat(bookClassMapper.getAttribute2property().get("TITLE")).isEqualTo("title");
+            assertThat(bookClassMapper.getAttribute2property().get("AUTHOR_ID")).isEqualTo("authorId");
+            assertThat(bookClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+            assertThat(bookClassMapper.getProperty2attribute().get("title")).isEqualTo("TITLE");
+            assertThat(bookClassMapper.getProperty2attribute().get("authorId")).isEqualTo("AUTHOR_ID");
 
             Entity authorEntity = mapper.getDataBaseSchema().getEntityByName("AUTHOR");
-            assertEquals(1, mapper.getEVClassMappersByVertex(authorVertexType).size());
+            assertThat(mapper.getEVClassMappersByVertex(authorVertexType).size()).isEqualTo(1);
             EVClassMapper authorClassMapper = mapper.getEVClassMappersByVertex(authorVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(authorEntity).size());
-            assertEquals(authorClassMapper, mapper.getEVClassMappersByEntity(authorEntity).get(0));
-            assertEquals(authorClassMapper.getEntity(), authorEntity);
-            assertEquals(authorClassMapper.getVertexType(), authorVertexType);
+            assertThat(mapper.getEVClassMappersByEntity(authorEntity).size()).isEqualTo(1);
+            assertThat(mapper.getEVClassMappersByEntity(authorEntity).get(0)).isEqualTo(authorClassMapper);
+            assertThat(authorEntity).isEqualTo(authorClassMapper.getEntity());
+            assertThat(authorVertexType).isEqualTo(authorClassMapper.getVertexType());
 
-            assertEquals(3, authorClassMapper.getAttribute2property().size());
-            assertEquals(3, authorClassMapper.getProperty2attribute().size());
-            assertEquals("id", authorClassMapper.getAttribute2property().get("ID"));
-            assertEquals("name", authorClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("age", authorClassMapper.getAttribute2property().get("AGE"));
-            assertEquals("ID", authorClassMapper.getProperty2attribute().get("id"));
-            assertEquals("NAME", authorClassMapper.getProperty2attribute().get("name"));
-            assertEquals("AGE", authorClassMapper.getProperty2attribute().get("age"));
+            assertThat(authorClassMapper.getAttribute2property().size()).isEqualTo(3);
+            assertThat(authorClassMapper.getProperty2attribute().size()).isEqualTo(3);
+            assertThat(authorClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+            assertThat(authorClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+            assertThat(authorClassMapper.getAttribute2property().get("AGE")).isEqualTo("age");
+            assertThat(authorClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+            assertThat(authorClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
+            assertThat(authorClassMapper.getProperty2attribute().get("age")).isEqualTo("AGE");
 
             Entity itemEntity = mapper.getDataBaseSchema().getEntityByName("ITEM");
-            assertEquals(1, mapper.getEVClassMappersByVertex(itemVertexType).size());
+            assertThat(mapper.getEVClassMappersByVertex(itemVertexType).size()).isEqualTo(1);
             EVClassMapper itemClassMapper = mapper.getEVClassMappersByVertex(itemVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(itemEntity).size());
-            assertEquals(itemClassMapper, mapper.getEVClassMappersByEntity(itemEntity).get(0));
-            assertEquals(itemClassMapper.getEntity(), itemEntity);
-            assertEquals(itemClassMapper.getVertexType(), itemVertexType);
+            assertThat(mapper.getEVClassMappersByEntity(itemEntity).size()).isEqualTo(1);
+            assertThat(mapper.getEVClassMappersByEntity(itemEntity).get(0)).isEqualTo(itemClassMapper);
+            assertThat(itemEntity).isEqualTo(itemClassMapper.getEntity());
+            assertThat(itemVertexType).isEqualTo(itemClassMapper.getVertexType());
 
-            assertEquals(3, itemClassMapper.getAttribute2property().size());
-            assertEquals(3, itemClassMapper.getProperty2attribute().size());
-            assertEquals("id", itemClassMapper.getAttribute2property().get("ID"));
-            assertEquals("bookId", itemClassMapper.getAttribute2property().get("BOOK_ID"));
-            assertEquals("price", itemClassMapper.getAttribute2property().get("PRICE"));
-            assertEquals("ID", itemClassMapper.getProperty2attribute().get("id"));
-            assertEquals("BOOK_ID", itemClassMapper.getProperty2attribute().get("bookId"));
-            assertEquals("PRICE", itemClassMapper.getProperty2attribute().get("price"));
+            assertThat(itemClassMapper.getAttribute2property().size()).isEqualTo(3);
+            assertThat(itemClassMapper.getProperty2attribute().size()).isEqualTo(3);
+            assertThat(itemClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+            assertThat(itemClassMapper.getAttribute2property().get("BOOK_ID")).isEqualTo("bookId");
+            assertThat(itemClassMapper.getAttribute2property().get("PRICE")).isEqualTo("price");
+            assertThat(itemClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+            assertThat(itemClassMapper.getProperty2attribute().get("bookId")).isEqualTo("BOOK_ID");
+            assertThat(itemClassMapper.getProperty2attribute().get("price")).isEqualTo("PRICE");
 
             // Relationships-Edges Mapping
 
             Iterator<CanonicalRelationship> it = bookEntity.getOutCanonicalRelationships().iterator();
             CanonicalRelationship hasAuthorRelationship = it.next();
-            assertFalse(it.hasNext());
+            assertThat(it.hasNext()).isFalse();
             it = itemEntity.getOutCanonicalRelationships().iterator();
             CanonicalRelationship hasBookRelationship = it.next();
-            assertFalse(it.hasNext());
+            assertThat(it.hasNext()).isFalse();
 
-            assertEquals(2, mapper.getRelationship2edgeType().size());
-            assertEquals(authorEdgeType, mapper.getRelationship2edgeType().get(hasAuthorRelationship));
-            assertEquals(bookEdgeType, mapper.getRelationship2edgeType().get(hasBookRelationship));
+            assertThat(mapper.getRelationship2edgeType().size()).isEqualTo(2);
+            assertThat(mapper.getRelationship2edgeType().get(hasAuthorRelationship)).isEqualTo(authorEdgeType);
+            assertThat(mapper.getRelationship2edgeType().get(hasBookRelationship)).isEqualTo(bookEdgeType);
 
-            assertEquals(2, mapper.getEdgeType2relationships().size());
-            assertEquals(1, mapper.getEdgeType2relationships().get(authorEdgeType).size());
-            assertTrue(mapper.getEdgeType2relationships().get(authorEdgeType).contains(hasAuthorRelationship));
-            assertEquals(1, mapper.getEdgeType2relationships().get(bookEdgeType).size());
-            assertTrue(mapper.getEdgeType2relationships().get(bookEdgeType).contains(hasBookRelationship));
+            assertThat(mapper.getEdgeType2relationships().size()).isEqualTo(2);
+            assertThat(mapper.getEdgeType2relationships().get(authorEdgeType).size()).isEqualTo(1);
+            assertThat(mapper.getEdgeType2relationships().get(authorEdgeType).contains(hasAuthorRelationship)).isTrue();
+            assertThat(mapper.getEdgeType2relationships().get(bookEdgeType).size()).isEqualTo(1);
+            assertThat(mapper.getEdgeType2relationships().get(bookEdgeType).contains(hasBookRelationship)).isTrue();
 
             // JoinVertexes-AggregatorEdges Mapping
 
-            assertEquals(0, mapper.getJoinVertex2aggregatorEdges().size());
+            assertThat(mapper.getJoinVertex2aggregatorEdges().size()).isEqualTo(0);
         } catch (Exception e) {
             e.printStackTrace();
-            fail();
+            fail("");
         } finally {
             try {
                 // Dropping Source DB Schema and OrientGraph
@@ -511,17 +508,17 @@ public class GraphModelBuildingTest {
                 connection.close();
             } catch (Exception e) {
                 e.printStackTrace();
-                fail();
+                fail("");
             }
         }
     }
 
-    @Test
     /*
      *  Three tables and two relationships with a simple primary keys twice imported.
      */
 
-    public void buildGraphModelFromThreeTablesWithOneSimplePKImportedTwice() {
+    @Test
+    void buildGraphModelFromThreeTablesWithOneSimplePKImportedTwice() {
         Connection connection = null;
         Statement st = null;
 
@@ -552,10 +549,10 @@ public class GraphModelBuildingTest {
              *  Testing context information
              */
 
-            assertEquals(3, statistics.totalNumberOfModelVertices);
-            assertEquals(3, statistics.builtModelVertexTypes);
-            assertEquals(1, statistics.totalNumberOfModelEdges);
-            assertEquals(1, statistics.builtModelEdgeTypes);
+            assertThat(statistics.totalNumberOfModelVertices).isEqualTo(3);
+            assertThat(statistics.builtModelVertexTypes).isEqualTo(3);
+            assertThat(statistics.totalNumberOfModelEdges).isEqualTo(1);
+            assertThat(statistics.builtModelEdgeTypes).isEqualTo(1);
 
             /*
              *  Testing built graph model
@@ -566,85 +563,85 @@ public class GraphModelBuildingTest {
             EdgeType authorEdgeType = mapper.getGraphModel().getEdgeTypeByName("HasAuthor");
 
             // vertices check
-            assertEquals(3, mapper.getGraphModel().getVerticesType().size());
-            assertNotNull(authorVertexType);
-            assertNotNull(bookVertexType);
+            assertThat(mapper.getGraphModel().getVerticesType().size()).isEqualTo(3);
+            assertThat(authorVertexType).isNotNull();
+            assertThat(bookVertexType).isNotNull();
 
             // properties check
-            assertEquals(3, authorVertexType.getProperties().size());
+            assertThat(authorVertexType.getProperties().size()).isEqualTo(3);
 
-            assertNotNull(authorVertexType.getPropertyByName("id"));
-            assertEquals("id", authorVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", authorVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, authorVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, authorVertexType.getPropertyByName("id").isFromPrimaryKey());
+            assertThat(authorVertexType.getPropertyByName("id")).isNotNull();
+            assertThat(authorVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+            assertThat(authorVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(authorVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+            assertThat(authorVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
 
-            assertNotNull(authorVertexType.getPropertyByName("name"));
-            assertEquals("name", authorVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", authorVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(2, authorVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, authorVertexType.getPropertyByName("name").isFromPrimaryKey());
+            assertThat(authorVertexType.getPropertyByName("name")).isNotNull();
+            assertThat(authorVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+            assertThat(authorVertexType.getPropertyByName("name").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(authorVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(2);
+            assertThat(authorVertexType.getPropertyByName("name").isFromPrimaryKey()).isFalse();
 
-            assertNotNull(authorVertexType.getPropertyByName("age"));
-            assertEquals("age", authorVertexType.getPropertyByName("age").getName());
-            assertEquals("INTEGER", authorVertexType.getPropertyByName("age").getOriginalType());
-            assertEquals(3, authorVertexType.getPropertyByName("age").getOrdinalPosition());
-            assertEquals(false, authorVertexType.getPropertyByName("age").isFromPrimaryKey());
+            assertThat(authorVertexType.getPropertyByName("age")).isNotNull();
+            assertThat(authorVertexType.getPropertyByName("age").getName()).isEqualTo("age");
+            assertThat(authorVertexType.getPropertyByName("age").getOriginalType()).isEqualTo("INTEGER");
+            assertThat(authorVertexType.getPropertyByName("age").getOrdinalPosition()).isEqualTo(3);
+            assertThat(authorVertexType.getPropertyByName("age").isFromPrimaryKey()).isFalse();
 
-            assertEquals(3, bookVertexType.getProperties().size());
+            assertThat(bookVertexType.getProperties().size()).isEqualTo(3);
 
-            assertNotNull(bookVertexType.getPropertyByName("id"));
-            assertEquals("id", bookVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", bookVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, bookVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, bookVertexType.getPropertyByName("id").isFromPrimaryKey());
+            assertThat(bookVertexType.getPropertyByName("id")).isNotNull();
+            assertThat(bookVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+            assertThat(bookVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(bookVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+            assertThat(bookVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
 
-            assertNotNull(bookVertexType.getPropertyByName("title"));
-            assertEquals("title", bookVertexType.getPropertyByName("title").getName());
-            assertEquals("VARCHAR", bookVertexType.getPropertyByName("title").getOriginalType());
-            assertEquals(2, bookVertexType.getPropertyByName("title").getOrdinalPosition());
-            assertEquals(false, bookVertexType.getPropertyByName("title").isFromPrimaryKey());
+            assertThat(bookVertexType.getPropertyByName("title")).isNotNull();
+            assertThat(bookVertexType.getPropertyByName("title").getName()).isEqualTo("title");
+            assertThat(bookVertexType.getPropertyByName("title").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(bookVertexType.getPropertyByName("title").getOrdinalPosition()).isEqualTo(2);
+            assertThat(bookVertexType.getPropertyByName("title").isFromPrimaryKey()).isFalse();
 
-            assertNotNull(bookVertexType.getPropertyByName("authorId"));
-            assertEquals("authorId", bookVertexType.getPropertyByName("authorId").getName());
-            assertEquals("VARCHAR", bookVertexType.getPropertyByName("authorId").getOriginalType());
-            assertEquals(3, bookVertexType.getPropertyByName("authorId").getOrdinalPosition());
-            assertEquals(false, bookVertexType.getPropertyByName("authorId").isFromPrimaryKey());
+            assertThat(bookVertexType.getPropertyByName("authorId")).isNotNull();
+            assertThat(bookVertexType.getPropertyByName("authorId").getName()).isEqualTo("authorId");
+            assertThat(bookVertexType.getPropertyByName("authorId").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(bookVertexType.getPropertyByName("authorId").getOrdinalPosition()).isEqualTo(3);
+            assertThat(bookVertexType.getPropertyByName("authorId").isFromPrimaryKey()).isFalse();
 
-            assertEquals(4, articleVertexType.getProperties().size());
+            assertThat(articleVertexType.getProperties().size()).isEqualTo(4);
 
-            assertNotNull(articleVertexType.getPropertyByName("id"));
-            assertEquals("id", articleVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", articleVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, articleVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, articleVertexType.getPropertyByName("id").isFromPrimaryKey());
+            assertThat(articleVertexType.getPropertyByName("id")).isNotNull();
+            assertThat(articleVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+            assertThat(articleVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(articleVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+            assertThat(articleVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
 
-            assertNotNull(articleVertexType.getPropertyByName("title"));
-            assertEquals("title", articleVertexType.getPropertyByName("title").getName());
-            assertEquals("VARCHAR", articleVertexType.getPropertyByName("title").getOriginalType());
-            assertEquals(2, articleVertexType.getPropertyByName("title").getOrdinalPosition());
-            assertEquals(false, articleVertexType.getPropertyByName("title").isFromPrimaryKey());
+            assertThat(articleVertexType.getPropertyByName("title")).isNotNull();
+            assertThat(articleVertexType.getPropertyByName("title").getName()).isEqualTo("title");
+            assertThat(articleVertexType.getPropertyByName("title").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(articleVertexType.getPropertyByName("title").getOrdinalPosition()).isEqualTo(2);
+            assertThat(articleVertexType.getPropertyByName("title").isFromPrimaryKey()).isFalse();
 
-            assertNotNull(articleVertexType.getPropertyByName("date"));
-            assertEquals("date", articleVertexType.getPropertyByName("date").getName());
-            assertEquals("DATE", articleVertexType.getPropertyByName("date").getOriginalType());
-            assertEquals(3, articleVertexType.getPropertyByName("date").getOrdinalPosition());
-            assertEquals(false, articleVertexType.getPropertyByName("date").isFromPrimaryKey());
+            assertThat(articleVertexType.getPropertyByName("date")).isNotNull();
+            assertThat(articleVertexType.getPropertyByName("date").getName()).isEqualTo("date");
+            assertThat(articleVertexType.getPropertyByName("date").getOriginalType()).isEqualTo("DATE");
+            assertThat(articleVertexType.getPropertyByName("date").getOrdinalPosition()).isEqualTo(3);
+            assertThat(articleVertexType.getPropertyByName("date").isFromPrimaryKey()).isFalse();
 
-            assertNotNull(articleVertexType.getPropertyByName("authorId"));
-            assertEquals("authorId", articleVertexType.getPropertyByName("authorId").getName());
-            assertEquals("VARCHAR", articleVertexType.getPropertyByName("authorId").getOriginalType());
-            assertEquals(4, articleVertexType.getPropertyByName("authorId").getOrdinalPosition());
-            assertEquals(false, articleVertexType.getPropertyByName("authorId").isFromPrimaryKey());
+            assertThat(articleVertexType.getPropertyByName("authorId")).isNotNull();
+            assertThat(articleVertexType.getPropertyByName("authorId").getName()).isEqualTo("authorId");
+            assertThat(articleVertexType.getPropertyByName("authorId").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(articleVertexType.getPropertyByName("authorId").getOrdinalPosition()).isEqualTo(4);
+            assertThat(articleVertexType.getPropertyByName("authorId").isFromPrimaryKey()).isFalse();
 
             // edges check
-            assertEquals(1, mapper.getGraphModel().getEdgesType().size());
-            assertNotNull(authorEdgeType);
+            assertThat(mapper.getGraphModel().getEdgesType().size()).isEqualTo(1);
+            assertThat(authorEdgeType).isNotNull();
 
-            assertEquals("HasAuthor", authorEdgeType.getName());
-            assertEquals(0, authorEdgeType.getProperties().size());
-            assertEquals("Author", authorEdgeType.getInVertexType().getName());
-            assertEquals(2, authorEdgeType.getNumberRelationshipsRepresented());
+            assertThat(authorEdgeType.getName()).isEqualTo("HasAuthor");
+            assertThat(authorEdgeType.getProperties().size()).isEqualTo(0);
+            assertThat(authorEdgeType.getInVertexType().getName()).isEqualTo("Author");
+            assertThat(authorEdgeType.getNumberRelationshipsRepresented()).isEqualTo(2);
 
             /*
              * Rules check
@@ -652,86 +649,86 @@ public class GraphModelBuildingTest {
 
             // Classes Mapping
 
-            assertEquals(3, mapper.getVertexType2EVClassMappers().size());
-            assertEquals(3, mapper.getEntity2EVClassMappers().size());
+            assertThat(mapper.getVertexType2EVClassMappers().size()).isEqualTo(3);
+            assertThat(mapper.getEntity2EVClassMappers().size()).isEqualTo(3);
 
             Entity bookEntity = mapper.getDataBaseSchema().getEntityByName("BOOK");
-            assertEquals(1, mapper.getEVClassMappersByVertex(bookVertexType).size());
+            assertThat(mapper.getEVClassMappersByVertex(bookVertexType).size()).isEqualTo(1);
             EVClassMapper bookClassMapper = mapper.getEVClassMappersByVertex(bookVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(bookEntity).size());
-            assertEquals(bookClassMapper, mapper.getEVClassMappersByEntity(bookEntity).get(0));
-            assertEquals(bookClassMapper.getEntity(), bookEntity);
-            assertEquals(bookClassMapper.getVertexType(), bookVertexType);
+            assertThat(mapper.getEVClassMappersByEntity(bookEntity).size()).isEqualTo(1);
+            assertThat(mapper.getEVClassMappersByEntity(bookEntity).get(0)).isEqualTo(bookClassMapper);
+            assertThat(bookEntity).isEqualTo(bookClassMapper.getEntity());
+            assertThat(bookVertexType).isEqualTo(bookClassMapper.getVertexType());
 
-            assertEquals(3, bookClassMapper.getAttribute2property().size());
-            assertEquals(3, bookClassMapper.getProperty2attribute().size());
-            assertEquals("id", bookClassMapper.getAttribute2property().get("ID"));
-            assertEquals("title", bookClassMapper.getAttribute2property().get("TITLE"));
-            assertEquals("authorId", bookClassMapper.getAttribute2property().get("AUTHOR_ID"));
-            assertEquals("ID", bookClassMapper.getProperty2attribute().get("id"));
-            assertEquals("TITLE", bookClassMapper.getProperty2attribute().get("title"));
-            assertEquals("AUTHOR_ID", bookClassMapper.getProperty2attribute().get("authorId"));
+            assertThat(bookClassMapper.getAttribute2property().size()).isEqualTo(3);
+            assertThat(bookClassMapper.getProperty2attribute().size()).isEqualTo(3);
+            assertThat(bookClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+            assertThat(bookClassMapper.getAttribute2property().get("TITLE")).isEqualTo("title");
+            assertThat(bookClassMapper.getAttribute2property().get("AUTHOR_ID")).isEqualTo("authorId");
+            assertThat(bookClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+            assertThat(bookClassMapper.getProperty2attribute().get("title")).isEqualTo("TITLE");
+            assertThat(bookClassMapper.getProperty2attribute().get("authorId")).isEqualTo("AUTHOR_ID");
 
             Entity authorEntity = mapper.getDataBaseSchema().getEntityByName("AUTHOR");
-            assertEquals(1, mapper.getEVClassMappersByVertex(authorVertexType).size());
+            assertThat(mapper.getEVClassMappersByVertex(authorVertexType).size()).isEqualTo(1);
             EVClassMapper authorClassMapper = mapper.getEVClassMappersByVertex(authorVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(authorEntity).size());
-            assertEquals(authorClassMapper, mapper.getEVClassMappersByEntity(authorEntity).get(0));
-            assertEquals(authorClassMapper.getEntity(), authorEntity);
-            assertEquals(authorClassMapper.getVertexType(), authorVertexType);
+            assertThat(mapper.getEVClassMappersByEntity(authorEntity).size()).isEqualTo(1);
+            assertThat(mapper.getEVClassMappersByEntity(authorEntity).get(0)).isEqualTo(authorClassMapper);
+            assertThat(authorEntity).isEqualTo(authorClassMapper.getEntity());
+            assertThat(authorVertexType).isEqualTo(authorClassMapper.getVertexType());
 
-            assertEquals(3, authorClassMapper.getAttribute2property().size());
-            assertEquals(3, authorClassMapper.getProperty2attribute().size());
-            assertEquals("id", authorClassMapper.getAttribute2property().get("ID"));
-            assertEquals("name", authorClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("age", authorClassMapper.getAttribute2property().get("AGE"));
-            assertEquals("ID", authorClassMapper.getProperty2attribute().get("id"));
-            assertEquals("NAME", authorClassMapper.getProperty2attribute().get("name"));
-            assertEquals("AGE", authorClassMapper.getProperty2attribute().get("age"));
+            assertThat(authorClassMapper.getAttribute2property().size()).isEqualTo(3);
+            assertThat(authorClassMapper.getProperty2attribute().size()).isEqualTo(3);
+            assertThat(authorClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+            assertThat(authorClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+            assertThat(authorClassMapper.getAttribute2property().get("AGE")).isEqualTo("age");
+            assertThat(authorClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+            assertThat(authorClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
+            assertThat(authorClassMapper.getProperty2attribute().get("age")).isEqualTo("AGE");
 
             Entity articleEntity = mapper.getDataBaseSchema().getEntityByName("ARTICLE");
-            assertEquals(1, mapper.getEVClassMappersByVertex(articleVertexType).size());
+            assertThat(mapper.getEVClassMappersByVertex(articleVertexType).size()).isEqualTo(1);
             EVClassMapper articleClassMapper = mapper.getEVClassMappersByVertex(articleVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(articleEntity).size());
-            assertEquals(articleClassMapper, mapper.getEVClassMappersByEntity(articleEntity).get(0));
-            assertEquals(articleClassMapper.getEntity(), articleEntity);
-            assertEquals(articleClassMapper.getVertexType(), articleVertexType);
+            assertThat(mapper.getEVClassMappersByEntity(articleEntity).size()).isEqualTo(1);
+            assertThat(mapper.getEVClassMappersByEntity(articleEntity).get(0)).isEqualTo(articleClassMapper);
+            assertThat(articleEntity).isEqualTo(articleClassMapper.getEntity());
+            assertThat(articleVertexType).isEqualTo(articleClassMapper.getVertexType());
 
-            assertEquals(4, articleClassMapper.getAttribute2property().size());
-            assertEquals(4, articleClassMapper.getProperty2attribute().size());
-            assertEquals("id", articleClassMapper.getAttribute2property().get("ID"));
-            assertEquals("title", articleClassMapper.getAttribute2property().get("TITLE"));
-            assertEquals("date", articleClassMapper.getAttribute2property().get("DATE"));
-            assertEquals("authorId", articleClassMapper.getAttribute2property().get("AUTHOR_ID"));
-            assertEquals("ID", articleClassMapper.getProperty2attribute().get("id"));
-            assertEquals("TITLE", articleClassMapper.getProperty2attribute().get("title"));
-            assertEquals("DATE", articleClassMapper.getProperty2attribute().get("date"));
-            assertEquals("AUTHOR_ID", articleClassMapper.getProperty2attribute().get("authorId"));
+            assertThat(articleClassMapper.getAttribute2property().size()).isEqualTo(4);
+            assertThat(articleClassMapper.getProperty2attribute().size()).isEqualTo(4);
+            assertThat(articleClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+            assertThat(articleClassMapper.getAttribute2property().get("TITLE")).isEqualTo("title");
+            assertThat(articleClassMapper.getAttribute2property().get("DATE")).isEqualTo("date");
+            assertThat(articleClassMapper.getAttribute2property().get("AUTHOR_ID")).isEqualTo("authorId");
+            assertThat(articleClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+            assertThat(articleClassMapper.getProperty2attribute().get("title")).isEqualTo("TITLE");
+            assertThat(articleClassMapper.getProperty2attribute().get("date")).isEqualTo("DATE");
+            assertThat(articleClassMapper.getProperty2attribute().get("authorId")).isEqualTo("AUTHOR_ID");
 
             // Relationships-Edges Mapping
 
             Iterator<CanonicalRelationship> it = bookEntity.getOutCanonicalRelationships().iterator();
             CanonicalRelationship hasAuthorRelationship1 = it.next();
-            assertFalse(it.hasNext());
+            assertThat(it.hasNext()).isFalse();
             it = articleEntity.getOutCanonicalRelationships().iterator();
             CanonicalRelationship hasAuthorRelationship2 = it.next();
-            assertFalse(it.hasNext());
+            assertThat(it.hasNext()).isFalse();
 
-            assertEquals(2, mapper.getRelationship2edgeType().size());
-            assertEquals(authorEdgeType, mapper.getRelationship2edgeType().get(hasAuthorRelationship1));
-            assertEquals(authorEdgeType, mapper.getRelationship2edgeType().get(hasAuthorRelationship2));
+            assertThat(mapper.getRelationship2edgeType().size()).isEqualTo(2);
+            assertThat(mapper.getRelationship2edgeType().get(hasAuthorRelationship1)).isEqualTo(authorEdgeType);
+            assertThat(mapper.getRelationship2edgeType().get(hasAuthorRelationship2)).isEqualTo(authorEdgeType);
 
-            assertEquals(1, mapper.getEdgeType2relationships().size());
-            assertEquals(2, mapper.getEdgeType2relationships().get(authorEdgeType).size());
-            assertTrue(mapper.getEdgeType2relationships().get(authorEdgeType).contains(hasAuthorRelationship1));
-            assertTrue(mapper.getEdgeType2relationships().get(authorEdgeType).contains(hasAuthorRelationship2));
+            assertThat(mapper.getEdgeType2relationships().size()).isEqualTo(1);
+            assertThat(mapper.getEdgeType2relationships().get(authorEdgeType).size()).isEqualTo(2);
+            assertThat(mapper.getEdgeType2relationships().get(authorEdgeType).contains(hasAuthorRelationship1)).isTrue();
+            assertThat(mapper.getEdgeType2relationships().get(authorEdgeType).contains(hasAuthorRelationship2)).isTrue();
 
             // JoinVertexes-AggregatorEdges Mapping
 
-            assertEquals(0, mapper.getJoinVertex2aggregatorEdges().size());
+            assertThat(mapper.getJoinVertex2aggregatorEdges().size()).isEqualTo(0);
         } catch (Exception e) {
             e.printStackTrace();
-            fail();
+            fail("");
         } finally {
             try {
                 // Dropping Source DB Schema and OrientGraph
@@ -740,17 +737,17 @@ public class GraphModelBuildingTest {
                 connection.close();
             } catch (Exception e) {
                 e.printStackTrace();
-                fail();
+                fail("");
             }
         }
     }
 
-    @Test
     /*
      *  Two tables Foreign and Parent with a composite primary key imported from the parent table.
      */
 
-    public void buildGraphModelFromThreeTablesWithOneCompositePK() {
+    @Test
+    void buildGraphModelFromThreeTablesWithOneCompositePK() {
         Connection connection = null;
         Statement st = null;
 
@@ -777,10 +774,10 @@ public class GraphModelBuildingTest {
              *  Testing context information
              */
 
-            assertEquals(2, statistics.totalNumberOfModelVertices);
-            assertEquals(2, statistics.builtModelVertexTypes);
-            assertEquals(1, statistics.totalNumberOfModelEdges);
-            assertEquals(1, statistics.builtModelEdgeTypes);
+            assertThat(statistics.totalNumberOfModelVertices).isEqualTo(2);
+            assertThat(statistics.builtModelVertexTypes).isEqualTo(2);
+            assertThat(statistics.totalNumberOfModelEdges).isEqualTo(1);
+            assertThat(statistics.builtModelEdgeTypes).isEqualTo(1);
 
             /*
              *  Testing built graph model
@@ -790,65 +787,65 @@ public class GraphModelBuildingTest {
             EdgeType authorEdgeType = mapper.getGraphModel().getEdgeTypeByName("Book2Author");
 
             // vertices check
-            assertEquals(2, mapper.getGraphModel().getVerticesType().size());
-            assertNotNull(authorVertexType);
-            assertNotNull(bookVertexType);
+            assertThat(mapper.getGraphModel().getVerticesType().size()).isEqualTo(2);
+            assertThat(authorVertexType).isNotNull();
+            assertThat(bookVertexType).isNotNull();
 
             // properties check
-            assertEquals(3, authorVertexType.getProperties().size());
+            assertThat(authorVertexType.getProperties().size()).isEqualTo(3);
 
-            assertNotNull(authorVertexType.getPropertyByName("name"));
-            assertEquals("name", authorVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", authorVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(1, authorVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(true, authorVertexType.getPropertyByName("name").isFromPrimaryKey());
+            assertThat(authorVertexType.getPropertyByName("name")).isNotNull();
+            assertThat(authorVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+            assertThat(authorVertexType.getPropertyByName("name").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(authorVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(1);
+            assertThat(authorVertexType.getPropertyByName("name").isFromPrimaryKey()).isTrue();
 
-            assertNotNull(authorVertexType.getPropertyByName("surname"));
-            assertEquals("surname", authorVertexType.getPropertyByName("surname").getName());
-            assertEquals("VARCHAR", authorVertexType.getPropertyByName("surname").getOriginalType());
-            assertEquals(2, authorVertexType.getPropertyByName("surname").getOrdinalPosition());
-            assertEquals(true, authorVertexType.getPropertyByName("surname").isFromPrimaryKey());
+            assertThat(authorVertexType.getPropertyByName("surname")).isNotNull();
+            assertThat(authorVertexType.getPropertyByName("surname").getName()).isEqualTo("surname");
+            assertThat(authorVertexType.getPropertyByName("surname").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(authorVertexType.getPropertyByName("surname").getOrdinalPosition()).isEqualTo(2);
+            assertThat(authorVertexType.getPropertyByName("surname").isFromPrimaryKey()).isTrue();
 
-            assertNotNull(authorVertexType.getPropertyByName("age"));
-            assertEquals("age", authorVertexType.getPropertyByName("age").getName());
-            assertEquals("INTEGER", authorVertexType.getPropertyByName("age").getOriginalType());
-            assertEquals(3, authorVertexType.getPropertyByName("age").getOrdinalPosition());
-            assertEquals(false, authorVertexType.getPropertyByName("age").isFromPrimaryKey());
+            assertThat(authorVertexType.getPropertyByName("age")).isNotNull();
+            assertThat(authorVertexType.getPropertyByName("age").getName()).isEqualTo("age");
+            assertThat(authorVertexType.getPropertyByName("age").getOriginalType()).isEqualTo("INTEGER");
+            assertThat(authorVertexType.getPropertyByName("age").getOrdinalPosition()).isEqualTo(3);
+            assertThat(authorVertexType.getPropertyByName("age").isFromPrimaryKey()).isFalse();
 
-            assertEquals(4, bookVertexType.getProperties().size());
+            assertThat(bookVertexType.getProperties().size()).isEqualTo(4);
 
-            assertNotNull(bookVertexType.getPropertyByName("id"));
-            assertEquals("id", bookVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", bookVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, bookVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, bookVertexType.getPropertyByName("id").isFromPrimaryKey());
+            assertThat(bookVertexType.getPropertyByName("id")).isNotNull();
+            assertThat(bookVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+            assertThat(bookVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(bookVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+            assertThat(bookVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
 
-            assertNotNull(bookVertexType.getPropertyByName("title"));
-            assertEquals("title", bookVertexType.getPropertyByName("title").getName());
-            assertEquals("VARCHAR", bookVertexType.getPropertyByName("title").getOriginalType());
-            assertEquals(2, bookVertexType.getPropertyByName("title").getOrdinalPosition());
-            assertEquals(false, bookVertexType.getPropertyByName("title").isFromPrimaryKey());
+            assertThat(bookVertexType.getPropertyByName("title")).isNotNull();
+            assertThat(bookVertexType.getPropertyByName("title").getName()).isEqualTo("title");
+            assertThat(bookVertexType.getPropertyByName("title").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(bookVertexType.getPropertyByName("title").getOrdinalPosition()).isEqualTo(2);
+            assertThat(bookVertexType.getPropertyByName("title").isFromPrimaryKey()).isFalse();
 
-            assertNotNull(bookVertexType.getPropertyByName("authorName"));
-            assertEquals("authorName", bookVertexType.getPropertyByName("authorName").getName());
-            assertEquals("VARCHAR", bookVertexType.getPropertyByName("authorName").getOriginalType());
-            assertEquals(3, bookVertexType.getPropertyByName("authorName").getOrdinalPosition());
-            assertEquals(false, bookVertexType.getPropertyByName("authorName").isFromPrimaryKey());
+            assertThat(bookVertexType.getPropertyByName("authorName")).isNotNull();
+            assertThat(bookVertexType.getPropertyByName("authorName").getName()).isEqualTo("authorName");
+            assertThat(bookVertexType.getPropertyByName("authorName").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(bookVertexType.getPropertyByName("authorName").getOrdinalPosition()).isEqualTo(3);
+            assertThat(bookVertexType.getPropertyByName("authorName").isFromPrimaryKey()).isFalse();
 
-            assertNotNull(bookVertexType.getPropertyByName("authorSurname"));
-            assertEquals("authorSurname", bookVertexType.getPropertyByName("authorSurname").getName());
-            assertEquals("VARCHAR", bookVertexType.getPropertyByName("authorSurname").getOriginalType());
-            assertEquals(4, bookVertexType.getPropertyByName("authorSurname").getOrdinalPosition());
-            assertEquals(false, bookVertexType.getPropertyByName("authorSurname").isFromPrimaryKey());
+            assertThat(bookVertexType.getPropertyByName("authorSurname")).isNotNull();
+            assertThat(bookVertexType.getPropertyByName("authorSurname").getName()).isEqualTo("authorSurname");
+            assertThat(bookVertexType.getPropertyByName("authorSurname").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(bookVertexType.getPropertyByName("authorSurname").getOrdinalPosition()).isEqualTo(4);
+            assertThat(bookVertexType.getPropertyByName("authorSurname").isFromPrimaryKey()).isFalse();
 
             // edges check
-            assertEquals(1, mapper.getGraphModel().getEdgesType().size());
-            assertNotNull(authorEdgeType);
+            assertThat(mapper.getGraphModel().getEdgesType().size()).isEqualTo(1);
+            assertThat(authorEdgeType).isNotNull();
 
-            assertEquals("Book2Author", authorEdgeType.getName());
-            assertEquals(0, authorEdgeType.getProperties().size());
-            assertEquals("Author", authorEdgeType.getInVertexType().getName());
-            assertEquals(1, authorEdgeType.getNumberRelationshipsRepresented());
+            assertThat(authorEdgeType.getName()).isEqualTo("Book2Author");
+            assertThat(authorEdgeType.getProperties().size()).isEqualTo(0);
+            assertThat(authorEdgeType.getInVertexType().getName()).isEqualTo("Author");
+            assertThat(authorEdgeType.getNumberRelationshipsRepresented()).isEqualTo(1);
 
             /*
              * Rules check
@@ -856,64 +853,64 @@ public class GraphModelBuildingTest {
 
             // Classes Mapping
 
-            assertEquals(2, mapper.getVertexType2EVClassMappers().size());
-            assertEquals(2, mapper.getEntity2EVClassMappers().size());
+            assertThat(mapper.getVertexType2EVClassMappers().size()).isEqualTo(2);
+            assertThat(mapper.getEntity2EVClassMappers().size()).isEqualTo(2);
 
             Entity bookEntity = mapper.getDataBaseSchema().getEntityByName("BOOK");
-            assertEquals(1, mapper.getEVClassMappersByVertex(bookVertexType).size());
+            assertThat(mapper.getEVClassMappersByVertex(bookVertexType).size()).isEqualTo(1);
             EVClassMapper bookClassMapper = mapper.getEVClassMappersByVertex(bookVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(bookEntity).size());
-            assertEquals(bookClassMapper, mapper.getEVClassMappersByEntity(bookEntity).get(0));
-            assertEquals(bookClassMapper.getEntity(), bookEntity);
-            assertEquals(bookClassMapper.getVertexType(), bookVertexType);
+            assertThat(mapper.getEVClassMappersByEntity(bookEntity).size()).isEqualTo(1);
+            assertThat(mapper.getEVClassMappersByEntity(bookEntity).get(0)).isEqualTo(bookClassMapper);
+            assertThat(bookEntity).isEqualTo(bookClassMapper.getEntity());
+            assertThat(bookVertexType).isEqualTo(bookClassMapper.getVertexType());
 
-            assertEquals(4, bookClassMapper.getAttribute2property().size());
-            assertEquals(4, bookClassMapper.getProperty2attribute().size());
-            assertEquals("id", bookClassMapper.getAttribute2property().get("ID"));
-            assertEquals("title", bookClassMapper.getAttribute2property().get("TITLE"));
-            assertEquals("authorName", bookClassMapper.getAttribute2property().get("AUTHOR_NAME"));
-            assertEquals("authorSurname", bookClassMapper.getAttribute2property().get("AUTHOR_SURNAME"));
-            assertEquals("ID", bookClassMapper.getProperty2attribute().get("id"));
-            assertEquals("TITLE", bookClassMapper.getProperty2attribute().get("title"));
-            assertEquals("AUTHOR_NAME", bookClassMapper.getProperty2attribute().get("authorName"));
-            assertEquals("AUTHOR_SURNAME", bookClassMapper.getProperty2attribute().get("authorSurname"));
+            assertThat(bookClassMapper.getAttribute2property().size()).isEqualTo(4);
+            assertThat(bookClassMapper.getProperty2attribute().size()).isEqualTo(4);
+            assertThat(bookClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+            assertThat(bookClassMapper.getAttribute2property().get("TITLE")).isEqualTo("title");
+            assertThat(bookClassMapper.getAttribute2property().get("AUTHOR_NAME")).isEqualTo("authorName");
+            assertThat(bookClassMapper.getAttribute2property().get("AUTHOR_SURNAME")).isEqualTo("authorSurname");
+            assertThat(bookClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+            assertThat(bookClassMapper.getProperty2attribute().get("title")).isEqualTo("TITLE");
+            assertThat(bookClassMapper.getProperty2attribute().get("authorName")).isEqualTo("AUTHOR_NAME");
+            assertThat(bookClassMapper.getProperty2attribute().get("authorSurname")).isEqualTo("AUTHOR_SURNAME");
 
             Entity authorEntity = mapper.getDataBaseSchema().getEntityByName("AUTHOR");
-            assertEquals(1, mapper.getEVClassMappersByVertex(authorVertexType).size());
+            assertThat(mapper.getEVClassMappersByVertex(authorVertexType).size()).isEqualTo(1);
             EVClassMapper authorClassMapper = mapper.getEVClassMappersByVertex(authorVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(authorEntity).size());
-            assertEquals(authorClassMapper, mapper.getEVClassMappersByEntity(authorEntity).get(0));
-            assertEquals(authorClassMapper.getEntity(), authorEntity);
-            assertEquals(authorClassMapper.getVertexType(), authorVertexType);
+            assertThat(mapper.getEVClassMappersByEntity(authorEntity).size()).isEqualTo(1);
+            assertThat(mapper.getEVClassMappersByEntity(authorEntity).get(0)).isEqualTo(authorClassMapper);
+            assertThat(authorEntity).isEqualTo(authorClassMapper.getEntity());
+            assertThat(authorVertexType).isEqualTo(authorClassMapper.getVertexType());
 
-            assertEquals(3, authorClassMapper.getAttribute2property().size());
-            assertEquals(3, authorClassMapper.getProperty2attribute().size());
-            assertEquals("name", authorClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("surname", authorClassMapper.getAttribute2property().get("SURNAME"));
-            assertEquals("age", authorClassMapper.getAttribute2property().get("AGE"));
-            assertEquals("NAME", authorClassMapper.getProperty2attribute().get("name"));
-            assertEquals("SURNAME", authorClassMapper.getProperty2attribute().get("surname"));
-            assertEquals("AGE", authorClassMapper.getProperty2attribute().get("age"));
+            assertThat(authorClassMapper.getAttribute2property().size()).isEqualTo(3);
+            assertThat(authorClassMapper.getProperty2attribute().size()).isEqualTo(3);
+            assertThat(authorClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+            assertThat(authorClassMapper.getAttribute2property().get("SURNAME")).isEqualTo("surname");
+            assertThat(authorClassMapper.getAttribute2property().get("AGE")).isEqualTo("age");
+            assertThat(authorClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
+            assertThat(authorClassMapper.getProperty2attribute().get("surname")).isEqualTo("SURNAME");
+            assertThat(authorClassMapper.getProperty2attribute().get("age")).isEqualTo("AGE");
 
             // Relationships-Edges Mapping
 
             Iterator<CanonicalRelationship> it = bookEntity.getOutCanonicalRelationships().iterator();
             CanonicalRelationship hasAuthorRelationship = it.next();
-            assertFalse(it.hasNext());
+            assertThat(it.hasNext()).isFalse();
 
-            assertEquals(1, mapper.getRelationship2edgeType().size());
-            assertEquals(authorEdgeType, mapper.getRelationship2edgeType().get(hasAuthorRelationship));
+            assertThat(mapper.getRelationship2edgeType().size()).isEqualTo(1);
+            assertThat(mapper.getRelationship2edgeType().get(hasAuthorRelationship)).isEqualTo(authorEdgeType);
 
-            assertEquals(1, mapper.getEdgeType2relationships().size());
-            assertEquals(1, mapper.getEdgeType2relationships().get(authorEdgeType).size());
-            assertTrue(mapper.getEdgeType2relationships().get(authorEdgeType).contains(hasAuthorRelationship));
+            assertThat(mapper.getEdgeType2relationships().size()).isEqualTo(1);
+            assertThat(mapper.getEdgeType2relationships().get(authorEdgeType).size()).isEqualTo(1);
+            assertThat(mapper.getEdgeType2relationships().get(authorEdgeType).contains(hasAuthorRelationship)).isTrue();
 
             // JoinVertexes-AggregatorEdges Mapping
 
-            assertEquals(0, mapper.getJoinVertex2aggregatorEdges().size());
+            assertThat(mapper.getJoinVertex2aggregatorEdges().size()).isEqualTo(0);
         } catch (Exception e) {
             e.printStackTrace();
-            fail();
+            fail("");
         } finally {
             try {
                 // Dropping Source DB Schema and OrientGraph
@@ -922,17 +919,17 @@ public class GraphModelBuildingTest {
                 connection.close();
             } catch (Exception e) {
                 e.printStackTrace();
-                fail();
+                fail("");
             }
         }
     }
 
-    @Test
     /*
      *  Three tables: 2 Parent and 1 join table which imports two different simple primary key.
      */
 
-    public void buildGraphModelFromJoinTableAnd2ParentTables() {
+    @Test
+    void buildGraphModelFromJoinTableAnd2ParentTables() {
         Connection connection = null;
         Statement st = null;
 
@@ -963,10 +960,10 @@ public class GraphModelBuildingTest {
              *  Testing context information
              */
 
-            assertEquals(3, statistics.totalNumberOfModelVertices);
-            assertEquals(3, statistics.builtModelVertexTypes);
-            assertEquals(2, statistics.totalNumberOfModelEdges);
-            assertEquals(2, statistics.builtModelEdgeTypes);
+            assertThat(statistics.totalNumberOfModelVertices).isEqualTo(3);
+            assertThat(statistics.builtModelVertexTypes).isEqualTo(3);
+            assertThat(statistics.totalNumberOfModelEdges).isEqualTo(2);
+            assertThat(statistics.builtModelEdgeTypes).isEqualTo(2);
 
             /*
              *  Testing built graph model
@@ -978,80 +975,80 @@ public class GraphModelBuildingTest {
             EdgeType filmEdgeType = mapper.getGraphModel().getEdgeTypeByName("HasFilm");
 
             // vertices check
-            assertEquals(3, mapper.getGraphModel().getVerticesType().size());
-            assertNotNull(actorVertexType);
-            assertNotNull(filmVertexType);
-            assertNotNull(film2actorVertexType);
+            assertThat(mapper.getGraphModel().getVerticesType().size()).isEqualTo(3);
+            assertThat(actorVertexType).isNotNull();
+            assertThat(filmVertexType).isNotNull();
+            assertThat(film2actorVertexType).isNotNull();
 
             // properties check
-            assertEquals(3, actorVertexType.getProperties().size());
+            assertThat(actorVertexType.getProperties().size()).isEqualTo(3);
 
-            assertNotNull(actorVertexType.getPropertyByName("id"));
-            assertEquals("id", actorVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", actorVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, actorVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, actorVertexType.getPropertyByName("id").isFromPrimaryKey());
+            assertThat(actorVertexType.getPropertyByName("id")).isNotNull();
+            assertThat(actorVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+            assertThat(actorVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(actorVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+            assertThat(actorVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
 
-            assertNotNull(actorVertexType.getPropertyByName("name"));
-            assertEquals("name", actorVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", actorVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(2, actorVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, actorVertexType.getPropertyByName("name").isFromPrimaryKey());
+            assertThat(actorVertexType.getPropertyByName("name")).isNotNull();
+            assertThat(actorVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+            assertThat(actorVertexType.getPropertyByName("name").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(actorVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(2);
+            assertThat(actorVertexType.getPropertyByName("name").isFromPrimaryKey()).isFalse();
 
-            assertNotNull(actorVertexType.getPropertyByName("surname"));
-            assertEquals("surname", actorVertexType.getPropertyByName("surname").getName());
-            assertEquals("VARCHAR", actorVertexType.getPropertyByName("surname").getOriginalType());
-            assertEquals(3, actorVertexType.getPropertyByName("surname").getOrdinalPosition());
-            assertEquals(false, actorVertexType.getPropertyByName("surname").isFromPrimaryKey());
+            assertThat(actorVertexType.getPropertyByName("surname")).isNotNull();
+            assertThat(actorVertexType.getPropertyByName("surname").getName()).isEqualTo("surname");
+            assertThat(actorVertexType.getPropertyByName("surname").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(actorVertexType.getPropertyByName("surname").getOrdinalPosition()).isEqualTo(3);
+            assertThat(actorVertexType.getPropertyByName("surname").isFromPrimaryKey()).isFalse();
 
-            assertEquals(3, filmVertexType.getProperties().size());
+            assertThat(filmVertexType.getProperties().size()).isEqualTo(3);
 
-            assertNotNull(filmVertexType.getPropertyByName("id"));
-            assertEquals("id", filmVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", filmVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, filmVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, filmVertexType.getPropertyByName("id").isFromPrimaryKey());
+            assertThat(filmVertexType.getPropertyByName("id")).isNotNull();
+            assertThat(filmVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+            assertThat(filmVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(filmVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+            assertThat(filmVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
 
-            assertNotNull(filmVertexType.getPropertyByName("title"));
-            assertEquals("title", filmVertexType.getPropertyByName("title").getName());
-            assertEquals("VARCHAR", filmVertexType.getPropertyByName("title").getOriginalType());
-            assertEquals(2, filmVertexType.getPropertyByName("title").getOrdinalPosition());
-            assertEquals(false, filmVertexType.getPropertyByName("title").isFromPrimaryKey());
+            assertThat(filmVertexType.getPropertyByName("title")).isNotNull();
+            assertThat(filmVertexType.getPropertyByName("title").getName()).isEqualTo("title");
+            assertThat(filmVertexType.getPropertyByName("title").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(filmVertexType.getPropertyByName("title").getOrdinalPosition()).isEqualTo(2);
+            assertThat(filmVertexType.getPropertyByName("title").isFromPrimaryKey()).isFalse();
 
-            assertNotNull(filmVertexType.getPropertyByName("year"));
-            assertEquals("year", filmVertexType.getPropertyByName("year").getName());
-            assertEquals("DATE", filmVertexType.getPropertyByName("year").getOriginalType());
-            assertEquals(3, filmVertexType.getPropertyByName("year").getOrdinalPosition());
-            assertEquals(false, filmVertexType.getPropertyByName("year").isFromPrimaryKey());
+            assertThat(filmVertexType.getPropertyByName("year")).isNotNull();
+            assertThat(filmVertexType.getPropertyByName("year").getName()).isEqualTo("year");
+            assertThat(filmVertexType.getPropertyByName("year").getOriginalType()).isEqualTo("DATE");
+            assertThat(filmVertexType.getPropertyByName("year").getOrdinalPosition()).isEqualTo(3);
+            assertThat(filmVertexType.getPropertyByName("year").isFromPrimaryKey()).isFalse();
 
-            assertEquals(2, film2actorVertexType.getProperties().size());
+            assertThat(film2actorVertexType.getProperties().size()).isEqualTo(2);
 
-            assertNotNull(film2actorVertexType.getPropertyByName("filmId"));
-            assertEquals("filmId", film2actorVertexType.getPropertyByName("filmId").getName());
-            assertEquals("VARCHAR", film2actorVertexType.getPropertyByName("filmId").getOriginalType());
-            assertEquals(1, film2actorVertexType.getPropertyByName("filmId").getOrdinalPosition());
-            assertEquals(true, film2actorVertexType.getPropertyByName("filmId").isFromPrimaryKey());
+            assertThat(film2actorVertexType.getPropertyByName("filmId")).isNotNull();
+            assertThat(film2actorVertexType.getPropertyByName("filmId").getName()).isEqualTo("filmId");
+            assertThat(film2actorVertexType.getPropertyByName("filmId").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(film2actorVertexType.getPropertyByName("filmId").getOrdinalPosition()).isEqualTo(1);
+            assertThat(film2actorVertexType.getPropertyByName("filmId").isFromPrimaryKey()).isTrue();
 
-            assertNotNull(film2actorVertexType.getPropertyByName("actorId"));
-            assertEquals("actorId", film2actorVertexType.getPropertyByName("actorId").getName());
-            assertEquals("VARCHAR", film2actorVertexType.getPropertyByName("actorId").getOriginalType());
-            assertEquals(2, film2actorVertexType.getPropertyByName("actorId").getOrdinalPosition());
-            assertEquals(true, film2actorVertexType.getPropertyByName("actorId").isFromPrimaryKey());
+            assertThat(film2actorVertexType.getPropertyByName("actorId")).isNotNull();
+            assertThat(film2actorVertexType.getPropertyByName("actorId").getName()).isEqualTo("actorId");
+            assertThat(film2actorVertexType.getPropertyByName("actorId").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(film2actorVertexType.getPropertyByName("actorId").getOrdinalPosition()).isEqualTo(2);
+            assertThat(film2actorVertexType.getPropertyByName("actorId").isFromPrimaryKey()).isTrue();
 
             // edges check
-            assertEquals(2, mapper.getGraphModel().getEdgesType().size());
-            assertNotNull(filmEdgeType);
-            assertNotNull(actorEdgeType);
+            assertThat(mapper.getGraphModel().getEdgesType().size()).isEqualTo(2);
+            assertThat(filmEdgeType).isNotNull();
+            assertThat(actorEdgeType).isNotNull();
 
-            assertEquals("HasFilm", filmEdgeType.getName());
-            assertEquals(0, filmEdgeType.getProperties().size());
-            assertEquals("Film", filmEdgeType.getInVertexType().getName());
-            assertEquals(1, filmEdgeType.getNumberRelationshipsRepresented());
+            assertThat(filmEdgeType.getName()).isEqualTo("HasFilm");
+            assertThat(filmEdgeType.getProperties().size()).isEqualTo(0);
+            assertThat(filmEdgeType.getInVertexType().getName()).isEqualTo("Film");
+            assertThat(filmEdgeType.getNumberRelationshipsRepresented()).isEqualTo(1);
 
-            assertEquals("HasActor", actorEdgeType.getName());
-            assertEquals(0, actorEdgeType.getProperties().size());
-            assertEquals("Actor", actorEdgeType.getInVertexType().getName());
-            assertEquals(1, actorEdgeType.getNumberRelationshipsRepresented());
+            assertThat(actorEdgeType.getName()).isEqualTo("HasActor");
+            assertThat(actorEdgeType.getProperties().size()).isEqualTo(0);
+            assertThat(actorEdgeType.getInVertexType().getName()).isEqualTo("Actor");
+            assertThat(actorEdgeType.getNumberRelationshipsRepresented()).isEqualTo(1);
 
             /*
              * Rules check
@@ -1059,81 +1056,81 @@ public class GraphModelBuildingTest {
 
             // Classes Mapping
 
-            assertEquals(3, mapper.getVertexType2EVClassMappers().size());
-            assertEquals(3, mapper.getEntity2EVClassMappers().size());
+            assertThat(mapper.getVertexType2EVClassMappers().size()).isEqualTo(3);
+            assertThat(mapper.getEntity2EVClassMappers().size()).isEqualTo(3);
 
             Entity filmEntity = mapper.getDataBaseSchema().getEntityByName("FILM");
-            assertEquals(1, mapper.getEVClassMappersByVertex(filmVertexType).size());
+            assertThat(mapper.getEVClassMappersByVertex(filmVertexType).size()).isEqualTo(1);
             EVClassMapper filmClassMapper = mapper.getEVClassMappersByVertex(filmVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(filmEntity).size());
-            assertEquals(filmClassMapper, mapper.getEVClassMappersByEntity(filmEntity).get(0));
-            assertEquals(filmClassMapper.getEntity(), filmEntity);
-            assertEquals(filmClassMapper.getVertexType(), filmVertexType);
+            assertThat(mapper.getEVClassMappersByEntity(filmEntity).size()).isEqualTo(1);
+            assertThat(mapper.getEVClassMappersByEntity(filmEntity).get(0)).isEqualTo(filmClassMapper);
+            assertThat(filmEntity).isEqualTo(filmClassMapper.getEntity());
+            assertThat(filmVertexType).isEqualTo(filmClassMapper.getVertexType());
 
-            assertEquals(3, filmClassMapper.getAttribute2property().size());
-            assertEquals(3, filmClassMapper.getProperty2attribute().size());
-            assertEquals("id", filmClassMapper.getAttribute2property().get("ID"));
-            assertEquals("title", filmClassMapper.getAttribute2property().get("TITLE"));
-            assertEquals("year", filmClassMapper.getAttribute2property().get("YEAR"));
-            assertEquals("ID", filmClassMapper.getProperty2attribute().get("id"));
-            assertEquals("TITLE", filmClassMapper.getProperty2attribute().get("title"));
-            assertEquals("YEAR", filmClassMapper.getProperty2attribute().get("year"));
+            assertThat(filmClassMapper.getAttribute2property().size()).isEqualTo(3);
+            assertThat(filmClassMapper.getProperty2attribute().size()).isEqualTo(3);
+            assertThat(filmClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+            assertThat(filmClassMapper.getAttribute2property().get("TITLE")).isEqualTo("title");
+            assertThat(filmClassMapper.getAttribute2property().get("YEAR")).isEqualTo("year");
+            assertThat(filmClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+            assertThat(filmClassMapper.getProperty2attribute().get("title")).isEqualTo("TITLE");
+            assertThat(filmClassMapper.getProperty2attribute().get("year")).isEqualTo("YEAR");
 
             Entity actorEntity = mapper.getDataBaseSchema().getEntityByName("ACTOR");
-            assertEquals(1, mapper.getEVClassMappersByVertex(actorVertexType).size());
+            assertThat(mapper.getEVClassMappersByVertex(actorVertexType).size()).isEqualTo(1);
             EVClassMapper actorClassMapper = mapper.getEVClassMappersByVertex(actorVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(actorEntity).size());
-            assertEquals(actorClassMapper, mapper.getEVClassMappersByEntity(actorEntity).get(0));
-            assertEquals(actorClassMapper.getEntity(), actorEntity);
-            assertEquals(actorClassMapper.getVertexType(), actorVertexType);
+            assertThat(mapper.getEVClassMappersByEntity(actorEntity).size()).isEqualTo(1);
+            assertThat(mapper.getEVClassMappersByEntity(actorEntity).get(0)).isEqualTo(actorClassMapper);
+            assertThat(actorEntity).isEqualTo(actorClassMapper.getEntity());
+            assertThat(actorVertexType).isEqualTo(actorClassMapper.getVertexType());
 
-            assertEquals(3, actorClassMapper.getAttribute2property().size());
-            assertEquals(3, actorClassMapper.getProperty2attribute().size());
-            assertEquals("id", actorClassMapper.getAttribute2property().get("ID"));
-            assertEquals("name", actorClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("surname", actorClassMapper.getAttribute2property().get("SURNAME"));
-            assertEquals("ID", actorClassMapper.getProperty2attribute().get("id"));
-            assertEquals("NAME", actorClassMapper.getProperty2attribute().get("name"));
-            assertEquals("SURNAME", actorClassMapper.getProperty2attribute().get("surname"));
+            assertThat(actorClassMapper.getAttribute2property().size()).isEqualTo(3);
+            assertThat(actorClassMapper.getProperty2attribute().size()).isEqualTo(3);
+            assertThat(actorClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+            assertThat(actorClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+            assertThat(actorClassMapper.getAttribute2property().get("SURNAME")).isEqualTo("surname");
+            assertThat(actorClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+            assertThat(actorClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
+            assertThat(actorClassMapper.getProperty2attribute().get("surname")).isEqualTo("SURNAME");
 
             Entity filmActorEntity = mapper.getDataBaseSchema().getEntityByName("FILM_ACTOR");
-            assertEquals(1, mapper.getEVClassMappersByVertex(film2actorVertexType).size());
+            assertThat(mapper.getEVClassMappersByVertex(film2actorVertexType).size()).isEqualTo(1);
             EVClassMapper filmActorClassMapper = mapper.getEVClassMappersByVertex(film2actorVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(filmActorEntity).size());
-            assertEquals(filmActorClassMapper, mapper.getEVClassMappersByEntity(filmActorEntity).get(0));
-            assertEquals(filmActorClassMapper.getEntity(), filmActorEntity);
-            assertEquals(filmActorClassMapper.getVertexType(), film2actorVertexType);
+            assertThat(mapper.getEVClassMappersByEntity(filmActorEntity).size()).isEqualTo(1);
+            assertThat(mapper.getEVClassMappersByEntity(filmActorEntity).get(0)).isEqualTo(filmActorClassMapper);
+            assertThat(filmActorEntity).isEqualTo(filmActorClassMapper.getEntity());
+            assertThat(film2actorVertexType).isEqualTo(filmActorClassMapper.getVertexType());
 
-            assertEquals(2, filmActorClassMapper.getAttribute2property().size());
-            assertEquals(2, filmActorClassMapper.getProperty2attribute().size());
-            assertEquals("filmId", filmActorClassMapper.getAttribute2property().get("FILM_ID"));
-            assertEquals("actorId", filmActorClassMapper.getAttribute2property().get("ACTOR_ID"));
-            assertEquals("FILM_ID", filmActorClassMapper.getProperty2attribute().get("filmId"));
-            assertEquals("ACTOR_ID", filmActorClassMapper.getProperty2attribute().get("actorId"));
+            assertThat(filmActorClassMapper.getAttribute2property().size()).isEqualTo(2);
+            assertThat(filmActorClassMapper.getProperty2attribute().size()).isEqualTo(2);
+            assertThat(filmActorClassMapper.getAttribute2property().get("FILM_ID")).isEqualTo("filmId");
+            assertThat(filmActorClassMapper.getAttribute2property().get("ACTOR_ID")).isEqualTo("actorId");
+            assertThat(filmActorClassMapper.getProperty2attribute().get("filmId")).isEqualTo("FILM_ID");
+            assertThat(filmActorClassMapper.getProperty2attribute().get("actorId")).isEqualTo("ACTOR_ID");
 
             // Relationships-Edges Mapping
 
             Iterator<CanonicalRelationship> it = filmActorEntity.getOutCanonicalRelationships().iterator();
             CanonicalRelationship hasActorRelationship = it.next();
             CanonicalRelationship hasFilmRelationship = it.next();
-            assertFalse(it.hasNext());
+            assertThat(it.hasNext()).isFalse();
 
-            assertEquals(2, mapper.getRelationship2edgeType().size());
-            assertEquals(filmEdgeType, mapper.getRelationship2edgeType().get(hasFilmRelationship));
-            assertEquals(actorEdgeType, mapper.getRelationship2edgeType().get(hasActorRelationship));
+            assertThat(mapper.getRelationship2edgeType().size()).isEqualTo(2);
+            assertThat(mapper.getRelationship2edgeType().get(hasFilmRelationship)).isEqualTo(filmEdgeType);
+            assertThat(mapper.getRelationship2edgeType().get(hasActorRelationship)).isEqualTo(actorEdgeType);
 
-            assertEquals(2, mapper.getEdgeType2relationships().size());
-            assertEquals(1, mapper.getEdgeType2relationships().get(filmEdgeType).size());
-            assertTrue(mapper.getEdgeType2relationships().get(filmEdgeType).contains(hasFilmRelationship));
-            assertEquals(1, mapper.getEdgeType2relationships().get(actorEdgeType).size());
-            assertTrue(mapper.getEdgeType2relationships().get(actorEdgeType).contains(hasActorRelationship));
+            assertThat(mapper.getEdgeType2relationships().size()).isEqualTo(2);
+            assertThat(mapper.getEdgeType2relationships().get(filmEdgeType).size()).isEqualTo(1);
+            assertThat(mapper.getEdgeType2relationships().get(filmEdgeType).contains(hasFilmRelationship)).isTrue();
+            assertThat(mapper.getEdgeType2relationships().get(actorEdgeType).size()).isEqualTo(1);
+            assertThat(mapper.getEdgeType2relationships().get(actorEdgeType).contains(hasActorRelationship)).isTrue();
 
             // JoinVertexes-AggregatorEdges Mapping
 
-            assertEquals(0, mapper.getJoinVertex2aggregatorEdges().size());
+            assertThat(mapper.getJoinVertex2aggregatorEdges().size()).isEqualTo(0);
         } catch (Exception e) {
             e.printStackTrace();
-            fail();
+            fail("");
         } finally {
             try {
                 // Dropping Source DB Schema and OrientGraph
@@ -1142,18 +1139,18 @@ public class GraphModelBuildingTest {
                 connection.close();
             } catch (Exception e) {
                 e.printStackTrace();
-                fail();
+                fail("");
             }
         }
     }
 
-    @Test
     /*
      *  Two tables: 1 Foreign and 1 Parent (parent has an inner referential integrity).
      *  The primary key is imported both by the foreign table and the attribute of the parent table itself.
      */
 
-    public void buildGraphModelFromTwoTablesWithOneSimplePKImportedTwice() {
+    @Test
+    void buildGraphModelFromTwoTablesWithOneSimplePKImportedTwice() {
         Connection connection = null;
         Statement st = null;
 
@@ -1182,10 +1179,10 @@ public class GraphModelBuildingTest {
              *  Testing context information
              */
 
-            assertEquals(2, statistics.totalNumberOfModelVertices);
-            assertEquals(2, statistics.builtModelVertexTypes);
-            assertEquals(2, statistics.totalNumberOfModelEdges);
-            assertEquals(2, statistics.builtModelEdgeTypes);
+            assertThat(statistics.totalNumberOfModelVertices).isEqualTo(2);
+            assertThat(statistics.builtModelVertexTypes).isEqualTo(2);
+            assertThat(statistics.totalNumberOfModelEdges).isEqualTo(2);
+            assertThat(statistics.builtModelEdgeTypes).isEqualTo(2);
 
             /*
              *  Testing built graph model
@@ -1196,65 +1193,65 @@ public class GraphModelBuildingTest {
             EdgeType mgrEdgeType = mapper.getGraphModel().getEdgeTypeByName("HasMgr");
 
             // vertices check
-            assertEquals(2, mapper.getGraphModel().getVerticesType().size());
-            assertNotNull(employeeVertexType);
-            assertNotNull(projectVertexType);
+            assertThat(mapper.getGraphModel().getVerticesType().size()).isEqualTo(2);
+            assertThat(employeeVertexType).isNotNull();
+            assertThat(projectVertexType).isNotNull();
 
             // properties check
-            assertEquals(3, employeeVertexType.getProperties().size());
+            assertThat(employeeVertexType.getProperties().size()).isEqualTo(3);
 
-            assertNotNull(employeeVertexType.getPropertyByName("empId"));
-            assertEquals("empId", employeeVertexType.getPropertyByName("empId").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("empId").getOriginalType());
-            assertEquals(1, employeeVertexType.getPropertyByName("empId").getOrdinalPosition());
-            assertEquals(true, employeeVertexType.getPropertyByName("empId").isFromPrimaryKey());
+            assertThat(employeeVertexType.getPropertyByName("empId")).isNotNull();
+            assertThat(employeeVertexType.getPropertyByName("empId").getName()).isEqualTo("empId");
+            assertThat(employeeVertexType.getPropertyByName("empId").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(employeeVertexType.getPropertyByName("empId").getOrdinalPosition()).isEqualTo(1);
+            assertThat(employeeVertexType.getPropertyByName("empId").isFromPrimaryKey()).isTrue();
 
-            assertNotNull(employeeVertexType.getPropertyByName("mgrId"));
-            assertEquals("mgrId", employeeVertexType.getPropertyByName("mgrId").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("mgrId").getOriginalType());
-            assertEquals(2, employeeVertexType.getPropertyByName("mgrId").getOrdinalPosition());
-            assertEquals(false, employeeVertexType.getPropertyByName("mgrId").isFromPrimaryKey());
+            assertThat(employeeVertexType.getPropertyByName("mgrId")).isNotNull();
+            assertThat(employeeVertexType.getPropertyByName("mgrId").getName()).isEqualTo("mgrId");
+            assertThat(employeeVertexType.getPropertyByName("mgrId").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(employeeVertexType.getPropertyByName("mgrId").getOrdinalPosition()).isEqualTo(2);
+            assertThat(employeeVertexType.getPropertyByName("mgrId").isFromPrimaryKey()).isFalse();
 
-            assertNotNull(employeeVertexType.getPropertyByName("name"));
-            assertEquals("name", employeeVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(3, employeeVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, employeeVertexType.getPropertyByName("name").isFromPrimaryKey());
+            assertThat(employeeVertexType.getPropertyByName("name")).isNotNull();
+            assertThat(employeeVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+            assertThat(employeeVertexType.getPropertyByName("name").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(employeeVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(3);
+            assertThat(employeeVertexType.getPropertyByName("name").isFromPrimaryKey()).isFalse();
 
-            assertEquals(3, projectVertexType.getProperties().size());
+            assertThat(projectVertexType.getProperties().size()).isEqualTo(3);
 
-            assertNotNull(projectVertexType.getPropertyByName("id"));
-            assertEquals("id", projectVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", projectVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, projectVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, projectVertexType.getPropertyByName("id").isFromPrimaryKey());
+            assertThat(projectVertexType.getPropertyByName("id")).isNotNull();
+            assertThat(projectVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+            assertThat(projectVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(projectVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+            assertThat(projectVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
 
-            assertNotNull(projectVertexType.getPropertyByName("title"));
-            assertEquals("title", projectVertexType.getPropertyByName("title").getName());
-            assertEquals("VARCHAR", projectVertexType.getPropertyByName("title").getOriginalType());
-            assertEquals(2, projectVertexType.getPropertyByName("title").getOrdinalPosition());
-            assertEquals(false, projectVertexType.getPropertyByName("title").isFromPrimaryKey());
+            assertThat(projectVertexType.getPropertyByName("title")).isNotNull();
+            assertThat(projectVertexType.getPropertyByName("title").getName()).isEqualTo("title");
+            assertThat(projectVertexType.getPropertyByName("title").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(projectVertexType.getPropertyByName("title").getOrdinalPosition()).isEqualTo(2);
+            assertThat(projectVertexType.getPropertyByName("title").isFromPrimaryKey()).isFalse();
 
-            assertNotNull(projectVertexType.getPropertyByName("projectManager"));
-            assertEquals("projectManager", projectVertexType.getPropertyByName("projectManager").getName());
-            assertEquals("VARCHAR", projectVertexType.getPropertyByName("projectManager").getOriginalType());
-            assertEquals(3, projectVertexType.getPropertyByName("projectManager").getOrdinalPosition());
-            assertEquals(false, projectVertexType.getPropertyByName("projectManager").isFromPrimaryKey());
+            assertThat(projectVertexType.getPropertyByName("projectManager")).isNotNull();
+            assertThat(projectVertexType.getPropertyByName("projectManager").getName()).isEqualTo("projectManager");
+            assertThat(projectVertexType.getPropertyByName("projectManager").getOriginalType()).isEqualTo("VARCHAR");
+            assertThat(projectVertexType.getPropertyByName("projectManager").getOrdinalPosition()).isEqualTo(3);
+            assertThat(projectVertexType.getPropertyByName("projectManager").isFromPrimaryKey()).isFalse();
 
             // edges check
-            assertEquals(2, mapper.getGraphModel().getEdgesType().size());
-            assertNotNull(mgrEdgeType);
-            assertNotNull(projectManagerEdgeType);
+            assertThat(mapper.getGraphModel().getEdgesType().size()).isEqualTo(2);
+            assertThat(mgrEdgeType).isNotNull();
+            assertThat(projectManagerEdgeType).isNotNull();
 
-            assertEquals("HasMgr", mgrEdgeType.getName());
-            assertEquals(0, mgrEdgeType.getProperties().size());
-            assertEquals("Employee", mgrEdgeType.getInVertexType().getName());
-            assertEquals(1, mgrEdgeType.getNumberRelationshipsRepresented());
+            assertThat(mgrEdgeType.getName()).isEqualTo("HasMgr");
+            assertThat(mgrEdgeType.getProperties().size()).isEqualTo(0);
+            assertThat(mgrEdgeType.getInVertexType().getName()).isEqualTo("Employee");
+            assertThat(mgrEdgeType.getNumberRelationshipsRepresented()).isEqualTo(1);
 
-            assertEquals("HasProjectManager", projectManagerEdgeType.getName());
-            assertEquals(0, projectManagerEdgeType.getProperties().size());
-            assertEquals("Employee", projectManagerEdgeType.getInVertexType().getName());
-            assertEquals(1, projectManagerEdgeType.getNumberRelationshipsRepresented());
+            assertThat(projectManagerEdgeType.getName()).isEqualTo("HasProjectManager");
+            assertThat(projectManagerEdgeType.getProperties().size()).isEqualTo(0);
+            assertThat(projectManagerEdgeType.getInVertexType().getName()).isEqualTo("Employee");
+            assertThat(projectManagerEdgeType.getNumberRelationshipsRepresented()).isEqualTo(1);
 
             /*
              * Rules check
@@ -1262,68 +1259,68 @@ public class GraphModelBuildingTest {
 
             // Classes Mapping
 
-            assertEquals(2, mapper.getVertexType2EVClassMappers().size());
-            assertEquals(2, mapper.getEntity2EVClassMappers().size());
+            assertThat(mapper.getVertexType2EVClassMappers().size()).isEqualTo(2);
+            assertThat(mapper.getEntity2EVClassMappers().size()).isEqualTo(2);
 
             Entity employeeEntity = mapper.getDataBaseSchema().getEntityByName("EMPLOYEE");
-            assertEquals(1, mapper.getEVClassMappersByVertex(employeeVertexType).size());
+            assertThat(mapper.getEVClassMappersByVertex(employeeVertexType).size()).isEqualTo(1);
             EVClassMapper employeeClassMapper = mapper.getEVClassMappersByVertex(employeeVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(employeeEntity).size());
-            assertEquals(employeeClassMapper, mapper.getEVClassMappersByEntity(employeeEntity).get(0));
-            assertEquals(employeeClassMapper.getEntity(), employeeEntity);
-            assertEquals(employeeClassMapper.getVertexType(), employeeVertexType);
+            assertThat(mapper.getEVClassMappersByEntity(employeeEntity).size()).isEqualTo(1);
+            assertThat(mapper.getEVClassMappersByEntity(employeeEntity).get(0)).isEqualTo(employeeClassMapper);
+            assertThat(employeeEntity).isEqualTo(employeeClassMapper.getEntity());
+            assertThat(employeeVertexType).isEqualTo(employeeClassMapper.getVertexType());
 
-            assertEquals(3, employeeClassMapper.getAttribute2property().size());
-            assertEquals(3, employeeClassMapper.getProperty2attribute().size());
-            assertEquals("empId", employeeClassMapper.getAttribute2property().get("EMP_ID"));
-            assertEquals("mgrId", employeeClassMapper.getAttribute2property().get("MGR_ID"));
-            assertEquals("name", employeeClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("EMP_ID", employeeClassMapper.getProperty2attribute().get("empId"));
-            assertEquals("MGR_ID", employeeClassMapper.getProperty2attribute().get("mgrId"));
-            assertEquals("NAME", employeeClassMapper.getProperty2attribute().get("name"));
+            assertThat(employeeClassMapper.getAttribute2property().size()).isEqualTo(3);
+            assertThat(employeeClassMapper.getProperty2attribute().size()).isEqualTo(3);
+            assertThat(employeeClassMapper.getAttribute2property().get("EMP_ID")).isEqualTo("empId");
+            assertThat(employeeClassMapper.getAttribute2property().get("MGR_ID")).isEqualTo("mgrId");
+            assertThat(employeeClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+            assertThat(employeeClassMapper.getProperty2attribute().get("empId")).isEqualTo("EMP_ID");
+            assertThat(employeeClassMapper.getProperty2attribute().get("mgrId")).isEqualTo("MGR_ID");
+            assertThat(employeeClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
 
             Entity projectEntity = mapper.getDataBaseSchema().getEntityByName("PROJECT");
-            assertEquals(1, mapper.getEVClassMappersByVertex(projectVertexType).size());
+            assertThat(mapper.getEVClassMappersByVertex(projectVertexType).size()).isEqualTo(1);
             EVClassMapper projectClassMapper = mapper.getEVClassMappersByVertex(projectVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(projectEntity).size());
-            assertEquals(projectClassMapper, mapper.getEVClassMappersByEntity(projectEntity).get(0));
-            assertEquals(projectClassMapper.getEntity(), projectEntity);
-            assertEquals(projectClassMapper.getVertexType(), projectVertexType);
+            assertThat(mapper.getEVClassMappersByEntity(projectEntity).size()).isEqualTo(1);
+            assertThat(mapper.getEVClassMappersByEntity(projectEntity).get(0)).isEqualTo(projectClassMapper);
+            assertThat(projectEntity).isEqualTo(projectClassMapper.getEntity());
+            assertThat(projectVertexType).isEqualTo(projectClassMapper.getVertexType());
 
-            assertEquals(3, projectClassMapper.getAttribute2property().size());
-            assertEquals(3, projectClassMapper.getProperty2attribute().size());
-            assertEquals("id", projectClassMapper.getAttribute2property().get("ID"));
-            assertEquals("title", projectClassMapper.getAttribute2property().get("TITLE"));
-            assertEquals("projectManager", projectClassMapper.getAttribute2property().get("PROJECT_MANAGER"));
-            assertEquals("ID", projectClassMapper.getProperty2attribute().get("id"));
-            assertEquals("TITLE", projectClassMapper.getProperty2attribute().get("title"));
-            assertEquals("PROJECT_MANAGER", projectClassMapper.getProperty2attribute().get("projectManager"));
+            assertThat(projectClassMapper.getAttribute2property().size()).isEqualTo(3);
+            assertThat(projectClassMapper.getProperty2attribute().size()).isEqualTo(3);
+            assertThat(projectClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+            assertThat(projectClassMapper.getAttribute2property().get("TITLE")).isEqualTo("title");
+            assertThat(projectClassMapper.getAttribute2property().get("PROJECT_MANAGER")).isEqualTo("projectManager");
+            assertThat(projectClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+            assertThat(projectClassMapper.getProperty2attribute().get("title")).isEqualTo("TITLE");
+            assertThat(projectClassMapper.getProperty2attribute().get("projectManager")).isEqualTo("PROJECT_MANAGER");
 
             // Relationships-Edges Mapping
 
             Iterator<CanonicalRelationship> it = employeeEntity.getOutCanonicalRelationships().iterator();
             CanonicalRelationship hasManagerRelationship = it.next();
-            assertFalse(it.hasNext());
+            assertThat(it.hasNext()).isFalse();
             it = projectEntity.getOutCanonicalRelationships().iterator();
             CanonicalRelationship hasProjectManagerRelationship = it.next();
-            assertFalse(it.hasNext());
+            assertThat(it.hasNext()).isFalse();
 
-            assertEquals(2, mapper.getRelationship2edgeType().size());
-            assertEquals(mgrEdgeType, mapper.getRelationship2edgeType().get(hasManagerRelationship));
-            assertEquals(projectManagerEdgeType, mapper.getRelationship2edgeType().get(hasProjectManagerRelationship));
+            assertThat(mapper.getRelationship2edgeType().size()).isEqualTo(2);
+            assertThat(mapper.getRelationship2edgeType().get(hasManagerRelationship)).isEqualTo(mgrEdgeType);
+            assertThat(mapper.getRelationship2edgeType().get(hasProjectManagerRelationship)).isEqualTo(projectManagerEdgeType);
 
-            assertEquals(2, mapper.getEdgeType2relationships().size());
-            assertEquals(1, mapper.getEdgeType2relationships().get(mgrEdgeType).size());
-            assertTrue(mapper.getEdgeType2relationships().get(mgrEdgeType).contains(hasManagerRelationship));
-            assertEquals(1, mapper.getEdgeType2relationships().get(projectManagerEdgeType).size());
-            assertTrue(mapper.getEdgeType2relationships().get(projectManagerEdgeType).contains(hasProjectManagerRelationship));
+            assertThat(mapper.getEdgeType2relationships().size()).isEqualTo(2);
+            assertThat(mapper.getEdgeType2relationships().get(mgrEdgeType).size()).isEqualTo(1);
+            assertThat(mapper.getEdgeType2relationships().get(mgrEdgeType).contains(hasManagerRelationship)).isTrue();
+            assertThat(mapper.getEdgeType2relationships().get(projectManagerEdgeType).size()).isEqualTo(1);
+            assertThat(mapper.getEdgeType2relationships().get(projectManagerEdgeType).contains(hasProjectManagerRelationship)).isTrue();
 
             // JoinVertexes-AggregatorEdges Mapping
 
-            assertEquals(0, mapper.getJoinVertex2aggregatorEdges().size());
+            assertThat(mapper.getJoinVertex2aggregatorEdges().size()).isEqualTo(0);
         } catch (Exception e) {
             e.printStackTrace();
-            fail();
+            fail("");
         } finally {
             try {
                 // Dropping Source DB Schema and OrientGraph
@@ -1332,7 +1329,7 @@ public class GraphModelBuildingTest {
                 connection.close();
             } catch (Exception e) {
                 e.printStackTrace();
-                fail();
+                fail("");
             }
         }
     }

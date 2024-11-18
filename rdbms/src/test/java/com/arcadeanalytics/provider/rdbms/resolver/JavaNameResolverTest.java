@@ -40,7 +40,7 @@ package com.arcadeanalytics.provider.rdbms.resolver;
  * #L%
  */
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.arcadeanalytics.provider.rdbms.nameresolver.JavaConventionNameResolver;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,237 +50,237 @@ import org.junit.jupiter.api.Test;
  * @author Gabriele Ponzi
  */
 
-public class JavaNameResolverTest {
+class JavaNameResolverTest {
 
     private JavaConventionNameResolver nameResolver;
 
     @BeforeEach
-    public void init() {
+    void init() {
         this.nameResolver = new JavaConventionNameResolver();
     }
 
-    @Test
     /*
      * Resolve Vertex Class Name (Java Class Convention)
      */
 
-    public void resolveVertexClassNameWithJavaConvention() {
+    @Test
+    void resolveVertexClassNameWithJavaConvention() {
         String candidateName = "";
         String newCandidateName = "";
 
         // No white space nor underscore
 
         candidateName = "testClass"; // NOT acceptable (one or more uppercase char, except the first one)
-        assertEquals(false, nameResolver.isCompliantToJavaClassConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaClassConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaClassConvention(newCandidateName));
-        assertEquals("TestClass", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaClassConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("TestClass");
 
         candidateName = "Testclass"; // acceptable (one or more uppercase char, the first one included)
-        assertEquals(true, nameResolver.isCompliantToJavaClassConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaClassConvention(candidateName)).isTrue();
 
         candidateName = "TestClass"; // acceptable (one or more uppercase char, except the first one)
-        assertEquals(true, nameResolver.isCompliantToJavaClassConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaClassConvention(candidateName)).isTrue();
 
         candidateName = "testclass"; // NOT acceptable (no uppercase chars)
-        assertEquals(false, nameResolver.isCompliantToJavaClassConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaClassConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaClassConvention(newCandidateName));
-        assertEquals("Testclass", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaClassConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("Testclass");
 
         candidateName = "TESTCLASS"; //  NOT acceptable (no lowercase chars)
-        assertEquals(false, nameResolver.isCompliantToJavaClassConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaClassConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaClassConvention(newCandidateName));
-        assertEquals("Testclass", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaClassConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("Testclass");
 
         // White space
 
         candidateName = "test Class"; //  NOT acceptable
-        assertEquals(false, nameResolver.isCompliantToJavaClassConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaClassConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaClassConvention(newCandidateName));
-        assertEquals("TestClass", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaClassConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("TestClass");
 
         candidateName = "Test class"; // NOT acceptable
-        assertEquals(false, nameResolver.isCompliantToJavaClassConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaClassConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaClassConvention(newCandidateName));
-        assertEquals("TestClass", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaClassConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("TestClass");
 
         candidateName = "Test Class"; // NOT acceptable
-        assertEquals(false, nameResolver.isCompliantToJavaVariableConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaClassConvention(newCandidateName));
-        assertEquals("TestClass", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaClassConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("TestClass");
 
         candidateName = "test class"; // NOT acceptable
-        assertEquals(false, nameResolver.isCompliantToJavaClassConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaClassConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaClassConvention(newCandidateName));
-        assertEquals("TestClass", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaClassConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("TestClass");
 
         candidateName = "TEST CLASS"; // NOT acceptable
-        assertEquals(false, nameResolver.isCompliantToJavaClassConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaClassConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaClassConvention(newCandidateName));
-        assertEquals("TestClass", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaClassConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("TestClass");
 
         // Underscore
 
         candidateName = "test_Class"; // NOT acceptable
-        assertEquals(false, nameResolver.isCompliantToJavaClassConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaClassConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaClassConvention(newCandidateName));
-        assertEquals("TestClass", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaClassConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("TestClass");
 
         candidateName = "Test_class"; // NOT acceptable
-        assertEquals(false, nameResolver.isCompliantToJavaClassConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaClassConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaClassConvention(newCandidateName));
-        assertEquals("TestClass", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaClassConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("TestClass");
 
         candidateName = "Test_Class"; // NOT acceptable
-        assertEquals(false, nameResolver.isCompliantToJavaClassConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaClassConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaClassConvention(newCandidateName));
-        assertEquals("TestClass", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaClassConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("TestClass");
 
         candidateName = "test_class"; // NOT acceptable
-        assertEquals(false, nameResolver.isCompliantToJavaClassConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaClassConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaClassConvention(newCandidateName));
-        assertEquals("TestClass", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaClassConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("TestClass");
 
         candidateName = "TEST_CLASS"; // NOT acceptable
-        assertEquals(false, nameResolver.isCompliantToJavaClassConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaClassConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaClassConvention(newCandidateName));
-        assertEquals("TestClass", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaClassConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("TestClass");
     }
 
-    @Test
     /*
      * Resolve Vertex Class Name (Java Class Convention)
      * Test-Fix: Resolver supports names ending with '_'.
      */
 
-    public void resolveVertexClassNameWithJavaConventionNamesEndingWithUnderscore() {
+    @Test
+    void resolveVertexClassNameWithJavaConventionNamesEndingWithUnderscore() {
         String candidateName = "";
         String newCandidateName = "";
 
         // No white space nor underscore
 
         candidateName = "testClass_"; // NOT acceptable (one or more uppercase char, except the first one)
-        assertEquals(false, nameResolver.isCompliantToJavaClassConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaClassConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.toJavaClassConvention(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaClassConvention(newCandidateName));
-        assertEquals("TestClass", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaClassConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("TestClass");
 
         candidateName = "test_class_"; // NOT acceptable (one or more uppercase char, except the first one)
-        assertEquals(false, nameResolver.isCompliantToJavaClassConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaClassConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.toJavaClassConvention(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaClassConvention(newCandidateName));
-        assertEquals("TestClass", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaClassConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("TestClass");
     }
 
-    @Test
     /*
      * Resolve Vertex Property (Java Variable Convention)
      */
 
-    public void resolveVertexPropertyNameWithJavaConvention() {
+    @Test
+    void resolveVertexPropertyNameWithJavaConvention() {
         String candidateName = "";
         String newCandidateName = "";
 
         // No white space nor underscore
 
         candidateName = "testVariable"; // acceptable (one or more uppercase char, except the first one)
-        assertEquals(true, nameResolver.isCompliantToJavaVariableConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(candidateName)).isTrue();
 
         candidateName = "Testvariable"; // NOT acceptable (one or more uppercase char, the first one included)
-        assertEquals(false, nameResolver.isCompliantToJavaVariableConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaVariableConvention(newCandidateName));
-        assertEquals("testvariable", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("testvariable");
 
         candidateName = "TestVariable"; // NOT acceptable (one or more uppercase char, except the first one)
-        assertEquals(false, nameResolver.isCompliantToJavaVariableConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaVariableConvention(newCandidateName));
-        assertEquals("testVariable", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("testVariable");
 
         candidateName = "testvariable"; // acceptable (no uppercase chars)
-        assertEquals(true, nameResolver.isCompliantToJavaVariableConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(candidateName)).isTrue();
 
         candidateName = "TESTVARIABLE"; // NOT acceptable (no lowercase chars)
-        assertEquals(false, nameResolver.isCompliantToJavaVariableConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaVariableConvention(newCandidateName));
-        assertEquals("testvariable", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("testvariable");
 
         // White space
 
         candidateName = "test Variable"; //  NOT acceptable
-        assertEquals(false, nameResolver.isCompliantToJavaVariableConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaVariableConvention(newCandidateName));
-        assertEquals("testVariable", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("testVariable");
 
         candidateName = "Test variable"; // NOT acceptable
-        assertEquals(false, nameResolver.isCompliantToJavaVariableConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaVariableConvention(newCandidateName));
-        assertEquals("testVariable", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("testVariable");
 
         candidateName = "Test Variable"; // NOT acceptable
-        assertEquals(false, nameResolver.isCompliantToJavaVariableConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaVariableConvention(newCandidateName));
-        assertEquals("testVariable", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("testVariable");
 
         candidateName = "test variable"; // NOT acceptable
-        assertEquals(false, nameResolver.isCompliantToJavaVariableConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaVariableConvention(newCandidateName));
-        assertEquals("testVariable", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("testVariable");
 
         candidateName = "TEST VARIABLE"; // NOT acceptable
-        assertEquals(false, nameResolver.isCompliantToJavaVariableConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaVariableConvention(newCandidateName));
-        assertEquals("testVariable", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("testVariable");
 
         // Underscore
 
         candidateName = "test_Variable"; // NOT acceptable
-        assertEquals(false, nameResolver.isCompliantToJavaVariableConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaVariableConvention(newCandidateName));
-        assertEquals("testVariable", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("testVariable");
 
         candidateName = "Test_variable"; // NOT acceptable
-        assertEquals(false, nameResolver.isCompliantToJavaVariableConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaVariableConvention(newCandidateName));
-        assertEquals("testVariable", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("testVariable");
 
         candidateName = "Test_Variable"; // NOT acceptable
-        assertEquals(false, nameResolver.isCompliantToJavaVariableConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaVariableConvention(newCandidateName));
-        assertEquals("testVariable", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("testVariable");
 
         candidateName = "test_variable"; // NOT acceptable
-        assertEquals(false, nameResolver.isCompliantToJavaVariableConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaVariableConvention(newCandidateName));
-        assertEquals("testVariable", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("testVariable");
 
         candidateName = "TEST_VARIABLE"; // NOT acceptable
-        assertEquals(false, nameResolver.isCompliantToJavaVariableConvention(candidateName));
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(candidateName)).isFalse();
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals(true, nameResolver.isCompliantToJavaVariableConvention(newCandidateName));
-        assertEquals("testVariable", newCandidateName);
+        assertThat(nameResolver.isCompliantToJavaVariableConvention(newCandidateName)).isTrue();
+        assertThat(newCandidateName).isEqualTo("testVariable");
     }
 }

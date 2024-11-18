@@ -20,18 +20,30 @@
 package com.arcadeanalytics.provider
 
 import org.assertj.core.api.Assertions
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class TypeMapperKtTest {
-
     @Test
     fun shouldMapNumericTypes() {
         listOf(
-            "decimal", "dec", "numeric", "real", "integer",
-            "int", "int2", "int4", "tinyint",
-            "smallint unsigned", "tinyint unsigned", "mediumint unsigned",
-            "float", "double precision",
-            "smallint", "money", "double", "smallmoney",
+            "decimal",
+            "dec",
+            "numeric",
+            "real",
+            "integer",
+            "int",
+            "int2",
+            "int4",
+            "tinyint",
+            "smallint unsigned",
+            "tinyint unsigned",
+            "mediumint unsigned",
+            "float",
+            "double precision",
+            "smallint",
+            "money",
+            "double",
+            "smallmoney",
         ).forEach {
             Assertions.assertThat(mapType(it)).isEqualTo("Numeric")
         }
@@ -40,16 +52,31 @@ class TypeMapperKtTest {
     @Test
     fun shouldMapTextTypes() {
         listOf(
-            "string", "varchar", "text", "char",
-            "varchar2", "nvarchar2", "clob", "nclob",
-            "char varying", "character varying", "ntext", "nchar",
-            "national char", "national character", "nvarchar", "national char varying",
-            "national character varying", "longvarchar", "character large object",
-            "mediumtext", "longtext", "tinytext",
-        )
-            .forEach {
-                Assertions.assertThat(mapType(it)).isEqualTo("String")
-            }
+            "string",
+            "varchar",
+            "text",
+            "char",
+            "varchar2",
+            "nvarchar2",
+            "clob",
+            "nclob",
+            "char varying",
+            "character varying",
+            "ntext",
+            "nchar",
+            "national char",
+            "national character",
+            "nvarchar",
+            "national char varying",
+            "national character varying",
+            "longvarchar",
+            "character large object",
+            "mediumtext",
+            "longtext",
+            "tinytext",
+        ).forEach {
+            Assertions.assertThat(mapType(it)).isEqualTo("String")
+        }
     }
 
     @Test
@@ -63,10 +90,9 @@ class TypeMapperKtTest {
             "smalldatetime",
             "datetimeoffset",
             "time with time zone",
-        )
-            .forEach {
-                Assertions.assertThat(mapType(it)).isEqualTo("Date")
-            }
+        ).forEach {
+            Assertions.assertThat(mapType(it)).isEqualTo("Date")
+        }
     }
 
     @Test

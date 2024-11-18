@@ -40,8 +40,7 @@ package com.arcadeanalytics.provider.rdbms.util;
  * #L%
  */
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.orientechnologies.orient.core.record.impl.ODocument;
 import java.util.Date;
@@ -51,23 +50,23 @@ import org.junit.jupiter.api.Test;
  * @author Gabriele Ponzi
  */
 
-public class FunctionsHandlerTest {
+class FunctionsHandlerTest {
 
     @Test
-    public void timeFormatsTest() {
+    void timeFormatsTest() {
         Date start = new Date();
         long endMillis = start.getTime() + 7713000L;
         Date end = new Date(endMillis);
 
         String timeFormat1 = FunctionsHandler.getHMSFormat(start, end);
-        assertEquals("02:08:33", timeFormat1);
+        assertThat(timeFormat1).isEqualTo("02:08:33");
 
         String timeFormat2 = FunctionsHandler.getHMSFormat(7713000L);
-        assertEquals("02:08:33", timeFormat2);
+        assertThat(timeFormat2).isEqualTo("02:08:33");
     }
 
     @Test
-    public void documentEqualsTest() {
+    void documentEqualsTest() {
         // two identical documents
 
         String stringDoc1 =
@@ -106,7 +105,7 @@ public class FunctionsHandlerTest {
         ODocument document2 = new ODocument();
         document2.fromJSON(stringDoc2, "noMap");
 
-        assertTrue(FunctionsHandler.haveDocumentsSameContent(document1, document2) == true);
+        assertThat(FunctionsHandler.haveDocumentsSameContent(document1, document2)).isEqualTo(true);
 
         // two documents with the same content (fields' order not equal)
 
@@ -128,7 +127,7 @@ public class FunctionsHandlerTest {
         document2 = new ODocument();
         document2.fromJSON(stringDoc2, "noMap");
 
-        assertTrue(FunctionsHandler.haveDocumentsSameContent(document1, document2) == true);
+        assertThat(FunctionsHandler.haveDocumentsSameContent(document1, document2)).isEqualTo(true);
 
         // two documents with different content (different values)
 
@@ -150,7 +149,7 @@ public class FunctionsHandlerTest {
         document2 = new ODocument();
         document2.fromJSON(stringDoc2, "noMap");
 
-        assertTrue(FunctionsHandler.haveDocumentsSameContent(document1, document2) == false);
+        assertThat(FunctionsHandler.haveDocumentsSameContent(document1, document2)).isEqualTo(false);
 
         // two documents with different content (different number of fields)
 
@@ -170,7 +169,7 @@ public class FunctionsHandlerTest {
         document2 = new ODocument();
         document2.fromJSON(stringDoc2, "noMap");
 
-        assertTrue(FunctionsHandler.haveDocumentsSameContent(document1, document2) == false);
+        assertThat(FunctionsHandler.haveDocumentsSameContent(document1, document2)).isEqualTo(false);
 
         // two documents with different content (different fields' name)
 
@@ -192,7 +191,7 @@ public class FunctionsHandlerTest {
         document2 = new ODocument();
         document2.fromJSON(stringDoc2, "noMap");
 
-        assertTrue(FunctionsHandler.haveDocumentsSameContent(document1, document2) == false);
+        assertThat(FunctionsHandler.haveDocumentsSameContent(document1, document2)).isEqualTo(false);
 
         // two documents with different content (at least one field in doc1 is a nested document while the correspondent field in doc2 is a string)
 
@@ -210,6 +209,6 @@ public class FunctionsHandlerTest {
         document2 = new ODocument();
         document2.fromJSON(stringDoc2, "noMap");
 
-        assertTrue(FunctionsHandler.haveDocumentsSameContent(document1, document2) == false);
+        assertThat(FunctionsHandler.haveDocumentsSameContent(document1, document2)).isEqualTo(false);
     }
 }

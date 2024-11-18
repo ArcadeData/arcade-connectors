@@ -40,7 +40,7 @@ package com.arcadeanalytics.provider.rdbms.resolver;
  * #L%
  */
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.arcadeanalytics.provider.rdbms.nameresolver.OriginalConventionNameResolver;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,21 +50,21 @@ import org.junit.jupiter.api.Test;
  * @author Gabriele Ponzi
  */
 
-public class OriginalNameResolverTest {
+class OriginalNameResolverTest {
 
     private OriginalConventionNameResolver nameResolver;
 
     @BeforeEach
-    public void init() {
+    void init() {
         this.nameResolver = new OriginalConventionNameResolver();
     }
 
-    @Test
     /*
      * Resolve Vertex Class Name (Original Class Convention)
      */
 
-    public void resolveVertexClassNameWithOriginalNameConvention() {
+    @Test
+    void resolveVertexClassNameWithOriginalNameConvention() {
         String candidateName = "";
         String newCandidateName = "";
 
@@ -72,75 +72,75 @@ public class OriginalNameResolverTest {
 
         candidateName = "testClass"; // NOT acceptable (one or more uppercase char, except the first one)
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals("testClass", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("testClass");
 
         candidateName = "Testclass"; // acceptable (one or more uppercase char, the first one included)
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals("Testclass", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("Testclass");
 
         candidateName = "TestClass"; // acceptable (one or more uppercase char, except the first one)
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals("TestClass", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("TestClass");
 
         candidateName = "testclass"; // NOT acceptable (no uppercase chars)
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals("testclass", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("testclass");
 
         candidateName = "TESTCLASS"; //  NOT acceptable (no lowercase chars)
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals("TESTCLASS", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("TESTCLASS");
 
         // White space
 
         candidateName = "test Class"; //  NOT acceptable
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals("test_Class", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("test_Class");
 
         candidateName = "Test class"; // NOT acceptable
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals("Test_class", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("Test_class");
 
         candidateName = "Test Class"; // NOT acceptable
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals("Test_Class", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("Test_Class");
 
         candidateName = "test class"; // NOT acceptable
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals("test_class", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("test_class");
 
         candidateName = "TEST CLASS"; // NOT acceptable
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals("TEST_CLASS", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("TEST_CLASS");
 
         // Underscore
 
         candidateName = "test_Class"; // NOT acceptable
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals("test_Class", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("test_Class");
 
         candidateName = "Test_class"; // NOT acceptable
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals("Test_class", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("Test_class");
 
         candidateName = "Test_Class"; // NOT acceptable
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals("Test_Class", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("Test_Class");
 
         candidateName = "test_class"; // NOT acceptable
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals("test_class", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("test_class");
 
         candidateName = "TEST_CLASS"; // NOT acceptable
         newCandidateName = nameResolver.resolveVertexName(candidateName);
-        assertEquals("TEST_CLASS", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("TEST_CLASS");
     }
 
-    @Test
     /*
      * Resolve Vertex Property (Original Variable Convention)
      */
 
-    public void resolveVertexPropertyNameWithOriginalNameConvention() {
+    @Test
+    void resolveVertexPropertyNameWithOriginalNameConvention() {
         String candidateName = "";
         String newCandidateName = "";
 
@@ -148,66 +148,66 @@ public class OriginalNameResolverTest {
 
         candidateName = "testVariable"; // acceptable (one or more uppercase char, except the first one)
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals("testVariable", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("testVariable");
 
         candidateName = "Testvariable"; // NOT acceptable (one or more uppercase char, the first one included)
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals("Testvariable", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("Testvariable");
 
         candidateName = "TestVariable"; // NOT acceptable (one or more uppercase char, except the first one)
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals("TestVariable", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("TestVariable");
 
         candidateName = "testvariable"; // acceptable (no uppercase chars)
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals("testvariable", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("testvariable");
 
         candidateName = "TESTVARIABLE"; // NOT acceptable (no lowercase chars)
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals("TESTVARIABLE", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("TESTVARIABLE");
 
         // White space
 
         candidateName = "test Variable"; //  NOT acceptable
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals("test_Variable", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("test_Variable");
 
         candidateName = "Test variable"; // NOT acceptable
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals("Test_variable", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("Test_variable");
 
         candidateName = "Test Variable"; // NOT acceptable
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals("Test_Variable", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("Test_Variable");
 
         candidateName = "test variable"; // NOT acceptable
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals("test_variable", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("test_variable");
 
         candidateName = "TEST VARIABLE"; // NOT acceptable
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals("TEST_VARIABLE", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("TEST_VARIABLE");
 
         // Underscore
 
         candidateName = "test_Variable"; // NOT acceptable
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals("test_Variable", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("test_Variable");
 
         candidateName = "Test_variable"; // NOT acceptable
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals("Test_variable", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("Test_variable");
 
         candidateName = "Test_Variable"; // NOT acceptable
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals("Test_Variable", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("Test_Variable");
 
         candidateName = "test_variable"; // NOT acceptable
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals("test_variable", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("test_variable");
 
         candidateName = "TEST_VARIABLE"; // NOT acceptable
         newCandidateName = nameResolver.resolveVertexProperty(candidateName);
-        assertEquals("TEST_VARIABLE", newCandidateName);
+        assertThat(newCandidateName).isEqualTo("TEST_VARIABLE");
     }
 }

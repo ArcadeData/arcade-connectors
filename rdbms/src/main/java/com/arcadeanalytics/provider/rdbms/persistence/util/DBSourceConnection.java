@@ -74,14 +74,13 @@ public class DBSourceConnection {
                     .readValue(Optional.ofNullable(datasource.getConnectionProperties())
                             .orElse("{}"), HashMap.class);
 
-            if (connectionAdditionalProperties.size() > 0) {
+            if (!connectionAdditionalProperties.isEmpty()) {
                 for (String connectionProp : connectionAdditionalProperties.keySet()) {
                     props.setProperty(connectionProp, connectionAdditionalProperties.get(connectionProp));
                 }
             }
 
-            Connection connection = DriverManager.getConnection(uri, props);
-            return connection;
+          return DriverManager.getConnection(uri, props);
         } catch (Exception e) {
             throw new RDBMSProviderRuntimeException(e);
         }

@@ -20,7 +20,7 @@ package com.arcadeanalytics.provider.rdbms.graphprovider;
  * #L%
  */
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.arcadeanalytics.data.Sprite;
 import com.arcadeanalytics.data.SpritePlayer;
@@ -51,7 +51,7 @@ public abstract class AbstractRDBMSGraphProvider {
 
         @Override
         public void play(Sprite document) {
-            assertNotNull(document.entries());
+            assertThat(document.entries()).isNotNull();
             processed++;
 
             if (
