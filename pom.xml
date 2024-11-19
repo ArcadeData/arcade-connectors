@@ -93,7 +93,7 @@
 <!--        <module>orientdb3</module>-->
         <module>rdbms</module>
         <module>integration</module>
-        <module>test-coverage-aggregator</module>
+<!--        <module>test-coverage-aggregator</module>-->
     </modules>
 
     <distributionManagement>
