@@ -27,7 +27,6 @@ import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class JanusgraphGremlinDataProviderIntTest {
-
     private val provider: GremlinDataProvider = GremlinDataProvider()
 
     @Test
@@ -43,7 +42,8 @@ internal class JanusgraphGremlinDataProviderIntTest {
         assertThat(cytoData.data.target).isNullOrEmpty()
 
         val record = cytoData.data.record
-        assertThat(record).isNotNull
+        assertThat(record)
+            .isNotNull
             .containsKeys("@in", "@out", "name", "@edgeCount")
     }
 
@@ -55,9 +55,11 @@ internal class JanusgraphGremlinDataProviderIntTest {
 
         val data = provider.fetchData(dataSource, query, 10)
 
-        val ids = data.nodes.asSequence()
-            .map { it.data.id }
-            .toList()
+        val ids =
+            data.nodes
+                .asSequence()
+                .map { it.data.id }
+                .toList()
 
         val load = provider.load(dataSource, ids.toTypedArray())
 
@@ -70,15 +72,19 @@ internal class JanusgraphGremlinDataProviderIntTest {
 
         val data = provider.fetchData(dataSource, query, 10)
 
-        val ids = data.nodes.asSequence()
-            .map { it.data.id }
-            .toList()
+        val ids =
+            data.nodes
+                .asSequence()
+                .map { it.data.id }
+                .toList()
 
-        val label: String = data.nodes.asSequence()
-            .map { it.data.record["@in"] as Map<String, Any> }
-            .map { ins -> ins.keys }
-            .flatMap { k -> k.asSequence() }
-            .first()
+        val label: String =
+            data.nodes
+                .asSequence()
+                .map { it.data.record["@in"] as Map<String, Any> }
+                .map { ins -> ins.keys }
+                .flatMap { k -> k.asSequence() }
+                .first()
 
         val load = provider.expand(dataSource, ids.toTypedArray(), "in", label, 50)
 
@@ -92,9 +98,11 @@ internal class JanusgraphGremlinDataProviderIntTest {
 
         val data = provider.fetchData(dataSource, query, 10)
 
-        val ids = data.nodes.asSequence()
-            .map { it.data.id }
-            .toList()
+        val ids =
+            data.nodes
+                .asSequence()
+                .map { it.data.id }
+                .toList()
 
         val load = provider.expand(dataSource, ids.toTypedArray(), "both", "", 50)
 
@@ -114,7 +122,8 @@ internal class JanusgraphGremlinDataProviderIntTest {
         assertThat(cytoData.data.target).isNotNull()
 
         val record = cytoData.data.record
-        assertThat(record).isNotNull
+        assertThat(record)
+            .isNotNull
             .containsKeys("@in", "@out")
 
         assertThat(data.nodes).isNotEmpty
@@ -132,17 +141,27 @@ internal class JanusgraphGremlinDataProviderIntTest {
         val firstNode = firstDataSet.nodes.first().data
         val secondNode = firstDataSet.nodes.elementAt(2).data
 
-        val fromIds = firstDataSet.nodes.asSequence().map { it.data.id }.toList()
-        val toIds = secondDataSet.nodes.asSequence().map { it.data.id }.toList()
+        val fromIds =
+            firstDataSet.nodes
+                .asSequence()
+                .map { it.data.id }
+                .toList()
+        val toIds =
+            secondDataSet.nodes
+                .asSequence()
+                .map { it.data.id }
+                .toList()
 
-        val edgeClasses = firstDataSet.nodes.union(secondDataSet.nodes)
-            .asSequence()
-            .map { d ->
-                (d.data.record["@in"] as Map<String, Int>).keys
-                    .union((d.data.record["@out"] as Map<String, Int>).keys)
-            }
-            .flatMap { it.asSequence() }
-            .toSet()
+        val edgeClasses =
+            firstDataSet.nodes
+                .union(secondDataSet.nodes)
+                .asSequence()
+                .map { d ->
+                    (d.data.record["@in"] as Map<String, Int>)
+                        .keys
+                        .union((d.data.record["@out"] as Map<String, Int>).keys)
+                }.flatMap { it.asSequence() }
+                .toSet()
 
 //        val edgeClasses = (firstNode.record["@in"] as Map<String, Int>).keys
 //                .union((firstNode.record["@out"] as Map<String, Int>).keys)

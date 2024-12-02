@@ -28,98 +28,98 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * It represents a hierarchical tree of entities.
- * It collects the involved entities, the "inheritance strategy" adopted at the lower level (DBMS level) and other
- * meta-data useful for records importing.
+ * It represents a hierarchical tree of entities. It collects the involved entities, the
+ * "inheritance strategy" adopted at the lower level (DBMS level) and other meta-data useful for
+ * records importing.
  *
  * @author Gabriele Ponzi
  */
-
 public class HierarchicalBag {
 
-    private Map<Integer, Set<Entity>> depth2entities;
-    private String inheritancePattern;
+  private Map<Integer, Set<Entity>> depth2entities;
+  private String inheritancePattern;
 
-    private String discriminatorColumn;
-    private Map<String, String> entityName2discriminatorValue;
+  private String discriminatorColumn;
+  private Map<String, String> entityName2discriminatorValue;
 
-    public HierarchicalBag() {
-        this.depth2entities = new LinkedHashMap<Integer, Set<Entity>>();
-        this.entityName2discriminatorValue = new HashMap<String, String>();
+  public HierarchicalBag() {
+    this.depth2entities = new LinkedHashMap<Integer, Set<Entity>>();
+    this.entityName2discriminatorValue = new HashMap<String, String>();
+  }
+
+  public HierarchicalBag(String inheritancePattern) {
+    this.inheritancePattern = inheritancePattern;
+    this.depth2entities = new HashMap<Integer, Set<Entity>>();
+    this.entityName2discriminatorValue = new HashMap<String, String>();
+  }
+
+  public Map<Integer, Set<Entity>> getDepth2entities() {
+    return this.depth2entities;
+  }
+
+  public void setDepth2entities(Map<Integer, Set<Entity>> depth2entities) {
+    this.depth2entities = depth2entities;
+  }
+
+  public String getInheritancePattern() {
+    return this.inheritancePattern;
+  }
+
+  public void setInheritancePattern(String inheritancePattern) {
+    this.inheritancePattern = inheritancePattern;
+  }
+
+  public String getDiscriminatorColumn() {
+    return this.discriminatorColumn;
+  }
+
+  public void setDiscriminatorColumn(String discriminatorColumn) {
+    this.discriminatorColumn = discriminatorColumn;
+  }
+
+  public Map<String, String> getEntityName2discriminatorValue() {
+    return this.entityName2discriminatorValue;
+  }
+
+  public void setEntityName2discriminatorValue(Map<String, String> entityName2discriminatorValue) {
+    this.entityName2discriminatorValue = entityName2discriminatorValue;
+  }
+
+  @Override
+  public int hashCode() {
+    Iterator<Entity> it = getDepth2entities().get(0).iterator();
+    Entity rootEntity = it.next();
+
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((rootEntity == null) ? 0 : rootEntity.getName().hashCode());
+    result = prime * result + ((inheritancePattern == null) ? 0 : inheritancePattern.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    HierarchicalBag that = (HierarchicalBag) obj;
+
+    Iterator<Entity> it = this.getDepth2entities().get(0).iterator();
+    Entity rootEntity = it.next();
+
+    it = that.getDepth2entities().get(0).iterator();
+    Entity thatRootEntity = it.next();
+
+    if (this.inheritancePattern.equals(that.getInheritancePattern())
+        && rootEntity.getName().equals(thatRootEntity.getName())) {
+      return true;
     }
+    return false;
+  }
 
-    public HierarchicalBag(String inheritancePattern) {
-        this.inheritancePattern = inheritancePattern;
-        this.depth2entities = new HashMap<Integer, Set<Entity>>();
-        this.entityName2discriminatorValue = new HashMap<String, String>();
+  public DataSourceInfo getSourceDataseInfo() {
+    Set<Entity> entities = this.getDepth2entities().get(0);
+    Iterator<Entity> it = entities.iterator();
+    if (it.hasNext()) {
+      return it.next().getDataSource();
     }
-
-    public Map<Integer, Set<Entity>> getDepth2entities() {
-        return this.depth2entities;
-    }
-
-    public void setDepth2entities(Map<Integer, Set<Entity>> depth2entities) {
-        this.depth2entities = depth2entities;
-    }
-
-    public String getInheritancePattern() {
-        return this.inheritancePattern;
-    }
-
-    public void setInheritancePattern(String inheritancePattern) {
-        this.inheritancePattern = inheritancePattern;
-    }
-
-    public String getDiscriminatorColumn() {
-        return this.discriminatorColumn;
-    }
-
-    public void setDiscriminatorColumn(String discriminatorColumn) {
-        this.discriminatorColumn = discriminatorColumn;
-    }
-
-    public Map<String, String> getEntityName2discriminatorValue() {
-        return this.entityName2discriminatorValue;
-    }
-
-    public void setEntityName2discriminatorValue(Map<String, String> entityName2discriminatorValue) {
-        this.entityName2discriminatorValue = entityName2discriminatorValue;
-    }
-
-    @Override
-    public int hashCode() {
-        Iterator<Entity> it = getDepth2entities().get(0).iterator();
-        Entity rootEntity = it.next();
-
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((rootEntity == null) ? 0 : rootEntity.getName().hashCode());
-        result = prime * result + ((inheritancePattern == null) ? 0 : inheritancePattern.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        HierarchicalBag that = (HierarchicalBag) obj;
-
-        Iterator<Entity> it = this.getDepth2entities().get(0).iterator();
-        Entity rootEntity = it.next();
-
-        it = that.getDepth2entities().get(0).iterator();
-        Entity thatRootEntity = it.next();
-
-        if (this.inheritancePattern.equals(that.getInheritancePattern()) && rootEntity.getName().equals(thatRootEntity.getName())) {
-            return true;
-        }
-        return false;
-    }
-
-    public DataSourceInfo getSourceDataseInfo() {
-        Set<Entity> entities = this.getDepth2entities().get(0);
-        Iterator<Entity> it = entities.iterator();
-        if (it.hasNext()) {
-            return it.next().getDataSource();
-        }
-        return null;
-    }
+    return null;
+  }
 }

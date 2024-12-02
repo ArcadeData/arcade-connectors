@@ -26,23 +26,23 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 class CosmosDBGremlinDataProviderIntTest {
-
     private lateinit var dataSource: DataSourceInfo
 
     private lateinit var provider: CosmosDBGremlinDataProvider
 
     @BeforeEach
     fun setup() {
-        dataSource = DataSourceInfo(
-            id = 1L,
-            type = "GREMLIN_COSMOSDB",
-            name = "testDataSource",
-            server = "YOUR SERVER",
-            port = 443,
-            username = "USERNAME",
-            password = "PASSWORD",
-            database = "N/A",
-        )
+        dataSource =
+            DataSourceInfo(
+                id = 1L,
+                type = "GREMLIN_COSMOSDB",
+                name = "testDataSource",
+                server = "YOUR SERVER",
+                port = 443,
+                username = "USERNAME",
+                password = "PASSWORD",
+                database = "N/A",
+            )
 
         provider = CosmosDBGremlinDataProvider()
     }
@@ -61,7 +61,8 @@ class CosmosDBGremlinDataProviderIntTest {
         assertThat(cytoData.data.target).isNull()
 
         val record = cytoData.data.record
-        assertThat(record).isNotNull
+        assertThat(record)
+            .isNotNull
             .containsKeys("@in", "@out", "Name", "@edgeCount")
 
         println("cytoData = $cytoData")
@@ -76,9 +77,11 @@ class CosmosDBGremlinDataProviderIntTest {
 
         val data = provider.fetchData(dataSource, query, 5)
 
-        val ids = data.nodes.asSequence()
-            .map { data -> data.data.id }
-            .toList()
+        val ids =
+            data.nodes
+                .asSequence()
+                .map { data -> data.data.id }
+                .toList()
 
         val load = provider.load(dataSource, ids.toTypedArray())
 
@@ -94,15 +97,19 @@ class CosmosDBGremlinDataProviderIntTest {
 
         val data = provider.fetchData(dataSource, query, 10)
 
-        val ids = data.nodes.asSequence()
-            .map { data -> data.data.id }
-            .toList()
+        val ids =
+            data.nodes
+                .asSequence()
+                .map { data -> data.data.id }
+                .toList()
 
-        val label: String = data.nodes.asSequence()
-            .map { data -> data.data.record["@in"] as Map<String, Any> }
-            .map { ins -> ins.keys }
-            .flatMap { k -> k.asSequence() }
-            .first()
+        val label: String =
+            data.nodes
+                .asSequence()
+                .map { data -> data.data.record["@in"] as Map<String, Any> }
+                .map { ins -> ins.keys }
+                .flatMap { k -> k.asSequence() }
+                .first()
 
         val load = provider.expand(dataSource, ids.toTypedArray(), "in", label, 300)
 
@@ -117,9 +124,11 @@ class CosmosDBGremlinDataProviderIntTest {
 
         val data = provider.fetchData(dataSource, query, 10)
 
-        val ids = data.nodes.asSequence()
-            .map { data -> data.data.id }
-            .toList()
+        val ids =
+            data.nodes
+                .asSequence()
+                .map { data -> data.data.id }
+                .toList()
 
         val load = provider.expand(dataSource, ids.toTypedArray(), "both", "", 300)
 
@@ -140,7 +149,8 @@ class CosmosDBGremlinDataProviderIntTest {
         assertThat(cytoData.data.target).isNotNull()
 
         val record = cytoData.data.record
-        assertThat(record).isNotNull
+        assertThat(record)
+            .isNotNull
             .containsKeys("@in", "@out")
 
         assertThat(data.nodes).isNotEmpty

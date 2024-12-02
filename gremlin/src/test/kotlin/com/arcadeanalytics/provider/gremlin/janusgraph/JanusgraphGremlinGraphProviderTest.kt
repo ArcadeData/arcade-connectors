@@ -32,7 +32,6 @@ import java.util.ArrayList
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class JanusgraphGremlinGraphProviderTest {
-
     private val provider: GremlinGraphProvider = GremlinGraphProvider()
 
     @Test
@@ -40,29 +39,28 @@ internal class JanusgraphGremlinGraphProviderTest {
         val nodes = ArrayList<Sprite>()
         val edges = ArrayList<Sprite>()
 
-        val indexer = object : SpritePlayer {
-            override fun begin() {
-                // noop
-            }
-
-            override fun processed(): Long {
-                return 0
-            }
-
-            override fun play(sprite: Sprite) {
-                when (sprite.valueOf(ARCADE_TYPE)) {
-                    ARCADE_NODE_TYPE -> nodes.add(sprite)
-                    ARCADE_EDGE_TYPE -> edges.add(sprite)
+        val indexer =
+            object : SpritePlayer {
+                override fun begin() {
+                    // noop
                 }
-                assertThat(sprite.valueOf("@class")).isNotBlank
-                assertThat(sprite.hasField("_a_id")).isTrue
-                assertThat(sprite.hasField("_a_type")).isTrue
-                assertThat(sprite.hasField("_a_type")).isTrue
-            }
 
-            override fun end() {
+                override fun processed(): Long = 0
+
+                override fun play(sprite: Sprite) {
+                    when (sprite.valueOf(ARCADE_TYPE)) {
+                        ARCADE_NODE_TYPE -> nodes.add(sprite)
+                        ARCADE_EDGE_TYPE -> edges.add(sprite)
+                    }
+                    assertThat(sprite.valueOf("@class")).isNotBlank
+                    assertThat(sprite.hasField("_a_id")).isTrue
+                    assertThat(sprite.hasField("_a_type")).isTrue
+                    assertThat(sprite.hasField("_a_type")).isTrue
+                }
+
+                override fun end() {
+                }
             }
-        }
 
         provider.provideTo(JanusgraphContainer.dataSource, indexer)
         assertThat(nodes).hasSize(808)

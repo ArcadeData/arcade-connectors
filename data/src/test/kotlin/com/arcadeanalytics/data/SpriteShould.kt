@@ -30,7 +30,6 @@ import java.time.format.DateTimeFormatter
 import java.util.regex.Pattern
 
 class SpriteShould {
-
     private lateinit var sprite: Sprite
 
     @BeforeEach
@@ -40,7 +39,8 @@ class SpriteShould {
 
     @Test
     internal fun `add values of different types`() {
-        sprite.add("field1", "value1")
+        sprite
+            .add("field1", "value1")
             .add("field2", 10)
             .add("field3", false)
 
@@ -55,11 +55,13 @@ class SpriteShould {
     internal fun `flat collection value`() {
         val values = mutableListOf<String>("value1", "value2", "value3")
 
-        sprite.add("field1", values)
+        sprite
+            .add("field1", values)
             .add("field2", 10)
             .add("field3", false)
 
-        assertThat(sprite.rawValuesOf<String>("field1")).isNotEmpty
+        assertThat(sprite.rawValuesOf<String>("field1"))
+            .isNotEmpty
             .hasSize(3)
 
         assertThat(sprite.entries()).contains(
@@ -73,7 +75,8 @@ class SpriteShould {
 
     @Test
     internal fun `return single value as string`() {
-        sprite.add("field1", "value1")
+        sprite
+            .add("field1", "value1")
             .add("field2", 10)
             .add("field3", false)
 
@@ -84,7 +87,8 @@ class SpriteShould {
 
     @Test
     internal fun `return multi value as string`() {
-        sprite.add("field1", 10)
+        sprite
+            .add("field1", 10)
             .add("field1", 20)
             .add("field1", 30)
 
@@ -93,7 +97,8 @@ class SpriteShould {
 
     @Test
     internal fun `return multi value as int type`() {
-        sprite.add("field1", 10)
+        sprite
+            .add("field1", 10)
             .add("field1", 20)
             .add("field1", 30)
 
@@ -102,7 +107,8 @@ class SpriteShould {
 
     @Test
     internal fun `return single value typed`() {
-        sprite.add("field1", "value1")
+        sprite
+            .add("field1", "value1")
             .add("field2", 10)
             .add("field3", false)
 
@@ -113,19 +119,20 @@ class SpriteShould {
 
     @Test
     internal fun `copy single value field`() {
-        sprite.add("field", "value")
+        sprite
+            .add("field", "value")
             .copy("field", "copyOfField")
 
         assertThat(sprite.entries()).contains(
             entry("field", "value"),
             entry("copyOfField", "value"),
-
         )
     }
 
     @Test
     internal fun `copy multi values field`() {
-        sprite.add("field", "value1")
+        sprite
+            .add("field", "value1")
             .add("field", "value2")
             .add("field", "value3")
             .add("field", "value4")
@@ -158,7 +165,8 @@ class SpriteShould {
 
     @Test
     internal fun `rename field`() {
-        sprite.add("field", "value1")
+        sprite
+            .add("field", "value1")
             .add("field", "value2")
             .add("field", "value3")
             .add("field", "value4")
@@ -174,7 +182,8 @@ class SpriteShould {
 
     @Test
     internal fun `rename with lambda`() {
-        sprite.add("a_field", "value1")
+        sprite
+            .add("a_field", "value1")
             .rename(Pattern.compile("a_.*")) { v: String -> v.removePrefix("a_") }
 
         assertThat(sprite.data)
@@ -184,7 +193,8 @@ class SpriteShould {
 
     @Test
     internal fun `join field values`() {
-        sprite.add("field", "value1")
+        sprite
+            .add("field", "value1")
             .add("field", "value2")
             .add("field", "value3")
             .add("field", "value4")
@@ -205,7 +215,8 @@ class SpriteShould {
 
     @Test
     internal fun `split field value`() {
-        sprite.add("field", "value1 value2 value3 value4")
+        sprite
+            .add("field", "value1 value2 value3 value4")
             .splitValues("field", " ")
 
         assertThat(sprite.isMultiValue("field")).isTrue()
@@ -222,7 +233,8 @@ class SpriteShould {
 
     @Test
     internal fun `retrieve field names`() {
-        sprite.add("field", "value")
+        sprite
+            .add("field", "value")
             .add("field2", "value2")
             .add("field3", "value3")
 
@@ -232,7 +244,8 @@ class SpriteShould {
 
     @Test
     internal fun `retrieve field names with regexp`() {
-        sprite.add("field1", "value")
+        sprite
+            .add("field1", "value")
             .add("field2", "value2")
             .add("field3", "value3")
             .add("a_field", "value")
@@ -249,7 +262,8 @@ class SpriteShould {
 
     @Test
     internal fun `retrieve field string values with regexp`() {
-        sprite.add("field1", "value")
+        sprite
+            .add("field1", "value")
             .add("field2", "value2")
             .add("field3", "value3")
             .add("a_field", "value")
@@ -286,7 +300,8 @@ class SpriteShould {
 
     @Test
     internal fun `remove fields`() {
-        sprite.add("field", "value")
+        sprite
+            .add("field", "value")
             .add("field", "value2")
             .add("field2", "value2")
 
@@ -297,7 +312,8 @@ class SpriteShould {
 
     @Test
     internal fun `remove fields with pattern`() {
-        sprite.add("field", "value")
+        sprite
+            .add("field", "value")
             .add("field", "value2")
             .add("field2", "value2")
 
@@ -309,11 +325,12 @@ class SpriteShould {
     @Test
     internal fun `load from map`() {
         val now = LocalDate.now()
-        val input = mapOf(
-            "field1" to "value1",
-            "field2" to "value2",
-            "field3" to now,
-        )
+        val input =
+            mapOf(
+                "field1" to "value1",
+                "field2" to "value2",
+                "field3" to now,
+            )
 
         sprite.load(input)
 
@@ -326,10 +343,11 @@ class SpriteShould {
 
     @Test
     internal fun `apply lambda to all field values`() {
-        sprite.add("field", "value")
+        sprite
+            .add("field", "value")
             .add("field", "value2")
 
-        sprite.apply("field", String::toUpperCase)
+        sprite.apply("field", String::uppercase)
 
         assertThat(sprite.data).isNotEmpty()
 
@@ -338,10 +356,11 @@ class SpriteShould {
 
     @Test
     internal fun `apply lambda to all fields matching a pattern`() {
-        sprite.add("firstField", "value")
+        sprite
+            .add("firstField", "value")
             .add("secondField", "value2")
 
-        sprite.apply(Pattern.compile(".*Field"), String::toUpperCase)
+        sprite.apply(Pattern.compile(".*Field"), String::uppercase)
 
         assertThat(sprite.data).isNotEmpty()
 
@@ -351,10 +370,11 @@ class SpriteShould {
 
     @Test
     internal fun `apply lambda to all field values and store on another field`() {
-        sprite.add("field", "value")
+        sprite
+            .add("field", "value")
             .add("field", "value2")
 
-        sprite.apply("field", String::toUpperCase, "to")
+        sprite.apply("field", String::uppercase, "to")
 
         assertThat(sprite.data).isNotEmpty()
 
@@ -365,11 +385,13 @@ class SpriteShould {
     @Test
     internal fun `return map with single value`() {
         val now = LocalDate.now()
-        val map = sprite.add("field", "value")
-            .add("field", "value2")
-            .add("field", "value3")
-            .add("dateField", now)
-            .asMap()
+        val map =
+            sprite
+                .add("field", "value")
+                .add("field", "value2")
+                .add("field", "value3")
+                .add("dateField", now)
+                .asMap()
 
         assertThat(map?.get("field")).isEqualTo("value")
         assertThat(map?.get("dateField")).isEqualTo(now)
@@ -378,11 +400,13 @@ class SpriteShould {
     @Test
     internal fun `return map with single value as string`() {
         val now = LocalDate.now()
-        val map = sprite.add("field", "value")
-            .add("field", "value2")
-            .add("field", "value3")
-            .add("dateField", now)
-            .asStringMap()
+        val map =
+            sprite
+                .add("field", "value")
+                .add("field", "value2")
+                .add("field", "value3")
+                .add("dateField", now)
+                .asStringMap()
 
         assertThat(map.get("field")).isEqualTo("value")
 
@@ -391,11 +415,13 @@ class SpriteShould {
 
     @Test
     internal fun `transform sprite to mutable map of collections`() {
-        val map = sprite.add("field", "value")
-            .add("field", "value2")
-            .add("field", "value3")
-            .add("single", "singleValue")
-            .asMultimap()
+        val map =
+            sprite
+                .add("field", "value")
+                .add("field", "value2")
+                .add("field", "value3")
+                .add("single", "singleValue")
+                .asMultimap()
 
         assertThat(map?.get("field"))
             .hasSize(3)
@@ -408,7 +434,8 @@ class SpriteShould {
 
     @Test
     internal fun `answer about field's size`() {
-        sprite.add("field", "value")
+        sprite
+            .add("field", "value")
             .add("field", "value2")
             .add("field", "value3")
             .add("dateField", LocalDate.now())
@@ -435,7 +462,8 @@ class SpriteShould {
 
     @Test
     internal fun `view date as string`() {
-        sprite.add("text", "the text")
+        sprite
+            .add("text", "the text")
             .add("text", "another text")
             .add("date", LocalDate.parse("20180901", DateTimeFormatter.ofPattern("yyyyMMdd")))
             .add("age", 10)
@@ -446,17 +474,18 @@ class SpriteShould {
 
     @Test
     internal fun `show an ETL example`() {
-        val data = Sprite()
-            .add("age", 90)
-            .add("name", "rob")
-            .add("text", "first phrase")
-            .add("text", "second phrase")
-            .add("text", "third phrase")
-            .add("text", "fourth phrase")
-            .rename("age", "weight")
-            .apply("weight") { v: Float -> v * 2.2 }
-            .apply("name", String::toUpperCase)
-            .joinValuesOf("text")
+        val data =
+            Sprite()
+                .add("age", 90)
+                .add("name", "rob")
+                .add("text", "first phrase")
+                .add("text", "second phrase")
+                .add("text", "third phrase")
+                .add("text", "fourth phrase")
+                .rename("age", "weight")
+                .apply("weight") { v: Int -> v * 2.2 }
+                .apply("name", String::uppercase)
+                .joinValuesOf("text")
 
         assertThat(data.hasField("age"))
             .isFalse()

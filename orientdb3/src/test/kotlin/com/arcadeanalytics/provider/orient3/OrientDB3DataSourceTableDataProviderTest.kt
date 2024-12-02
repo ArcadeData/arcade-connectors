@@ -28,7 +28,6 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 internal class OrientDB3DataSourceTableDataProviderTest {
-
     private val provider: OrientDB3DataSourceTableDataProvider = OrientDB3DataSourceTableDataProvider()
 
     @Test
@@ -119,12 +118,21 @@ internal class OrientDB3DataSourceTableDataProviderTest {
     fun shouldFetchDataWithAggregateParametrizedQuery() {
         // when
 
-        var query = "select avg(age) as age, count(name) as count from Person  where age < :age   group by age order by count desc limit :limit "
+        val query =
+            """
+            select avg(age) as age, count(name) as count
+            from Person
+            where age < :age
+            group by age
+            order by count desc
+            limit :limit
+            """.trimIndent()
 
-        val params: QueryParams = listOf(
-            QueryParam("age", "query", "(SELECT age FROM Person WHERE name ='rob')"),
-            QueryParam("limit", "single", "1"),
-        )
+        val params: QueryParams =
+            listOf(
+                QueryParam("age", "query", "(SELECT age FROM Person WHERE name ='rob')"),
+                QueryParam("limit", "single", "1"),
+            )
 
         val data = provider.fetchData(OrientDB3Container.dataSource, query, params, 20)
 

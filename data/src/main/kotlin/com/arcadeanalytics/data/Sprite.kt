@@ -31,49 +31,56 @@ import java.util.regex.Pattern
  *
  * @author Roberto Franchini
  */
-private const val copySuffix = "____COPY___"
+private const val COPY_SUFFIX = "____COPY___"
 
 class Sprite {
-
     val data: ListMultimap<String, Any?> = ArrayListMultimap.create()
 
-    fun add(field: String, value: Any?): Sprite {
+    fun add(
+        field: String,
+        value: Any?,
+    ): Sprite {
         if (value is Collection<*>) {
-            value.asSequence()
+            value
+                .asSequence()
                 .filter { it != null }
                 .forEach { v -> data.put(field, v) }
-        } else if (value != null) data.put(field, value)
+        } else if (value != null) {
+            data.put(field, value)
+        }
         return this
     }
 
-    fun add(field: String, value: String): Sprite {
+    fun add(
+        field: String,
+        value: String,
+    ): Sprite {
         if (value.isNotBlank()) {
             data.put(field, value)
         }
         return this
     }
 
-    fun entries(): MutableCollection<MutableMap.MutableEntry<String, Any?>>? {
-        return data.entries()
-    }
+    fun entries(): MutableCollection<MutableMap.MutableEntry<String, Any?>>? = data.entries()
 
-    fun fields(): Set<String> {
-        return HashSet(data.keySet())
-    }
+    fun fields(): Set<String> = HashSet(data.keySet())
 
-    fun fields(pattern: Pattern): Set<String> {
-        return data.keySet()
+    fun fields(pattern: Pattern): Set<String> =
+        data
+            .keySet()
             .filter { k -> pattern.matcher(k).matches() }
             .toSet()
-    }
 
-    fun fields(pattern: Regex): Set<String> {
-        return data.keySet()
+    fun fields(pattern: Regex): Set<String> =
+        data
+            .keySet()
             .filter { k -> pattern.matches(k) }
             .toSet()
-    }
 
-    fun rename(field: String, renamed: String): Sprite {
+    fun rename(
+        field: String,
+        renamed: String,
+    ): Sprite {
         with(data) {
             copy(field, renamed)
             removeAll(field)
@@ -81,7 +88,10 @@ class Sprite {
         return this
     }
 
-    fun copy(from: String, to: String): Sprite {
+    fun copy(
+        from: String,
+        to: String,
+    ): Sprite {
         with(data) {
             val fromValues = Lists.newArrayList(get(from))
             addAll(to, fromValues)
@@ -89,22 +99,34 @@ class Sprite {
         return this
     }
 
-    fun addAll(field: String, values: Iterable<Any?>): Sprite {
+    fun addAll(
+        field: String,
+        values: Iterable<Any?>,
+    ): Sprite {
         values.forEach { add(field, it) }
         return this
     }
 
-    fun addAll(field: String, values: List<Any?>): Sprite {
+    fun addAll(
+        field: String,
+        values: List<Any?>,
+    ): Sprite {
         values.forEach { add(field, it) }
         return this
     }
 
-    fun addAllIfNotExists(field: String, values: Iterable<Any>): Sprite {
+    fun addAllIfNotExists(
+        field: String,
+        values: Iterable<Any>,
+    ): Sprite {
         values.forEach { addIfNotExists(field, it) }
         return this
     }
 
-    fun addIfNotExists(field: String, fieldValue: Any): Sprite {
+    fun addIfNotExists(
+        field: String,
+        fieldValue: Any,
+    ): Sprite {
         if (hasNotValue(field, fieldValue)) {
             add(field, fieldValue)
         }
@@ -112,25 +134,21 @@ class Sprite {
         return this
     }
 
-    fun hasNotValue(value: Any): Boolean {
-        return !data.containsValue(value)
-    }
+    fun hasNotValue(value: Any): Boolean = !data.containsValue(value)
 
-    fun hasNotValue(field: String, value: Any): Boolean {
-        return !data.containsEntry(field, value)
-    }
+    fun hasNotValue(
+        field: String,
+        value: Any,
+    ): Boolean = !data.containsEntry(field, value)
 
-    fun hasValue(value: Any): Boolean {
-        return data.containsValue(value)
-    }
+    fun hasValue(value: Any): Boolean = data.containsValue(value)
 
-    fun hasValue(field: String, value: Any): Boolean {
-        return data.containsEntry(field, value)
-    }
+    fun hasValue(
+        field: String,
+        value: Any,
+    ): Boolean = data.containsEntry(field, value)
 
-    fun hasField(field: String): Boolean {
-        return data.containsKey(field)
-    }
+    fun hasField(field: String): Boolean = data.containsKey(field)
 
     fun load(input: Map<String, Any>): Sprite {
         input.entries
@@ -138,7 +156,10 @@ class Sprite {
         return this
     }
 
-    fun remove(field: String, fieldValue: Any): Sprite {
+    fun remove(
+        field: String,
+        fieldValue: Any,
+    ): Sprite {
         data.remove(field, fieldValue)
         return this
     }
@@ -158,21 +179,30 @@ class Sprite {
         return this
     }
 
-    fun <F : Any, T : Any> apply(pattern: Pattern, fieldModifier: (F) -> T): Sprite {
+    fun <F : Any, T : Any> apply(
+        pattern: Pattern,
+        fieldModifier: (F) -> T,
+    ): Sprite {
         fields(pattern)
             .forEach { f -> apply(f, fieldModifier) }
 
         return this
     }
 
-    fun <F : Any, T : Any> apply(pattern: Regex, fieldModifier: (F) -> T): Sprite {
+    fun <F : Any, T : Any> apply(
+        pattern: Regex,
+        fieldModifier: (F) -> T,
+    ): Sprite {
         fields(pattern)
             .forEach { f -> apply(f, fieldModifier) }
 
         return this
     }
 
-    fun <F : Any, T : Any> apply(field: String, fieldModifier: (F) -> T): Sprite {
+    fun <F : Any, T : Any> apply(
+        field: String,
+        fieldModifier: (F) -> T,
+    ): Sprite {
         if (hasField(field)) {
             val newValues = newValuesOf(field, fieldModifier)
             remove(field)
@@ -182,7 +212,11 @@ class Sprite {
         return this
     }
 
-    fun <F : Any, T : Any> apply(from: String, transformer: (F) -> T, to: String): Sprite {
+    fun <F : Any, T : Any> apply(
+        from: String,
+        transformer: (F) -> T,
+        to: String,
+    ): Sprite {
         if (hasField(from)) {
             val newValues = newValuesOf(from, transformer)
             addAll(to, newValues)
@@ -191,16 +225,20 @@ class Sprite {
         return this
     }
 
-    private fun <F : Any, T : Any> newValuesOf(field: String, fieldModifier: (F) -> T): List<Any?> {
+    private fun <F : Any, T : Any> newValuesOf(
+        field: String,
+        fieldModifier: (F) -> T,
+    ): List<Any?> {
         val originalValues: List<F> = rawValuesOf(field)
         return originalValues.map { it -> fieldModifier(it) }.toList()
     }
 
-    fun <T : Any> rawValuesOf(field: String): List<T> {
-        return data.get(field).orEmpty() as List<T>
-    }
+    fun <T : Any> rawValuesOf(field: String): List<T> = data.get(field).orEmpty() as List<T>
 
-    fun rename(field: Pattern, renamed: (v: String) -> String): Sprite {
+    fun rename(
+        field: Pattern,
+        renamed: (v: String) -> String,
+    ): Sprite {
         fields(field)
             .forEach { f ->
                 val cleaned = renamed(f)
@@ -218,65 +256,46 @@ class Sprite {
         limit: Int = -1,
         truncated: CharSequence = "...",
     ): Sprite {
-        val merged = rawValuesOf<String>(field)
-            .joinToString(separator, prefix, postfix, limit, truncated)
+        val merged =
+            rawValuesOf<String>(field)
+                .joinToString(separator, prefix, postfix, limit, truncated)
 
         remove(field)
             .add(field, merged)
         return this
     }
 
-    fun valueOf(field: String): String {
-        return rawValueOf<Any>(field).let(Any::toString)
-    }
+    fun valueOf(field: String): String = rawValueOf<Any>(field).let(Any::toString)
 
-    fun valuesOf(field: String): List<String> {
-        return rawValuesOf<Any>(field).map { it -> it.toString() }.toList()
-    }
+    fun valuesOf(field: String): List<String> = rawValuesOf<Any>(field).map { it -> it.toString() }.toList()
 
-    fun valuesOf(regex: Regex): List<String> {
-        return fields(regex)
+    fun valuesOf(regex: Regex): List<String> =
+        fields(regex)
             .map { field ->
                 rawValuesOf<Any>(field)
                     .map { it.toString() }
-            }
-            .flatMap {
+            }.flatMap {
                 it.toList()
-            }
-            .toList()
-    }
+            }.toList()
 
-    fun valuesOf(regex: Pattern): List<String> {
-        return fields(regex)
+    fun valuesOf(regex: Pattern): List<String> =
+        fields(regex)
             .map { field ->
                 rawValuesOf<Any>(field)
                     .map { it.toString() }
-            }
-            .flatMap {
+            }.flatMap {
                 it.toList()
-            }
-            .toList()
-    }
+            }.toList()
 
-    fun <T : Any> rawValueOf(field: String): T {
-        return rawValuesOf<T>(field).first()
-    }
+    fun <T : Any> rawValueOf(field: String): T = rawValuesOf<T>(field).first()
 
-    fun isMultiValue(field: String): Boolean {
-        return data.get(field).size > 1
-    }
+    fun isMultiValue(field: String): Boolean = data.get(field).size > 1
 
-    fun isSingleValue(field: String): Boolean {
-        return data.get(field).size == 1
-    }
+    fun isSingleValue(field: String): Boolean = data.get(field).size == 1
 
-    fun sizeOf(field: String): Int {
-        return data.get(field).size
-    }
+    fun sizeOf(field: String): Int = data.get(field).size
 
-    fun asMultimap(): MutableMap<String, MutableCollection<Any?>>? {
-        return data.asMap()
-    }
+    fun asMultimap(): MutableMap<String, MutableCollection<Any?>>? = data.asMap()
 
     fun asMap(): MutableMap<String, Any?>? {
         val map = HashMap<String, Any?>()
@@ -296,8 +315,11 @@ class Sprite {
         return map
     }
 
-    fun splitValues(field: String, separator: String): Sprite {
-        val copySuffix = copySuffix
+    fun splitValues(
+        field: String,
+        separator: String,
+    ): Sprite {
+        val copySuffix = COPY_SUFFIX
         copy(field, "$field$copySuffix")
             .remove(field)
             .valuesOf("$field$copySuffix")
@@ -311,9 +333,7 @@ class Sprite {
         return this
     }
 
-    fun isEmpty(): Boolean {
-        return data.isEmpty
-    }
+    fun isEmpty(): Boolean = data.isEmpty
 
     override fun hashCode(): Int {
         val prime = 31
@@ -334,7 +354,5 @@ class Sprite {
         return true
     }
 
-    override fun toString(): String {
-        return data.toString()
-    }
+    override fun toString(): String = data.toString()
 }

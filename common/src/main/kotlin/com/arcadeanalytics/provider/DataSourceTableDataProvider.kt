@@ -21,20 +21,21 @@ package com.arcadeanalytics.provider
 
 const val TABLE_CLASS = "Table"
 
-data class QueryParam(val name: String, val type: String, val value: String)
+data class QueryParam(
+    val name: String,
+    val type: String,
+    val value: String,
+)
 
 typealias QueryParams = List<QueryParam>
 
-inline fun String.prefixIfAbsent(prefix: String): String {
-    return if (this.startsWith(prefix)) this else prefix + this
-}
+inline fun String.prefixIfAbsent(prefix: String): String = if (this.startsWith(prefix)) this else prefix + this
 
 /**
  * Interface to be implemented by specialized data providers
  *  @author Roberto Franchini
  */
 interface DataSourceTableDataProvider : DataSourceProvider {
-
     fun fetchData(
         dataSource: DataSourceInfo,
         query: String,

@@ -27,43 +27,45 @@ import com.arcadeanalytics.provider.rdbms.model.dbschema.CanonicalRelationship;
  *
  * @author Gabriele Ponzi
  */
-
 public class OriginalConventionNameResolver implements NameResolver {
 
-    @Override
-    public String resolveVertexName(String candidateName) {
-        candidateName = candidateName.replace(" ", "_");
-        return candidateName;
+  @Override
+  public String resolveVertexName(String candidateName) {
+    candidateName = candidateName.replace(" ", "_");
+    return candidateName;
+  }
+
+  @Override
+  public String resolveVertexProperty(String candidateName) {
+    candidateName = candidateName.replace(" ", "_");
+    return candidateName;
+  }
+
+  @Override
+  public String resolveEdgeName(CanonicalRelationship relationship) {
+    String finalName;
+
+    // Foreign Key composed of 1 attribute
+    if (relationship.getFromColumns().size() == 1) {
+      String columnName = relationship.getFromColumns().get(0).getName();
+      columnName = columnName.replace("_id", "");
+      columnName = columnName.replace("_ID", "");
+      columnName = columnName.replace("_oid", "");
+      columnName = columnName.replace("_OID", "");
+      columnName = columnName.replace("_eid", "");
+      columnName = columnName.replace("_EID", "");
+
+      // manipulating name (Java Convention)
+      finalName = "has_" + columnName;
+    }
+    // Foreign Key composed of multiple attribute
+    else {
+      finalName =
+          relationship.getForeignEntity().getName()
+              + "2"
+              + relationship.getParentEntity().getName();
     }
 
-    @Override
-    public String resolveVertexProperty(String candidateName) {
-        candidateName = candidateName.replace(" ", "_");
-        return candidateName;
-    }
-
-    @Override
-    public String resolveEdgeName(CanonicalRelationship relationship) {
-        String finalName;
-
-        // Foreign Key composed of 1 attribute
-        if (relationship.getFromColumns().size() == 1) {
-            String columnName = relationship.getFromColumns().get(0).getName();
-            columnName = columnName.replace("_id", "");
-            columnName = columnName.replace("_ID", "");
-            columnName = columnName.replace("_oid", "");
-            columnName = columnName.replace("_OID", "");
-            columnName = columnName.replace("_eid", "");
-            columnName = columnName.replace("_EID", "");
-
-            // manipulating name (Java Convention)
-            finalName = "has_" + columnName;
-        }
-        // Foreign Key composed of multiple attribute
-        else {
-            finalName = relationship.getForeignEntity().getName() + "2" + relationship.getParentEntity().getName();
-        }
-
-        return finalName;
-    }
+    return finalName;
+  }
 }

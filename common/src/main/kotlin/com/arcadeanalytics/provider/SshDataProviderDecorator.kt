@@ -21,8 +21,10 @@ package com.arcadeanalytics.provider
 
 import org.slf4j.LoggerFactory
 
-class SshDataProviderDecorator(private val provider: DataSourceGraphDataProvider) : SshTunnelTemplate(), DataSourceGraphDataProvider {
-
+class SshDataProviderDecorator(
+    private val provider: DataSourceGraphDataProvider,
+) : SshTunnelTemplate(),
+    DataSourceGraphDataProvider {
     private val log = LoggerFactory.getLogger(SshDataProviderDecorator::class.java)
 
     override fun testConnection(dataSource: DataSourceInfo): Boolean {
@@ -35,7 +37,11 @@ class SshDataProviderDecorator(private val provider: DataSourceGraphDataProvider
         return testConnection
     }
 
-    override fun fetchData(dataSource: DataSourceInfo, query: String, limit: Int): GraphData {
+    override fun fetchData(
+        dataSource: DataSourceInfo,
+        query: String,
+        limit: Int,
+    ): GraphData {
         val (session, wrapper) = buildTunnel(dataSource)
 
         val graphData = provider.fetchData(wrapper, query, limit)
@@ -45,7 +51,13 @@ class SshDataProviderDecorator(private val provider: DataSourceGraphDataProvider
         return graphData
     }
 
-    override fun expand(dataSource: DataSourceInfo, ids: Array<String>, direction: String, edgeLabel: String, maxTraversal: Int): GraphData {
+    override fun expand(
+        dataSource: DataSourceInfo,
+        ids: Array<String>,
+        direction: String,
+        edgeLabel: String,
+        maxTraversal: Int,
+    ): GraphData {
         val (session, wrapper) = buildTunnel(dataSource)
 
         val graphData = provider.expand(wrapper, ids, direction, edgeLabel, maxTraversal)
@@ -55,7 +67,12 @@ class SshDataProviderDecorator(private val provider: DataSourceGraphDataProvider
         return graphData
     }
 
-    override fun edges(dataSource: DataSourceInfo, fromIds: Array<String>, edgesLabel: Array<String>, toIds: Array<String>): GraphData {
+    override fun edges(
+        dataSource: DataSourceInfo,
+        fromIds: Array<String>,
+        edgesLabel: Array<String>,
+        toIds: Array<String>,
+    ): GraphData {
         val (session, wrapper) = buildTunnel(dataSource)
 
         val graphData = provider.edges(wrapper, fromIds, edgesLabel, toIds)
@@ -65,7 +82,10 @@ class SshDataProviderDecorator(private val provider: DataSourceGraphDataProvider
         return graphData
     }
 
-    override fun load(dataSource: DataSourceInfo, ids: Array<String>): GraphData {
+    override fun load(
+        dataSource: DataSourceInfo,
+        ids: Array<String>,
+    ): GraphData {
         val (session, wrapper) = buildTunnel(dataSource)
 
         val graphData = provider.load(wrapper, ids)
@@ -75,7 +95,11 @@ class SshDataProviderDecorator(private val provider: DataSourceGraphDataProvider
         return graphData
     }
 
-    override fun loadFromClass(dataSource: DataSourceInfo, className: String, limit: Int): GraphData {
+    override fun loadFromClass(
+        dataSource: DataSourceInfo,
+        className: String,
+        limit: Int,
+    ): GraphData {
         val (session, wrapper) = buildTunnel(dataSource)
 
         val graphData = provider.loadFromClass(wrapper, className, limit)
@@ -85,7 +109,13 @@ class SshDataProviderDecorator(private val provider: DataSourceGraphDataProvider
         return graphData
     }
 
-    override fun loadFromClass(dataSource: DataSourceInfo, className: String, propName: String, propertyValue: String, limit: Int): GraphData {
+    override fun loadFromClass(
+        dataSource: DataSourceInfo,
+        className: String,
+        propName: String,
+        propertyValue: String,
+        limit: Int,
+    ): GraphData {
         val (session, wrapper) = buildTunnel(dataSource)
 
         val graphData = provider.loadFromClass(wrapper, className, propName, propertyValue, limit)

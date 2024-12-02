@@ -20,10 +20,8 @@ package com.arcadeanalytics.provider.rdbms.dataprovider;
  * #L%
  */
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import com.arcadeanalytics.provider.CytoData;
 import com.arcadeanalytics.provider.DataSourceInfo;
@@ -34,655 +32,652 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.MySQLContainer;
 
-public class MysqlSQLDataProviderWithAggregationTest extends AbstractRDBMSProviderWithAggregationTest {
+class MysqlSQLDataProviderWithAggregationTest extends AbstractRDBMSProviderWithAggregationTest {
 
-    private DataSourceInfo dataSource = null;
+  private DataSourceInfo dataSource = null;
 
-    @BeforeEach
-    public void setUp() {
-        final MySQLContainer container = MySQLContainerHolder.container;
-        this.dataSource =
-            new DataSourceInfo(
-                1L,
-                "RDBMS_MYSQL",
-                "testDataSource",
-                "desc",
-                container.getContainerIpAddress(),
-                container.getFirstMappedPort(),
-                container.getDatabaseName(),
-                container.getUsername(),
-                container.getPassword(),
-                true,
-                "{}",
-                false,
-                false,
-                "",
-                22,
-                "",
-                false
-            );
+  @BeforeEach
+  public void setUp() {
+    final MySQLContainer container = MySQLContainerHolder.container;
+    this.dataSource =
+        new DataSourceInfo(
+            1L,
+            "RDBMS_MYSQL",
+            "testDataSource",
+            "desc",
+            container.getContainerIpAddress(),
+            container.getFirstMappedPort(),
+            container.getDatabaseName(),
+            container.getUsername(),
+            container.getPassword(),
+            true,
+            "{}",
+            false,
+            false,
+            "",
+            22,
+            "",
+            false);
 
-        provider = new RDBMSDataProvider();
+    provider = new RDBMSDataProvider();
+  }
+
+  @Override
+  @Test
+  public void fetchDataThroughTableScanTest() {
+    try {
+      provider.fetchData(dataSource, "select * from film_actor limit 5", 5);
+      fail("");
+    } catch (Exception e) {
+      String message = e.getMessage();
+      assertThat(message.contains("Wrong query content: the requested table was aggregated into"))
+          .isTrue();
     }
+  }
 
-    @Override
-    @Test
-    public void fetchDataThroughTableScanTest() {
-        try {
-            provider.fetchData(dataSource, "select * from film_actor limit 5", 5);
-            fail();
-        } catch (Exception e) {
-            String message = e.getMessage();
-            assertTrue(message.contains("Wrong query content: the requested table was aggregated into"));
-        }
-    }
+  @Override
+  @Test
+  public void expandN2NRelationship() {
+    /** Get movies by actor */
 
-    @Override
-    public void expandN2NRelationship() {
-        /**
-         * Get movies by actor
-         */
+    // expanding 1-N relationship: actor -[film_actor]-> film
+    String[] rootIds = {"1_1"};
+    GraphData data = provider.expand(dataSource, rootIds, "out", "film_actor", 300);
 
-        // expanding 1-N relationship: actor -[film_actor]-> film
-        String[] rootIds = { "1_1" };
-        GraphData data = provider.expand(dataSource, rootIds, "out", "film_actor", 300);
+    assertThat(data.getNodesClasses().size()).isEqualTo(1);
+    assertThat(data.getNodes().size()).isEqualTo(19);
+    assertThat(data.getEdgesClasses().size()).isEqualTo(1);
+    assertThat(data.getEdges().size()).isEqualTo(19);
 
-        assertEquals(data.getNodesClasses().size(), 1);
-        assertEquals(data.getNodes().size(), 19);
-        assertEquals(data.getEdgesClasses().size(), 1);
-        assertEquals(data.getEdges().size(), 19);
+    // Node classes checks
+    assertThat(data.getNodesClasses().containsKey("film")).isTrue();
 
-        // Node classes checks
-        assertTrue(data.getNodesClasses().containsKey("film"));
+    Map<String, Object> filmClass = data.getNodesClasses().get("film");
+    assertThat(filmClass.containsKey("film_id")).isTrue();
+    assertThat(filmClass.containsKey("title")).isTrue();
+    assertThat(filmClass.containsKey("description")).isTrue();
+    assertThat(filmClass.containsKey("release_year")).isTrue();
+    assertThat(filmClass.containsKey("language_id")).isTrue();
+    assertThat(filmClass.containsKey("original_language_id")).isTrue();
+    assertThat(filmClass.containsKey("rental_duration")).isTrue();
+    assertThat(filmClass.containsKey("rental_rate")).isTrue();
+    assertThat(filmClass.containsKey("length")).isTrue();
+    assertThat(filmClass.containsKey("replacement_cost")).isTrue();
+    assertThat(filmClass.containsKey("rating")).isTrue();
+    assertThat(filmClass.containsKey("last_update")).isTrue();
+    assertThat(filmClass.containsKey("special_features")).isTrue();
 
-        Map<String, Object> filmClass = data.getNodesClasses().get("film");
-        assertTrue(filmClass.containsKey("film_id"));
-        assertTrue(filmClass.containsKey("title"));
-        assertTrue(filmClass.containsKey("description"));
-        assertTrue(filmClass.containsKey("release_year"));
-        assertTrue(filmClass.containsKey("language_id"));
-        assertTrue(filmClass.containsKey("original_language_id"));
-        assertTrue(filmClass.containsKey("rental_duration"));
-        assertTrue(filmClass.containsKey("rental_rate"));
-        assertTrue(filmClass.containsKey("length"));
-        assertTrue(filmClass.containsKey("replacement_cost"));
-        assertTrue(filmClass.containsKey("rating"));
-        assertTrue(filmClass.containsKey("last_update"));
-        assertTrue(filmClass.containsKey("special_features"));
+    // nodes checks
+    Iterator<CytoData> it = data.getNodes().iterator();
+    CytoData currNodeContent;
+    Map<String, Object> currRecord;
 
-        // nodes checks
-        Iterator<CytoData> it = data.getNodes().iterator();
-        CytoData currNodeContent;
-        Map<String, Object> currRecord;
+    currNodeContent = it.next();
+    assertThat(currNodeContent.getData()).isNotNull();
+    assertThat(currNodeContent.getData().getRecord()).isNotNull();
+    currRecord = currNodeContent.getData().getRecord();
+    assertThat(currRecord.containsKey("film_id")).isTrue();
+    assertThat(currRecord.get("film_id")).isEqualTo(1);
+    assertThat(currRecord.containsKey("title")).isTrue();
+    assertThat(currRecord.get("title")).isEqualTo("ACADEMY DINOSAUR");
+    assertThat(currRecord.containsKey("description")).isTrue();
+    assertThat(currRecord.get("description")).isNotNull();
 
-        currNodeContent = it.next();
-        assertNotNull(currNodeContent.getData());
-        assertNotNull(currNodeContent.getData().getRecord());
-        currRecord = currNodeContent.getData().getRecord();
-        assertTrue(currRecord.containsKey("film_id"));
-        assertEquals(currRecord.get("film_id"), 1);
-        assertTrue(currRecord.containsKey("title"));
-        assertEquals(currRecord.get("title"), "ACADEMY DINOSAUR");
-        assertTrue(currRecord.containsKey("description"));
-        assertNotNull(currRecord.get("description"));
+    currNodeContent = it.next();
+    assertThat(currNodeContent.getData()).isNotNull();
+    assertThat(currNodeContent.getData().getRecord()).isNotNull();
+    currRecord = currNodeContent.getData().getRecord();
+    assertThat(currRecord.containsKey("film_id")).isTrue();
+    assertThat(currRecord.get("film_id")).isEqualTo(23);
+    assertThat(currRecord.containsKey("title")).isTrue();
+    assertThat(currRecord.get("title")).isEqualTo("ANACONDA CONFESSIONS");
+    assertThat(currRecord.containsKey("description")).isTrue();
+    assertThat(currRecord.get("description")).isNotNull();
 
-        currNodeContent = it.next();
-        assertNotNull(currNodeContent.getData());
-        assertNotNull(currNodeContent.getData().getRecord());
-        currRecord = currNodeContent.getData().getRecord();
-        assertTrue(currRecord.containsKey("film_id"));
-        assertEquals(currRecord.get("film_id"), 23);
-        assertTrue(currRecord.containsKey("title"));
-        assertEquals(currRecord.get("title"), "ANACONDA CONFESSIONS");
-        assertTrue(currRecord.containsKey("description"));
-        assertNotNull(currRecord.get("description"));
+    currNodeContent = it.next();
+    assertThat(currNodeContent.getData()).isNotNull();
+    assertThat(currNodeContent.getData().getRecord()).isNotNull();
+    currRecord = currNodeContent.getData().getRecord();
+    assertThat(currRecord.containsKey("film_id")).isTrue();
+    assertThat(currRecord.get("film_id")).isEqualTo(25);
+    assertThat(currRecord.containsKey("title")).isTrue();
+    assertThat(currRecord.get("title")).isEqualTo("ANGELS LIFE");
+    assertThat(currRecord.containsKey("description")).isTrue();
+    assertThat(currRecord.get("description")).isNotNull();
 
-        currNodeContent = it.next();
-        assertNotNull(currNodeContent.getData());
-        assertNotNull(currNodeContent.getData().getRecord());
-        currRecord = currNodeContent.getData().getRecord();
-        assertTrue(currRecord.containsKey("film_id"));
-        assertEquals(currRecord.get("film_id"), 25);
-        assertTrue(currRecord.containsKey("title"));
-        assertEquals(currRecord.get("title"), "ANGELS LIFE");
-        assertTrue(currRecord.containsKey("description"));
-        assertNotNull(currRecord.get("description"));
+    currNodeContent = it.next();
+    assertThat(currNodeContent.getData()).isNotNull();
+    assertThat(currNodeContent.getData().getRecord()).isNotNull();
+    currRecord = currNodeContent.getData().getRecord();
+    assertThat(currRecord.containsKey("film_id")).isTrue();
+    assertThat(currRecord.get("film_id")).isEqualTo(106);
+    assertThat(currRecord.containsKey("title")).isTrue();
+    assertThat(currRecord.get("title")).isEqualTo("BULWORTH COMMANDMENTS");
+    assertThat(currRecord.containsKey("description")).isTrue();
+    assertThat(currRecord.get("description")).isNotNull();
 
-        currNodeContent = it.next();
-        assertNotNull(currNodeContent.getData());
-        assertNotNull(currNodeContent.getData().getRecord());
-        currRecord = currNodeContent.getData().getRecord();
-        assertTrue(currRecord.containsKey("film_id"));
-        assertEquals(currRecord.get("film_id"), 106);
-        assertTrue(currRecord.containsKey("title"));
-        assertEquals(currRecord.get("title"), "BULWORTH COMMANDMENTS");
-        assertTrue(currRecord.containsKey("description"));
-        assertNotNull(currRecord.get("description"));
+    currNodeContent = it.next();
+    assertThat(currNodeContent.getData()).isNotNull();
+    assertThat(currNodeContent.getData().getRecord()).isNotNull();
+    currRecord = currNodeContent.getData().getRecord();
+    assertThat(currRecord.containsKey("film_id")).isTrue();
+    assertThat(currRecord.get("film_id")).isEqualTo(140);
+    assertThat(currRecord.containsKey("title")).isTrue();
+    assertThat(currRecord.get("title")).isEqualTo("CHEAPER CLYDE");
+    assertThat(currRecord.containsKey("description")).isTrue();
+    assertThat(currRecord.get("description")).isNotNull();
 
-        currNodeContent = it.next();
-        assertNotNull(currNodeContent.getData());
-        assertNotNull(currNodeContent.getData().getRecord());
-        currRecord = currNodeContent.getData().getRecord();
-        assertTrue(currRecord.containsKey("film_id"));
-        assertEquals(currRecord.get("film_id"), 140);
-        assertTrue(currRecord.containsKey("title"));
-        assertEquals(currRecord.get("title"), "CHEAPER CLYDE");
-        assertTrue(currRecord.containsKey("description"));
-        assertNotNull(currRecord.get("description"));
+    currNodeContent = it.next();
+    assertThat(currNodeContent.getData()).isNotNull();
+    assertThat(currNodeContent.getData().getRecord()).isNotNull();
+    currRecord = currNodeContent.getData().getRecord();
+    assertThat(currRecord.containsKey("film_id")).isTrue();
+    assertThat(currRecord.get("film_id")).isEqualTo(166);
+    assertThat(currRecord.containsKey("title")).isTrue();
+    assertThat(currRecord.get("title")).isEqualTo("COLOR PHILADELPHIA");
+    assertThat(currRecord.containsKey("description")).isTrue();
+    assertThat(currRecord.get("description")).isNotNull();
 
-        currNodeContent = it.next();
-        assertNotNull(currNodeContent.getData());
-        assertNotNull(currNodeContent.getData().getRecord());
-        currRecord = currNodeContent.getData().getRecord();
-        assertTrue(currRecord.containsKey("film_id"));
-        assertEquals(currRecord.get("film_id"), 166);
-        assertTrue(currRecord.containsKey("title"));
-        assertEquals(currRecord.get("title"), "COLOR PHILADELPHIA");
-        assertTrue(currRecord.containsKey("description"));
-        assertNotNull(currRecord.get("description"));
+    currNodeContent = it.next();
+    assertThat(currNodeContent.getData()).isNotNull();
+    assertThat(currNodeContent.getData().getRecord()).isNotNull();
+    currRecord = currNodeContent.getData().getRecord();
+    assertThat(currRecord.containsKey("film_id")).isTrue();
+    assertThat(currRecord.get("film_id")).isEqualTo(277);
+    assertThat(currRecord.containsKey("title")).isTrue();
+    assertThat(currRecord.get("title")).isEqualTo("ELEPHANT TROJAN");
+    assertThat(currRecord.containsKey("description")).isTrue();
+    assertThat(currRecord.get("description")).isNotNull();
 
-        currNodeContent = it.next();
-        assertNotNull(currNodeContent.getData());
-        assertNotNull(currNodeContent.getData().getRecord());
-        currRecord = currNodeContent.getData().getRecord();
-        assertTrue(currRecord.containsKey("film_id"));
-        assertEquals(currRecord.get("film_id"), 277);
-        assertTrue(currRecord.containsKey("title"));
-        assertEquals(currRecord.get("title"), "ELEPHANT TROJAN");
-        assertTrue(currRecord.containsKey("description"));
-        assertNotNull(currRecord.get("description"));
+    currNodeContent = it.next();
+    assertThat(currNodeContent.getData()).isNotNull();
+    assertThat(currNodeContent.getData().getRecord()).isNotNull();
+    currRecord = currNodeContent.getData().getRecord();
+    assertThat(currRecord.containsKey("film_id")).isTrue();
+    assertThat(currRecord.get("film_id")).isEqualTo(361);
+    assertThat(currRecord.containsKey("title")).isTrue();
+    assertThat(currRecord.get("title")).isEqualTo("GLEAMING JAWBREAKER");
+    assertThat(currRecord.containsKey("description")).isTrue();
+    assertThat(currRecord.get("description")).isNotNull();
 
-        currNodeContent = it.next();
-        assertNotNull(currNodeContent.getData());
-        assertNotNull(currNodeContent.getData().getRecord());
-        currRecord = currNodeContent.getData().getRecord();
-        assertTrue(currRecord.containsKey("film_id"));
-        assertEquals(currRecord.get("film_id"), 361);
-        assertTrue(currRecord.containsKey("title"));
-        assertEquals(currRecord.get("title"), "GLEAMING JAWBREAKER");
-        assertTrue(currRecord.containsKey("description"));
-        assertNotNull(currRecord.get("description"));
+    currNodeContent = it.next();
+    assertThat(currNodeContent.getData()).isNotNull();
+    assertThat(currNodeContent.getData().getRecord()).isNotNull();
+    currRecord = currNodeContent.getData().getRecord();
+    assertThat(currRecord.containsKey("film_id")).isTrue();
+    assertThat(currRecord.get("film_id")).isEqualTo(438);
+    assertThat(currRecord.containsKey("title")).isTrue();
+    assertThat(currRecord.get("title")).isEqualTo("HUMAN GRAFFITI");
+    assertThat(currRecord.containsKey("description")).isTrue();
+    assertThat(currRecord.get("description")).isNotNull();
 
-        currNodeContent = it.next();
-        assertNotNull(currNodeContent.getData());
-        assertNotNull(currNodeContent.getData().getRecord());
-        currRecord = currNodeContent.getData().getRecord();
-        assertTrue(currRecord.containsKey("film_id"));
-        assertEquals(currRecord.get("film_id"), 438);
-        assertTrue(currRecord.containsKey("title"));
-        assertEquals(currRecord.get("title"), "HUMAN GRAFFITI");
-        assertTrue(currRecord.containsKey("description"));
-        assertNotNull(currRecord.get("description"));
+    currNodeContent = it.next();
+    assertThat(currNodeContent.getData()).isNotNull();
+    assertThat(currNodeContent.getData().getRecord()).isNotNull();
+    currRecord = currNodeContent.getData().getRecord();
+    assertThat(currRecord.containsKey("film_id")).isTrue();
+    assertThat(currRecord.get("film_id")).isEqualTo(499);
+    assertThat(currRecord.containsKey("title")).isTrue();
+    assertThat(currRecord.get("title")).isEqualTo("KING EVOLUTION");
+    assertThat(currRecord.containsKey("description")).isTrue();
+    assertThat(currRecord.get("description")).isNotNull();
 
-        currNodeContent = it.next();
-        assertNotNull(currNodeContent.getData());
-        assertNotNull(currNodeContent.getData().getRecord());
-        currRecord = currNodeContent.getData().getRecord();
-        assertTrue(currRecord.containsKey("film_id"));
-        assertEquals(currRecord.get("film_id"), 499);
-        assertTrue(currRecord.containsKey("title"));
-        assertEquals(currRecord.get("title"), "KING EVOLUTION");
-        assertTrue(currRecord.containsKey("description"));
-        assertNotNull(currRecord.get("description"));
+    currNodeContent = it.next();
+    assertThat(currNodeContent.getData()).isNotNull();
+    assertThat(currNodeContent.getData().getRecord()).isNotNull();
+    currRecord = currNodeContent.getData().getRecord();
+    assertThat(currRecord.containsKey("film_id")).isTrue();
+    assertThat(currRecord.get("film_id")).isEqualTo(506);
+    assertThat(currRecord.containsKey("title")).isTrue();
+    assertThat(currRecord.get("title")).isEqualTo("LADY STAGE");
+    assertThat(currRecord.containsKey("description")).isTrue();
+    assertThat(currRecord.get("description")).isNotNull();
 
-        currNodeContent = it.next();
-        assertNotNull(currNodeContent.getData());
-        assertNotNull(currNodeContent.getData().getRecord());
-        currRecord = currNodeContent.getData().getRecord();
-        assertTrue(currRecord.containsKey("film_id"));
-        assertEquals(currRecord.get("film_id"), 506);
-        assertTrue(currRecord.containsKey("title"));
-        assertEquals(currRecord.get("title"), "LADY STAGE");
-        assertTrue(currRecord.containsKey("description"));
-        assertNotNull(currRecord.get("description"));
+    currNodeContent = it.next();
+    assertThat(currNodeContent.getData()).isNotNull();
+    assertThat(currNodeContent.getData().getRecord()).isNotNull();
+    currRecord = currNodeContent.getData().getRecord();
+    assertThat(currRecord.containsKey("film_id")).isTrue();
+    assertThat(currRecord.get("film_id")).isEqualTo(509);
+    assertThat(currRecord.containsKey("title")).isTrue();
+    assertThat(currRecord.get("title")).isEqualTo("LANGUAGE COWBOY");
+    assertThat(currRecord.containsKey("description")).isTrue();
+    assertThat(currRecord.get("description")).isNotNull();
 
-        currNodeContent = it.next();
-        assertNotNull(currNodeContent.getData());
-        assertNotNull(currNodeContent.getData().getRecord());
-        currRecord = currNodeContent.getData().getRecord();
-        assertTrue(currRecord.containsKey("film_id"));
-        assertEquals(currRecord.get("film_id"), 509);
-        assertTrue(currRecord.containsKey("title"));
-        assertEquals(currRecord.get("title"), "LANGUAGE COWBOY");
-        assertTrue(currRecord.containsKey("description"));
-        assertNotNull(currRecord.get("description"));
+    currNodeContent = it.next();
+    assertThat(currNodeContent.getData()).isNotNull();
+    assertThat(currNodeContent.getData().getRecord()).isNotNull();
+    currRecord = currNodeContent.getData().getRecord();
+    assertThat(currRecord.containsKey("film_id")).isTrue();
+    assertThat(currRecord.get("film_id")).isEqualTo(605);
+    assertThat(currRecord.containsKey("title")).isTrue();
+    assertThat(currRecord.get("title")).isEqualTo("MULHOLLAND BEAST");
+    assertThat(currRecord.containsKey("description")).isTrue();
+    assertThat(currRecord.get("description")).isNotNull();
 
-        currNodeContent = it.next();
-        assertNotNull(currNodeContent.getData());
-        assertNotNull(currNodeContent.getData().getRecord());
-        currRecord = currNodeContent.getData().getRecord();
-        assertTrue(currRecord.containsKey("film_id"));
-        assertEquals(currRecord.get("film_id"), 605);
-        assertTrue(currRecord.containsKey("title"));
-        assertEquals(currRecord.get("title"), "MULHOLLAND BEAST");
-        assertTrue(currRecord.containsKey("description"));
-        assertNotNull(currRecord.get("description"));
+    currNodeContent = it.next();
+    assertThat(currNodeContent.getData()).isNotNull();
+    assertThat(currNodeContent.getData().getRecord()).isNotNull();
+    currRecord = currNodeContent.getData().getRecord();
+    assertThat(currRecord.containsKey("film_id")).isTrue();
+    assertThat(currRecord.get("film_id")).isEqualTo(635);
+    assertThat(currRecord.containsKey("title")).isTrue();
+    assertThat(currRecord.get("title")).isEqualTo("OKLAHOMA JUMANJI");
+    assertThat(currRecord.containsKey("description")).isTrue();
+    assertThat(currRecord.get("description")).isNotNull();
 
-        currNodeContent = it.next();
-        assertNotNull(currNodeContent.getData());
-        assertNotNull(currNodeContent.getData().getRecord());
-        currRecord = currNodeContent.getData().getRecord();
-        assertTrue(currRecord.containsKey("film_id"));
-        assertEquals(currRecord.get("film_id"), 635);
-        assertTrue(currRecord.containsKey("title"));
-        assertEquals(currRecord.get("title"), "OKLAHOMA JUMANJI");
-        assertTrue(currRecord.containsKey("description"));
-        assertNotNull(currRecord.get("description"));
+    currNodeContent = it.next();
+    assertThat(currNodeContent.getData()).isNotNull();
+    assertThat(currNodeContent.getData().getRecord()).isNotNull();
+    currRecord = currNodeContent.getData().getRecord();
+    assertThat(currRecord.containsKey("film_id")).isTrue();
+    assertThat(currRecord.get("film_id")).isEqualTo(749);
+    assertThat(currRecord.containsKey("title")).isTrue();
+    assertThat(currRecord.get("title")).isEqualTo("RULES HUMAN");
+    assertThat(currRecord.containsKey("description")).isTrue();
+    assertThat(currRecord.get("description")).isNotNull();
 
-        currNodeContent = it.next();
-        assertNotNull(currNodeContent.getData());
-        assertNotNull(currNodeContent.getData().getRecord());
-        currRecord = currNodeContent.getData().getRecord();
-        assertTrue(currRecord.containsKey("film_id"));
-        assertEquals(currRecord.get("film_id"), 749);
-        assertTrue(currRecord.containsKey("title"));
-        assertEquals(currRecord.get("title"), "RULES HUMAN");
-        assertTrue(currRecord.containsKey("description"));
-        assertNotNull(currRecord.get("description"));
+    currNodeContent = it.next();
+    assertThat(currNodeContent.getData()).isNotNull();
+    assertThat(currNodeContent.getData().getRecord()).isNotNull();
+    currRecord = currNodeContent.getData().getRecord();
+    assertThat(currRecord.containsKey("film_id")).isTrue();
+    assertThat(currRecord.get("film_id")).isEqualTo(832);
+    assertThat(currRecord.containsKey("title")).isTrue();
+    assertThat(currRecord.get("title")).isEqualTo("SPLASH GUMP");
+    assertThat(currRecord.containsKey("description")).isTrue();
+    assertThat(currRecord.get("description")).isNotNull();
 
-        currNodeContent = it.next();
-        assertNotNull(currNodeContent.getData());
-        assertNotNull(currNodeContent.getData().getRecord());
-        currRecord = currNodeContent.getData().getRecord();
-        assertTrue(currRecord.containsKey("film_id"));
-        assertEquals(currRecord.get("film_id"), 832);
-        assertTrue(currRecord.containsKey("title"));
-        assertEquals(currRecord.get("title"), "SPLASH GUMP");
-        assertTrue(currRecord.containsKey("description"));
-        assertNotNull(currRecord.get("description"));
+    currNodeContent = it.next();
+    assertThat(currNodeContent.getData()).isNotNull();
+    assertThat(currNodeContent.getData().getRecord()).isNotNull();
+    currRecord = currNodeContent.getData().getRecord();
+    assertThat(currRecord.containsKey("film_id")).isTrue();
+    assertThat(currRecord.get("film_id")).isEqualTo(939);
+    assertThat(currRecord.containsKey("title")).isTrue();
+    assertThat(currRecord.get("title")).isEqualTo("VERTIGO NORTHWEST");
+    assertThat(currRecord.containsKey("description")).isTrue();
+    assertThat(currRecord.get("description")).isNotNull();
 
-        currNodeContent = it.next();
-        assertNotNull(currNodeContent.getData());
-        assertNotNull(currNodeContent.getData().getRecord());
-        currRecord = currNodeContent.getData().getRecord();
-        assertTrue(currRecord.containsKey("film_id"));
-        assertEquals(currRecord.get("film_id"), 939);
-        assertTrue(currRecord.containsKey("title"));
-        assertEquals(currRecord.get("title"), "VERTIGO NORTHWEST");
-        assertTrue(currRecord.containsKey("description"));
-        assertNotNull(currRecord.get("description"));
+    currNodeContent = it.next();
+    assertThat(currNodeContent.getData()).isNotNull();
+    assertThat(currNodeContent.getData().getRecord()).isNotNull();
+    currRecord = currNodeContent.getData().getRecord();
+    assertThat(currRecord.containsKey("film_id")).isTrue();
+    assertThat(currRecord.get("film_id")).isEqualTo(970);
+    assertThat(currRecord.containsKey("title")).isTrue();
+    assertThat(currRecord.get("title")).isEqualTo("WESTWARD SEABISCUIT");
+    assertThat(currRecord.containsKey("description")).isTrue();
+    assertThat(currRecord.get("description")).isNotNull();
 
-        currNodeContent = it.next();
-        assertNotNull(currNodeContent.getData());
-        assertNotNull(currNodeContent.getData().getRecord());
-        currRecord = currNodeContent.getData().getRecord();
-        assertTrue(currRecord.containsKey("film_id"));
-        assertEquals(currRecord.get("film_id"), 970);
-        assertTrue(currRecord.containsKey("title"));
-        assertEquals(currRecord.get("title"), "WESTWARD SEABISCUIT");
-        assertTrue(currRecord.containsKey("description"));
-        assertNotNull(currRecord.get("description"));
+    currNodeContent = it.next();
+    assertThat(currNodeContent.getData()).isNotNull();
+    assertThat(currNodeContent.getData().getRecord()).isNotNull();
+    currRecord = currNodeContent.getData().getRecord();
+    assertThat(currRecord.containsKey("film_id")).isTrue();
+    assertThat(currRecord.get("film_id")).isEqualTo(980);
+    assertThat(currRecord.containsKey("title")).isTrue();
+    assertThat(currRecord.get("title")).isEqualTo("WIZARD COLDBLOODED");
+    assertThat(currRecord.containsKey("description")).isTrue();
+    assertThat(currRecord.get("description")).isNotNull();
 
-        currNodeContent = it.next();
-        assertNotNull(currNodeContent.getData());
-        assertNotNull(currNodeContent.getData().getRecord());
-        currRecord = currNodeContent.getData().getRecord();
-        assertTrue(currRecord.containsKey("film_id"));
-        assertEquals(currRecord.get("film_id"), 980);
-        assertTrue(currRecord.containsKey("title"));
-        assertEquals(currRecord.get("title"), "WIZARD COLDBLOODED");
-        assertTrue(currRecord.containsKey("description"));
-        assertNotNull(currRecord.get("description"));
+    // edges checks
+    it = data.getEdges().iterator();
+    CytoData currEdgeContent;
 
-        // edges checks
-        it = data.getEdges().iterator();
-        CytoData currEdgeContent;
+    currEdgeContent = it.next();
+    assertThat(currEdgeContent.getData()).isNotNull();
+    assertThat(currEdgeContent.getData().getRecord()).isNotNull();
+    currRecord = currEdgeContent.getData().getRecord();
+    assertThat(currRecord.size()).isEqualTo(1);
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    assertThat(currEdgeContent.getClasses()).isEqualTo("film_actor");
+    assertThat(currEdgeContent.getGroup()).isEqualTo("edges");
+    assertThat(currEdgeContent.getData().getSource()).isEqualTo("1_1");
+    assertThat(currEdgeContent.getData().getTarget()).isEqualTo("7_1");
+    assertThat(currEdgeContent.getData().getId()).isEqualTo("8_1_1");
 
-        currEdgeContent = it.next();
-        assertNotNull(currEdgeContent.getData());
-        assertNotNull(currEdgeContent.getData().getRecord());
-        currRecord = currEdgeContent.getData().getRecord();
-        assertEquals(currRecord.size(), 1);
-        assertTrue(currRecord.containsKey("last_update"));
-        assertEquals(currEdgeContent.getClasses(), "film_actor");
-        assertEquals(currEdgeContent.getGroup(), "edges");
-        assertEquals(currEdgeContent.getData().getSource(), "1_1");
-        assertEquals(currEdgeContent.getData().getTarget(), "7_1");
-        assertEquals(currEdgeContent.getData().getId(), "8_1_1");
+    currEdgeContent = it.next();
+    assertThat(currEdgeContent.getData()).isNotNull();
+    assertThat(currEdgeContent.getData().getRecord()).isNotNull();
+    currRecord = currEdgeContent.getData().getRecord();
+    assertThat(currRecord.size()).isEqualTo(1);
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    assertThat(currEdgeContent.getClasses()).isEqualTo("film_actor");
+    assertThat(currEdgeContent.getGroup()).isEqualTo("edges");
+    assertThat(currEdgeContent.getData().getSource()).isEqualTo("1_1");
+    assertThat(currEdgeContent.getData().getTarget()).isEqualTo("7_23");
+    assertThat(currEdgeContent.getData().getId()).isEqualTo("8_1_23");
 
-        currEdgeContent = it.next();
-        assertNotNull(currEdgeContent.getData());
-        assertNotNull(currEdgeContent.getData().getRecord());
-        currRecord = currEdgeContent.getData().getRecord();
-        assertEquals(currRecord.size(), 1);
-        assertTrue(currRecord.containsKey("last_update"));
-        assertEquals(currEdgeContent.getClasses(), "film_actor");
-        assertEquals(currEdgeContent.getGroup(), "edges");
-        assertEquals(currEdgeContent.getData().getSource(), "1_1");
-        assertEquals(currEdgeContent.getData().getTarget(), "7_23");
-        assertEquals(currEdgeContent.getData().getId(), "8_1_23");
+    currEdgeContent = it.next();
+    assertThat(currEdgeContent.getData()).isNotNull();
+    assertThat(currEdgeContent.getData().getRecord()).isNotNull();
+    currRecord = currEdgeContent.getData().getRecord();
+    assertThat(currRecord.size()).isEqualTo(1);
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    assertThat(currEdgeContent.getClasses()).isEqualTo("film_actor");
+    assertThat(currEdgeContent.getGroup()).isEqualTo("edges");
+    assertThat(currEdgeContent.getData().getSource()).isEqualTo("1_1");
+    assertThat(currEdgeContent.getData().getTarget()).isEqualTo("7_25");
+    assertThat(currEdgeContent.getData().getId()).isEqualTo("8_1_25");
 
-        currEdgeContent = it.next();
-        assertNotNull(currEdgeContent.getData());
-        assertNotNull(currEdgeContent.getData().getRecord());
-        currRecord = currEdgeContent.getData().getRecord();
-        assertEquals(currRecord.size(), 1);
-        assertTrue(currRecord.containsKey("last_update"));
-        assertEquals(currEdgeContent.getClasses(), "film_actor");
-        assertEquals(currEdgeContent.getGroup(), "edges");
-        assertEquals(currEdgeContent.getData().getSource(), "1_1");
-        assertEquals(currEdgeContent.getData().getTarget(), "7_25");
-        assertEquals(currEdgeContent.getData().getId(), "8_1_25");
+    currEdgeContent = it.next();
+    assertThat(currEdgeContent.getData()).isNotNull();
+    assertThat(currEdgeContent.getData().getRecord()).isNotNull();
+    currRecord = currEdgeContent.getData().getRecord();
+    assertThat(currRecord.size()).isEqualTo(1);
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    assertThat(currEdgeContent.getClasses()).isEqualTo("film_actor");
+    assertThat(currEdgeContent.getGroup()).isEqualTo("edges");
+    assertThat(currEdgeContent.getData().getSource()).isEqualTo("1_1");
+    assertThat(currEdgeContent.getData().getTarget()).isEqualTo("7_106");
+    assertThat(currEdgeContent.getData().getId()).isEqualTo("8_1_106");
 
-        currEdgeContent = it.next();
-        assertNotNull(currEdgeContent.getData());
-        assertNotNull(currEdgeContent.getData().getRecord());
-        currRecord = currEdgeContent.getData().getRecord();
-        assertEquals(currRecord.size(), 1);
-        assertTrue(currRecord.containsKey("last_update"));
-        assertEquals(currEdgeContent.getClasses(), "film_actor");
-        assertEquals(currEdgeContent.getGroup(), "edges");
-        assertEquals(currEdgeContent.getData().getSource(), "1_1");
-        assertEquals(currEdgeContent.getData().getTarget(), "7_106");
-        assertEquals(currEdgeContent.getData().getId(), "8_1_106");
+    currEdgeContent = it.next();
+    assertThat(currEdgeContent.getData()).isNotNull();
+    assertThat(currEdgeContent.getData().getRecord()).isNotNull();
+    currRecord = currEdgeContent.getData().getRecord();
+    assertThat(currRecord.size()).isEqualTo(1);
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    assertThat(currEdgeContent.getClasses()).isEqualTo("film_actor");
+    assertThat(currEdgeContent.getGroup()).isEqualTo("edges");
+    assertThat(currEdgeContent.getData().getSource()).isEqualTo("1_1");
+    assertThat(currEdgeContent.getData().getTarget()).isEqualTo("7_140");
+    assertThat(currEdgeContent.getData().getId()).isEqualTo("8_1_140");
 
-        currEdgeContent = it.next();
-        assertNotNull(currEdgeContent.getData());
-        assertNotNull(currEdgeContent.getData().getRecord());
-        currRecord = currEdgeContent.getData().getRecord();
-        assertEquals(currRecord.size(), 1);
-        assertTrue(currRecord.containsKey("last_update"));
-        assertEquals(currEdgeContent.getClasses(), "film_actor");
-        assertEquals(currEdgeContent.getGroup(), "edges");
-        assertEquals(currEdgeContent.getData().getSource(), "1_1");
-        assertEquals(currEdgeContent.getData().getTarget(), "7_140");
-        assertEquals(currEdgeContent.getData().getId(), "8_1_140");
+    currEdgeContent = it.next();
+    assertThat(currEdgeContent.getData()).isNotNull();
+    assertThat(currEdgeContent.getData().getRecord()).isNotNull();
+    currRecord = currEdgeContent.getData().getRecord();
+    assertThat(currRecord.size()).isEqualTo(1);
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    assertThat(currEdgeContent.getClasses()).isEqualTo("film_actor");
+    assertThat(currEdgeContent.getGroup()).isEqualTo("edges");
+    assertThat(currEdgeContent.getData().getSource()).isEqualTo("1_1");
+    assertThat(currEdgeContent.getData().getTarget()).isEqualTo("7_166");
+    assertThat(currEdgeContent.getData().getId()).isEqualTo("8_1_166");
 
-        currEdgeContent = it.next();
-        assertNotNull(currEdgeContent.getData());
-        assertNotNull(currEdgeContent.getData().getRecord());
-        currRecord = currEdgeContent.getData().getRecord();
-        assertEquals(currRecord.size(), 1);
-        assertTrue(currRecord.containsKey("last_update"));
-        assertEquals(currEdgeContent.getClasses(), "film_actor");
-        assertEquals(currEdgeContent.getGroup(), "edges");
-        assertEquals(currEdgeContent.getData().getSource(), "1_1");
-        assertEquals(currEdgeContent.getData().getTarget(), "7_166");
-        assertEquals(currEdgeContent.getData().getId(), "8_1_166");
+    currEdgeContent = it.next();
+    assertThat(currEdgeContent.getData()).isNotNull();
+    assertThat(currEdgeContent.getData().getRecord()).isNotNull();
+    currRecord = currEdgeContent.getData().getRecord();
+    assertThat(currRecord.size()).isEqualTo(1);
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    assertThat(currEdgeContent.getClasses()).isEqualTo("film_actor");
+    assertThat(currEdgeContent.getGroup()).isEqualTo("edges");
+    assertThat(currEdgeContent.getData().getSource()).isEqualTo("1_1");
+    assertThat(currEdgeContent.getData().getTarget()).isEqualTo("7_277");
+    assertThat(currEdgeContent.getData().getId()).isEqualTo("8_1_277");
 
-        currEdgeContent = it.next();
-        assertNotNull(currEdgeContent.getData());
-        assertNotNull(currEdgeContent.getData().getRecord());
-        currRecord = currEdgeContent.getData().getRecord();
-        assertEquals(currRecord.size(), 1);
-        assertTrue(currRecord.containsKey("last_update"));
-        assertEquals(currEdgeContent.getClasses(), "film_actor");
-        assertEquals(currEdgeContent.getGroup(), "edges");
-        assertEquals(currEdgeContent.getData().getSource(), "1_1");
-        assertEquals(currEdgeContent.getData().getTarget(), "7_277");
-        assertEquals(currEdgeContent.getData().getId(), "8_1_277");
+    currEdgeContent = it.next();
+    assertThat(currEdgeContent.getData()).isNotNull();
+    assertThat(currEdgeContent.getData().getRecord()).isNotNull();
+    currRecord = currEdgeContent.getData().getRecord();
+    assertThat(currRecord.size()).isEqualTo(1);
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    assertThat(currEdgeContent.getClasses()).isEqualTo("film_actor");
+    assertThat(currEdgeContent.getGroup()).isEqualTo("edges");
+    assertThat(currEdgeContent.getData().getSource()).isEqualTo("1_1");
+    assertThat(currEdgeContent.getData().getTarget()).isEqualTo("7_361");
+    assertThat(currEdgeContent.getData().getId()).isEqualTo("8_1_361");
 
-        currEdgeContent = it.next();
-        assertNotNull(currEdgeContent.getData());
-        assertNotNull(currEdgeContent.getData().getRecord());
-        currRecord = currEdgeContent.getData().getRecord();
-        assertEquals(currRecord.size(), 1);
-        assertTrue(currRecord.containsKey("last_update"));
-        assertEquals(currEdgeContent.getClasses(), "film_actor");
-        assertEquals(currEdgeContent.getGroup(), "edges");
-        assertEquals(currEdgeContent.getData().getSource(), "1_1");
-        assertEquals(currEdgeContent.getData().getTarget(), "7_361");
-        assertEquals(currEdgeContent.getData().getId(), "8_1_361");
+    currEdgeContent = it.next();
+    assertThat(currEdgeContent.getData()).isNotNull();
+    assertThat(currEdgeContent.getData().getRecord()).isNotNull();
+    currRecord = currEdgeContent.getData().getRecord();
+    assertThat(currRecord.size()).isEqualTo(1);
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    assertThat(currEdgeContent.getClasses()).isEqualTo("film_actor");
+    assertThat(currEdgeContent.getGroup()).isEqualTo("edges");
+    assertThat(currEdgeContent.getData().getSource()).isEqualTo("1_1");
+    assertThat(currEdgeContent.getData().getTarget()).isEqualTo("7_438");
+    assertThat(currEdgeContent.getData().getId()).isEqualTo("8_1_438");
 
-        currEdgeContent = it.next();
-        assertNotNull(currEdgeContent.getData());
-        assertNotNull(currEdgeContent.getData().getRecord());
-        currRecord = currEdgeContent.getData().getRecord();
-        assertEquals(currRecord.size(), 1);
-        assertTrue(currRecord.containsKey("last_update"));
-        assertEquals(currEdgeContent.getClasses(), "film_actor");
-        assertEquals(currEdgeContent.getGroup(), "edges");
-        assertEquals(currEdgeContent.getData().getSource(), "1_1");
-        assertEquals(currEdgeContent.getData().getTarget(), "7_438");
-        assertEquals(currEdgeContent.getData().getId(), "8_1_438");
+    currEdgeContent = it.next();
+    assertThat(currEdgeContent.getData()).isNotNull();
+    assertThat(currEdgeContent.getData().getRecord()).isNotNull();
+    currRecord = currEdgeContent.getData().getRecord();
+    assertThat(currRecord.size()).isEqualTo(1);
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    assertThat(currEdgeContent.getClasses()).isEqualTo("film_actor");
+    assertThat(currEdgeContent.getGroup()).isEqualTo("edges");
+    assertThat(currEdgeContent.getData().getSource()).isEqualTo("1_1");
+    assertThat(currEdgeContent.getData().getTarget()).isEqualTo("7_499");
+    assertThat(currEdgeContent.getData().getId()).isEqualTo("8_1_499");
 
-        currEdgeContent = it.next();
-        assertNotNull(currEdgeContent.getData());
-        assertNotNull(currEdgeContent.getData().getRecord());
-        currRecord = currEdgeContent.getData().getRecord();
-        assertEquals(currRecord.size(), 1);
-        assertTrue(currRecord.containsKey("last_update"));
-        assertEquals(currEdgeContent.getClasses(), "film_actor");
-        assertEquals(currEdgeContent.getGroup(), "edges");
-        assertEquals(currEdgeContent.getData().getSource(), "1_1");
-        assertEquals(currEdgeContent.getData().getTarget(), "7_499");
-        assertEquals(currEdgeContent.getData().getId(), "8_1_499");
+    currEdgeContent = it.next();
+    assertThat(currEdgeContent.getData()).isNotNull();
+    assertThat(currEdgeContent.getData().getRecord()).isNotNull();
+    currRecord = currEdgeContent.getData().getRecord();
+    assertThat(currRecord.size()).isEqualTo(1);
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    assertThat(currEdgeContent.getClasses()).isEqualTo("film_actor");
+    assertThat(currEdgeContent.getGroup()).isEqualTo("edges");
+    assertThat(currEdgeContent.getData().getSource()).isEqualTo("1_1");
+    assertThat(currEdgeContent.getData().getTarget()).isEqualTo("7_506");
+    assertThat(currEdgeContent.getData().getId()).isEqualTo("8_1_506");
 
-        currEdgeContent = it.next();
-        assertNotNull(currEdgeContent.getData());
-        assertNotNull(currEdgeContent.getData().getRecord());
-        currRecord = currEdgeContent.getData().getRecord();
-        assertEquals(currRecord.size(), 1);
-        assertTrue(currRecord.containsKey("last_update"));
-        assertEquals(currEdgeContent.getClasses(), "film_actor");
-        assertEquals(currEdgeContent.getGroup(), "edges");
-        assertEquals(currEdgeContent.getData().getSource(), "1_1");
-        assertEquals(currEdgeContent.getData().getTarget(), "7_506");
-        assertEquals(currEdgeContent.getData().getId(), "8_1_506");
+    currEdgeContent = it.next();
+    assertThat(currEdgeContent.getData()).isNotNull();
+    assertThat(currEdgeContent.getData().getRecord()).isNotNull();
+    currRecord = currEdgeContent.getData().getRecord();
+    assertThat(currRecord.size()).isEqualTo(1);
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    assertThat(currEdgeContent.getClasses()).isEqualTo("film_actor");
+    assertThat(currEdgeContent.getGroup()).isEqualTo("edges");
+    assertThat(currEdgeContent.getData().getSource()).isEqualTo("1_1");
+    assertThat(currEdgeContent.getData().getTarget()).isEqualTo("7_509");
+    assertThat(currEdgeContent.getData().getId()).isEqualTo("8_1_509");
 
-        currEdgeContent = it.next();
-        assertNotNull(currEdgeContent.getData());
-        assertNotNull(currEdgeContent.getData().getRecord());
-        currRecord = currEdgeContent.getData().getRecord();
-        assertEquals(currRecord.size(), 1);
-        assertTrue(currRecord.containsKey("last_update"));
-        assertEquals(currEdgeContent.getClasses(), "film_actor");
-        assertEquals(currEdgeContent.getGroup(), "edges");
-        assertEquals(currEdgeContent.getData().getSource(), "1_1");
-        assertEquals(currEdgeContent.getData().getTarget(), "7_509");
-        assertEquals(currEdgeContent.getData().getId(), "8_1_509");
+    currEdgeContent = it.next();
+    assertThat(currEdgeContent.getData()).isNotNull();
+    assertThat(currEdgeContent.getData().getRecord()).isNotNull();
+    currRecord = currEdgeContent.getData().getRecord();
+    assertThat(currRecord.size()).isEqualTo(1);
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    assertThat(currEdgeContent.getClasses()).isEqualTo("film_actor");
+    assertThat(currEdgeContent.getGroup()).isEqualTo("edges");
+    assertThat(currEdgeContent.getData().getSource()).isEqualTo("1_1");
+    assertThat(currEdgeContent.getData().getTarget()).isEqualTo("7_605");
+    assertThat(currEdgeContent.getData().getId()).isEqualTo("8_1_605");
 
-        currEdgeContent = it.next();
-        assertNotNull(currEdgeContent.getData());
-        assertNotNull(currEdgeContent.getData().getRecord());
-        currRecord = currEdgeContent.getData().getRecord();
-        assertEquals(currRecord.size(), 1);
-        assertTrue(currRecord.containsKey("last_update"));
-        assertEquals(currEdgeContent.getClasses(), "film_actor");
-        assertEquals(currEdgeContent.getGroup(), "edges");
-        assertEquals(currEdgeContent.getData().getSource(), "1_1");
-        assertEquals(currEdgeContent.getData().getTarget(), "7_605");
-        assertEquals(currEdgeContent.getData().getId(), "8_1_605");
+    currEdgeContent = it.next();
+    assertThat(currEdgeContent.getData()).isNotNull();
+    assertThat(currEdgeContent.getData().getRecord()).isNotNull();
+    currRecord = currEdgeContent.getData().getRecord();
+    assertThat(currRecord.size()).isEqualTo(1);
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    assertThat(currEdgeContent.getClasses()).isEqualTo("film_actor");
+    assertThat(currEdgeContent.getGroup()).isEqualTo("edges");
+    assertThat(currEdgeContent.getData().getSource()).isEqualTo("1_1");
+    assertThat(currEdgeContent.getData().getTarget()).isEqualTo("7_635");
+    assertThat(currEdgeContent.getData().getId()).isEqualTo("8_1_635");
 
-        currEdgeContent = it.next();
-        assertNotNull(currEdgeContent.getData());
-        assertNotNull(currEdgeContent.getData().getRecord());
-        currRecord = currEdgeContent.getData().getRecord();
-        assertEquals(currRecord.size(), 1);
-        assertTrue(currRecord.containsKey("last_update"));
-        assertEquals(currEdgeContent.getClasses(), "film_actor");
-        assertEquals(currEdgeContent.getGroup(), "edges");
-        assertEquals(currEdgeContent.getData().getSource(), "1_1");
-        assertEquals(currEdgeContent.getData().getTarget(), "7_635");
-        assertEquals(currEdgeContent.getData().getId(), "8_1_635");
+    currEdgeContent = it.next();
+    assertThat(currEdgeContent.getData()).isNotNull();
+    assertThat(currEdgeContent.getData().getRecord()).isNotNull();
+    currRecord = currEdgeContent.getData().getRecord();
+    assertThat(currRecord.size()).isEqualTo(1);
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    assertThat(currEdgeContent.getClasses()).isEqualTo("film_actor");
+    assertThat(currEdgeContent.getGroup()).isEqualTo("edges");
+    assertThat(currEdgeContent.getData().getSource()).isEqualTo("1_1");
+    assertThat(currEdgeContent.getData().getTarget()).isEqualTo("7_749");
+    assertThat(currEdgeContent.getData().getId()).isEqualTo("8_1_749");
 
-        currEdgeContent = it.next();
-        assertNotNull(currEdgeContent.getData());
-        assertNotNull(currEdgeContent.getData().getRecord());
-        currRecord = currEdgeContent.getData().getRecord();
-        assertEquals(currRecord.size(), 1);
-        assertTrue(currRecord.containsKey("last_update"));
-        assertEquals(currEdgeContent.getClasses(), "film_actor");
-        assertEquals(currEdgeContent.getGroup(), "edges");
-        assertEquals(currEdgeContent.getData().getSource(), "1_1");
-        assertEquals(currEdgeContent.getData().getTarget(), "7_749");
-        assertEquals(currEdgeContent.getData().getId(), "8_1_749");
+    currEdgeContent = it.next();
+    assertThat(currEdgeContent.getData()).isNotNull();
+    assertThat(currEdgeContent.getData().getRecord()).isNotNull();
+    currRecord = currEdgeContent.getData().getRecord();
+    assertThat(currRecord.size()).isEqualTo(1);
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    assertThat(currEdgeContent.getClasses()).isEqualTo("film_actor");
+    assertThat(currEdgeContent.getGroup()).isEqualTo("edges");
+    assertThat(currEdgeContent.getData().getSource()).isEqualTo("1_1");
+    assertThat(currEdgeContent.getData().getTarget()).isEqualTo("7_832");
+    assertThat(currEdgeContent.getData().getId()).isEqualTo("8_1_832");
 
-        currEdgeContent = it.next();
-        assertNotNull(currEdgeContent.getData());
-        assertNotNull(currEdgeContent.getData().getRecord());
-        currRecord = currEdgeContent.getData().getRecord();
-        assertEquals(currRecord.size(), 1);
-        assertTrue(currRecord.containsKey("last_update"));
-        assertEquals(currEdgeContent.getClasses(), "film_actor");
-        assertEquals(currEdgeContent.getGroup(), "edges");
-        assertEquals(currEdgeContent.getData().getSource(), "1_1");
-        assertEquals(currEdgeContent.getData().getTarget(), "7_832");
-        assertEquals(currEdgeContent.getData().getId(), "8_1_832");
+    currEdgeContent = it.next();
+    assertThat(currEdgeContent.getData()).isNotNull();
+    assertThat(currEdgeContent.getData().getRecord()).isNotNull();
+    currRecord = currEdgeContent.getData().getRecord();
+    assertThat(currRecord.size()).isEqualTo(1);
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    assertThat(currEdgeContent.getClasses()).isEqualTo("film_actor");
+    assertThat(currEdgeContent.getGroup()).isEqualTo("edges");
+    assertThat(currEdgeContent.getData().getSource()).isEqualTo("1_1");
+    assertThat(currEdgeContent.getData().getTarget()).isEqualTo("7_939");
+    assertThat(currEdgeContent.getData().getId()).isEqualTo("8_1_939");
 
-        currEdgeContent = it.next();
-        assertNotNull(currEdgeContent.getData());
-        assertNotNull(currEdgeContent.getData().getRecord());
-        currRecord = currEdgeContent.getData().getRecord();
-        assertEquals(currRecord.size(), 1);
-        assertTrue(currRecord.containsKey("last_update"));
-        assertEquals(currEdgeContent.getClasses(), "film_actor");
-        assertEquals(currEdgeContent.getGroup(), "edges");
-        assertEquals(currEdgeContent.getData().getSource(), "1_1");
-        assertEquals(currEdgeContent.getData().getTarget(), "7_939");
-        assertEquals(currEdgeContent.getData().getId(), "8_1_939");
+    currEdgeContent = it.next();
+    assertThat(currEdgeContent.getData()).isNotNull();
+    assertThat(currEdgeContent.getData().getRecord()).isNotNull();
+    currRecord = currEdgeContent.getData().getRecord();
+    assertThat(currRecord.size()).isEqualTo(1);
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    assertThat(currEdgeContent.getClasses()).isEqualTo("film_actor");
+    assertThat(currEdgeContent.getGroup()).isEqualTo("edges");
+    assertThat(currEdgeContent.getData().getSource()).isEqualTo("1_1");
+    assertThat(currEdgeContent.getData().getTarget()).isEqualTo("7_970");
+    assertThat(currEdgeContent.getData().getId()).isEqualTo("8_1_970");
 
-        currEdgeContent = it.next();
-        assertNotNull(currEdgeContent.getData());
-        assertNotNull(currEdgeContent.getData().getRecord());
-        currRecord = currEdgeContent.getData().getRecord();
-        assertEquals(currRecord.size(), 1);
-        assertTrue(currRecord.containsKey("last_update"));
-        assertEquals(currEdgeContent.getClasses(), "film_actor");
-        assertEquals(currEdgeContent.getGroup(), "edges");
-        assertEquals(currEdgeContent.getData().getSource(), "1_1");
-        assertEquals(currEdgeContent.getData().getTarget(), "7_970");
-        assertEquals(currEdgeContent.getData().getId(), "8_1_970");
+    currEdgeContent = it.next();
+    assertThat(currEdgeContent.getData()).isNotNull();
+    assertThat(currEdgeContent.getData().getRecord()).isNotNull();
+    currRecord = currEdgeContent.getData().getRecord();
+    assertThat(currRecord.size()).isEqualTo(1);
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    assertThat(currEdgeContent.getClasses()).isEqualTo("film_actor");
+    assertThat(currEdgeContent.getGroup()).isEqualTo("edges");
+    assertThat(currEdgeContent.getData().getSource()).isEqualTo("1_1");
+    assertThat(currEdgeContent.getData().getTarget()).isEqualTo("7_980");
+    assertThat(currEdgeContent.getData().getId()).isEqualTo("8_1_980");
 
-        currEdgeContent = it.next();
-        assertNotNull(currEdgeContent.getData());
-        assertNotNull(currEdgeContent.getData().getRecord());
-        currRecord = currEdgeContent.getData().getRecord();
-        assertEquals(currRecord.size(), 1);
-        assertTrue(currRecord.containsKey("last_update"));
-        assertEquals(currEdgeContent.getClasses(), "film_actor");
-        assertEquals(currEdgeContent.getGroup(), "edges");
-        assertEquals(currEdgeContent.getData().getSource(), "1_1");
-        assertEquals(currEdgeContent.getData().getTarget(), "7_980");
-        assertEquals(currEdgeContent.getData().getId(), "8_1_980");
+    /** Get actors by movie */
 
-        /**
-         * Get actors by movie
-         */
+    // expanding 1-N relationship: film <-[has_film]- actor
 
-        // expanding 1-N relationship: film <-[has_film]- actor
+    rootIds[0] = "7_2";
+    data = provider.expand(dataSource, rootIds, "in", "film_actor", 300);
 
-        rootIds[0] = "7_2";
-        data = provider.expand(dataSource, rootIds, "in", "film_actor", 300);
+    assertThat(data.getNodesClasses().size()).isEqualTo(1);
+    assertThat(data.getNodes().size()).isEqualTo(4);
+    assertThat(data.getEdgesClasses().size()).isEqualTo(1);
+    assertThat(data.getEdges().size()).isEqualTo(4);
 
-        assertEquals(data.getNodesClasses().size(), 1);
-        assertEquals(data.getNodes().size(), 4);
-        assertEquals(data.getEdgesClasses().size(), 1);
-        assertEquals(data.getEdges().size(), 4);
+    // Node classes checks
+    assertThat(data.getNodesClasses().containsKey("actor")).isTrue();
 
-        // Node classes checks
-        assertTrue(data.getNodesClasses().containsKey("actor"));
+    Map<String, Object> actorClass = data.getNodesClasses().get("actor");
+    assertThat(actorClass.containsKey("actor_id")).isTrue();
+    assertThat(actorClass.containsKey("first_name")).isTrue();
+    assertThat(actorClass.containsKey("last_name")).isTrue();
+    assertThat(actorClass.containsKey("last_update")).isTrue();
 
-        Map<String, Object> actorClass = data.getNodesClasses().get("actor");
-        assertTrue(actorClass.containsKey("actor_id"));
-        assertTrue(actorClass.containsKey("first_name"));
-        assertTrue(actorClass.containsKey("last_name"));
-        assertTrue(actorClass.containsKey("last_update"));
+    // nodes checks
+    it = data.getNodes().iterator();
 
-        // nodes checks
-        it = data.getNodes().iterator();
+    currNodeContent = it.next();
+    assertThat(currNodeContent.getData()).isNotNull();
+    assertThat(currNodeContent.getData().getRecord()).isNotNull();
+    currRecord = currNodeContent.getData().getRecord();
+    assertThat(currRecord.containsKey("actor_id")).isTrue();
+    assertThat(currRecord.get("actor_id")).isEqualTo(19);
+    assertThat(currRecord.containsKey("first_name")).isTrue();
+    assertThat(currRecord.get("first_name")).isEqualTo("BOB");
+    assertThat(currRecord.containsKey("last_name")).isTrue();
+    assertThat(currRecord.get("last_name")).isEqualTo("FAWCETT");
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    //    assertEquals(currRecord.get("last_update").toString(), "2013-05-26 14:47:57.62");
 
-        currNodeContent = it.next();
-        assertNotNull(currNodeContent.getData());
-        assertNotNull(currNodeContent.getData().getRecord());
-        currRecord = currNodeContent.getData().getRecord();
-        assertTrue(currRecord.containsKey("actor_id"));
-        assertEquals(currRecord.get("actor_id"), 19);
-        assertTrue(currRecord.containsKey("first_name"));
-        assertEquals(currRecord.get("first_name"), "BOB");
-        assertTrue(currRecord.containsKey("last_name"));
-        assertEquals(currRecord.get("last_name"), "FAWCETT");
-        assertTrue(currRecord.containsKey("last_update"));
-        //    assertEquals(currRecord.get("last_update").toString(), "2013-05-26 14:47:57.62");
+    currNodeContent = it.next();
+    assertThat(currNodeContent.getData()).isNotNull();
+    assertThat(currNodeContent.getData().getRecord()).isNotNull();
+    currRecord = currNodeContent.getData().getRecord();
+    assertThat(currRecord.containsKey("actor_id")).isTrue();
+    assertThat(currRecord.get("actor_id")).isEqualTo(85);
+    assertThat(currRecord.containsKey("first_name")).isTrue();
+    assertThat(currRecord.get("first_name")).isEqualTo("MINNIE");
+    assertThat(currRecord.containsKey("last_name")).isTrue();
+    assertThat(currRecord.get("last_name")).isEqualTo("ZELLWEGER");
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    //    assertEquals(currRecord.get("last_update").toString(), "2013-05-26 14:47:57.62");
 
-        currNodeContent = it.next();
-        assertNotNull(currNodeContent.getData());
-        assertNotNull(currNodeContent.getData().getRecord());
-        currRecord = currNodeContent.getData().getRecord();
-        assertTrue(currRecord.containsKey("actor_id"));
-        assertEquals(currRecord.get("actor_id"), 85);
-        assertTrue(currRecord.containsKey("first_name"));
-        assertEquals(currRecord.get("first_name"), "MINNIE");
-        assertTrue(currRecord.containsKey("last_name"));
-        assertEquals(currRecord.get("last_name"), "ZELLWEGER");
-        assertTrue(currRecord.containsKey("last_update"));
-        //    assertEquals(currRecord.get("last_update").toString(), "2013-05-26 14:47:57.62");
+    currNodeContent = it.next();
+    assertThat(currNodeContent.getData()).isNotNull();
+    assertThat(currNodeContent.getData().getRecord()).isNotNull();
+    currRecord = currNodeContent.getData().getRecord();
+    assertThat(currRecord.containsKey("actor_id")).isTrue();
+    assertThat(currRecord.get("actor_id")).isEqualTo(90);
+    assertThat(currRecord.containsKey("first_name")).isTrue();
+    assertThat(currRecord.get("first_name")).isEqualTo("SEAN");
+    assertThat(currRecord.containsKey("last_name")).isTrue();
+    assertThat(currRecord.get("last_name")).isEqualTo("GUINESS");
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    //    assertEquals(currRecord.get("last_update").toString(), "2013-05-26 14:47:57.62");
 
-        currNodeContent = it.next();
-        assertNotNull(currNodeContent.getData());
-        assertNotNull(currNodeContent.getData().getRecord());
-        currRecord = currNodeContent.getData().getRecord();
-        assertTrue(currRecord.containsKey("actor_id"));
-        assertEquals(currRecord.get("actor_id"), 90);
-        assertTrue(currRecord.containsKey("first_name"));
-        assertEquals(currRecord.get("first_name"), "SEAN");
-        assertTrue(currRecord.containsKey("last_name"));
-        assertEquals(currRecord.get("last_name"), "GUINESS");
-        assertTrue(currRecord.containsKey("last_update"));
-        //    assertEquals(currRecord.get("last_update").toString(), "2013-05-26 14:47:57.62");
+    currNodeContent = it.next();
+    assertThat(currNodeContent.getData()).isNotNull();
+    assertThat(currNodeContent.getData().getRecord()).isNotNull();
+    currRecord = currNodeContent.getData().getRecord();
+    assertThat(currRecord.containsKey("actor_id")).isTrue();
+    assertThat(currRecord.get("actor_id")).isEqualTo(160);
+    assertThat(currRecord.containsKey("first_name")).isTrue();
+    assertThat(currRecord.get("first_name")).isEqualTo("CHRIS");
+    assertThat(currRecord.containsKey("last_name")).isTrue();
+    assertThat(currRecord.get("last_name")).isEqualTo("DEPP");
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    //    assertEquals(currRecord.get("last_update").toString(), "2013-05-26 14:47:57.62");
 
-        currNodeContent = it.next();
-        assertNotNull(currNodeContent.getData());
-        assertNotNull(currNodeContent.getData().getRecord());
-        currRecord = currNodeContent.getData().getRecord();
-        assertTrue(currRecord.containsKey("actor_id"));
-        assertEquals(currRecord.get("actor_id"), 160);
-        assertTrue(currRecord.containsKey("first_name"));
-        assertEquals(currRecord.get("first_name"), "CHRIS");
-        assertTrue(currRecord.containsKey("last_name"));
-        assertEquals(currRecord.get("last_name"), "DEPP");
-        assertTrue(currRecord.containsKey("last_update"));
-        //    assertEquals(currRecord.get("last_update").toString(), "2013-05-26 14:47:57.62");
+    // edges checks
+    it = data.getEdges().iterator();
 
-        // edges checks
-        it = data.getEdges().iterator();
+    currEdgeContent = it.next();
+    assertThat(currEdgeContent.getData()).isNotNull();
+    assertThat(currEdgeContent.getData().getRecord()).isNotNull();
+    currRecord = currEdgeContent.getData().getRecord();
+    assertThat(currRecord.size()).isEqualTo(1);
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    assertThat(currEdgeContent.getClasses()).isEqualTo("film_actor");
+    assertThat(currEdgeContent.getGroup()).isEqualTo("edges");
+    assertThat(currEdgeContent.getData().getSource()).isEqualTo("1_19");
+    assertThat(currEdgeContent.getData().getTarget()).isEqualTo("7_2");
+    assertThat(currEdgeContent.getData().getId()).isEqualTo("8_19_2");
 
-        currEdgeContent = it.next();
-        assertNotNull(currEdgeContent.getData());
-        assertNotNull(currEdgeContent.getData().getRecord());
-        currRecord = currEdgeContent.getData().getRecord();
-        assertEquals(currRecord.size(), 1);
-        assertTrue(currRecord.containsKey("last_update"));
-        assertEquals(currEdgeContent.getClasses(), "film_actor");
-        assertEquals(currEdgeContent.getGroup(), "edges");
-        assertEquals(currEdgeContent.getData().getSource(), "1_19");
-        assertEquals(currEdgeContent.getData().getTarget(), "7_2");
-        assertEquals(currEdgeContent.getData().getId(), "8_19_2");
+    currEdgeContent = it.next();
+    assertThat(currEdgeContent.getData()).isNotNull();
+    assertThat(currEdgeContent.getData().getRecord()).isNotNull();
+    currRecord = currEdgeContent.getData().getRecord();
+    assertThat(currRecord.size()).isEqualTo(1);
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    assertThat(currEdgeContent.getClasses()).isEqualTo("film_actor");
+    assertThat(currEdgeContent.getGroup()).isEqualTo("edges");
+    assertThat(currEdgeContent.getData().getSource()).isEqualTo("1_85");
+    assertThat(currEdgeContent.getData().getTarget()).isEqualTo("7_2");
+    assertThat(currEdgeContent.getData().getId()).isEqualTo("8_85_2");
 
-        currEdgeContent = it.next();
-        assertNotNull(currEdgeContent.getData());
-        assertNotNull(currEdgeContent.getData().getRecord());
-        currRecord = currEdgeContent.getData().getRecord();
-        assertEquals(currRecord.size(), 1);
-        assertTrue(currRecord.containsKey("last_update"));
-        assertEquals(currEdgeContent.getClasses(), "film_actor");
-        assertEquals(currEdgeContent.getGroup(), "edges");
-        assertEquals(currEdgeContent.getData().getSource(), "1_85");
-        assertEquals(currEdgeContent.getData().getTarget(), "7_2");
-        assertEquals(currEdgeContent.getData().getId(), "8_85_2");
+    currEdgeContent = it.next();
+    assertThat(currEdgeContent.getData()).isNotNull();
+    assertThat(currEdgeContent.getData().getRecord()).isNotNull();
+    currRecord = currEdgeContent.getData().getRecord();
+    assertThat(currRecord.size()).isEqualTo(1);
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    assertThat(currEdgeContent.getClasses()).isEqualTo("film_actor");
+    assertThat(currEdgeContent.getGroup()).isEqualTo("edges");
+    assertThat(currEdgeContent.getData().getSource()).isEqualTo("1_90");
+    assertThat(currEdgeContent.getData().getTarget()).isEqualTo("7_2");
+    assertThat(currEdgeContent.getData().getId()).isEqualTo("8_90_2");
 
-        currEdgeContent = it.next();
-        assertNotNull(currEdgeContent.getData());
-        assertNotNull(currEdgeContent.getData().getRecord());
-        currRecord = currEdgeContent.getData().getRecord();
-        assertEquals(currRecord.size(), 1);
-        assertTrue(currRecord.containsKey("last_update"));
-        assertEquals(currEdgeContent.getClasses(), "film_actor");
-        assertEquals(currEdgeContent.getGroup(), "edges");
-        assertEquals(currEdgeContent.getData().getSource(), "1_90");
-        assertEquals(currEdgeContent.getData().getTarget(), "7_2");
-        assertEquals(currEdgeContent.getData().getId(), "8_90_2");
-
-        currEdgeContent = it.next();
-        assertNotNull(currEdgeContent.getData());
-        assertNotNull(currEdgeContent.getData().getRecord());
-        currRecord = currEdgeContent.getData().getRecord();
-        assertEquals(currRecord.size(), 1);
-        assertTrue(currRecord.containsKey("last_update"));
-        assertEquals(currEdgeContent.getClasses(), "film_actor");
-        assertEquals(currEdgeContent.getGroup(), "edges");
-        assertEquals(currEdgeContent.getData().getSource(), "1_160");
-        assertEquals(currEdgeContent.getData().getTarget(), "7_2");
-        assertEquals(currEdgeContent.getData().getId(), "8_160_2");
-    }
+    currEdgeContent = it.next();
+    assertThat(currEdgeContent.getData()).isNotNull();
+    assertThat(currEdgeContent.getData().getRecord()).isNotNull();
+    currRecord = currEdgeContent.getData().getRecord();
+    assertThat(currRecord.size()).isEqualTo(1);
+    assertThat(currRecord.containsKey("last_update")).isTrue();
+    assertThat(currEdgeContent.getClasses()).isEqualTo("film_actor");
+    assertThat(currEdgeContent.getGroup()).isEqualTo("edges");
+    assertThat(currEdgeContent.getData().getSource()).isEqualTo("1_160");
+    assertThat(currEdgeContent.getData().getTarget()).isEqualTo("7_2");
+    assertThat(currEdgeContent.getData().getId()).isEqualTo("8_160_2");
+  }
 }

@@ -30,8 +30,7 @@ import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx
 import com.orientechnologies.orient.core.metadata.schema.OImmutableSchema
 import org.slf4j.LoggerFactory
 
-class OrientDBDataSourceMetadataProvider() : DataSourceMetadataProvider {
-
+class OrientDBDataSourceMetadataProvider : DataSourceMetadataProvider {
     private val log = LoggerFactory.getLogger(OrientDBDataSourceMetadataProvider::class.java)
 
     override fun fetchMetadata(dataSource: DataSourceInfo): DataSourceMetadata {
@@ -48,37 +47,45 @@ class OrientDBDataSourceMetadataProvider() : DataSourceMetadataProvider {
         }
     }
 
-    private fun edgeClasses(schema: OImmutableSchema, db: ODatabaseDocumentTx): EdgesClasses {
-        return schema.classes
+    private fun edgeClasses(
+        schema: OImmutableSchema,
+        db: ODatabaseDocumentTx,
+    ): EdgesClasses =
+        schema.classes
             .asSequence()
             .filter { it.isEdgeType }
             .filter { it.name != "E" }
             .map {
-                val props = it.properties()
-                    .map { prop -> prop.name to TypeProperty(prop.name, prop.type.name) }
-                    .toMap()
+                val props =
+                    it
+                        .properties()
+                        .map { prop -> prop.name to TypeProperty(prop.name, prop.type.name) }
+                        .toMap()
 
                 TypeClass(it.name, db.countClass(it.name, true), props)
             }.map {
                 it.name to it
             }.toMap()
-    }
 
-    private fun nodeClasses(schema: OImmutableSchema, db: ODatabaseDocumentTx): NodesClasses {
-        return schema.classes
+    private fun nodeClasses(
+        schema: OImmutableSchema,
+        db: ODatabaseDocumentTx,
+    ): NodesClasses =
+        schema.classes
             .asSequence()
             .filter { it.isVertexType }
             .filter { it.name != "V" }
             .map {
-                val props = it.properties()
-                    .map { prop -> prop.name to TypeProperty(prop.name, prop.type.name) }
-                    .toMap()
+                val props =
+                    it
+                        .properties()
+                        .map { prop -> prop.name to TypeProperty(prop.name, prop.type.name) }
+                        .toMap()
 
                 TypeClass(it.name, db.countClass(it.name, true), props)
             }.map {
                 it.name to it
             }.toMap()
-    }
 
     override fun supportedDataSourceTypes(): Set<String> = setOf("ORIENTDB")
 }

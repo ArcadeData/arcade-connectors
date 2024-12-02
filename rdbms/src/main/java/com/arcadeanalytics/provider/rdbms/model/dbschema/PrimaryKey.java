@@ -27,20 +27,19 @@ import java.util.List;
  *
  * @author Gabriele Ponzi
  */
-
 public class PrimaryKey extends Key {
 
-    public PrimaryKey(Entity belongingEntity, List<Attribute> involvedAttributes) {
-        super(belongingEntity, involvedAttributes);
-    }
+  public PrimaryKey(Entity belongingEntity, List<Attribute> involvedAttributes) {
+    super(belongingEntity, involvedAttributes);
+  }
 
-    public Attribute getAttributeByOrdinalPosition(int ordinalPosition) {
-        // overflow
-        if (ordinalPosition > super.getInvolvedAttributes().size()) return null;
+  public Attribute getAttributeByOrdinalPosition(int ordinalPosition) {
+    // overflow
+    if (ordinalPosition > super.getInvolvedAttributes().size()) return null;
 
-        for (Attribute attribute : super.involvedAttributes) {
-            if (attribute.getOrdinalPosition() == ordinalPosition) return attribute;
-        }
-        return null;
+    for (Attribute attribute : super.involvedAttributes) {
+      if (attribute.getOrdinalPosition() == ordinalPosition) return attribute;
     }
+    return null;
+  }
 }

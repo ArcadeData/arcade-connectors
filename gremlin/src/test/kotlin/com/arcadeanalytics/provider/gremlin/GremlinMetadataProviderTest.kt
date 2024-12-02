@@ -25,7 +25,6 @@ import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GremlinMetadataProviderTest {
-
     private val provider: GremlinMetadataProvider = GremlinMetadataProvider()
 
     @Test

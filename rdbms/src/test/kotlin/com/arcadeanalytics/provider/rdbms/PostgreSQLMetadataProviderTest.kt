@@ -23,7 +23,7 @@ import com.arcadeanalytics.provider.DataSourceInfo
 import com.arcadeanalytics.provider.rdbms.dataprovider.PostgreSQLContainerHolder
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Assert
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -31,7 +31,6 @@ import org.testcontainers.containers.PostgreSQLContainer
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PostgreSQLMetadataProviderTest {
-
     private val container: PostgreSQLContainer<Nothing> = PostgreSQLContainerHolder.container as PostgreSQLContainer<Nothing>
 
     private lateinit var providerNoAggregation: RDBMSMetadataProvider
@@ -43,28 +42,30 @@ class PostgreSQLMetadataProviderTest {
     @BeforeEach
     @Throws(Exception::class)
     fun setUp() {
-        dataSourceNoAggregation = DataSourceInfo(
-            id = 1L,
-            type = "RDBMS_POSTGRESQL",
-            name = "testDataSource",
-            server = container.containerIpAddress,
-            port = container.firstMappedPort,
-            username = container.username,
-            password = container.password,
-            database = container.databaseName,
-            aggregationEnabled = false,
-        )
-        dataSourceWithAggregation = DataSourceInfo(
-            id = 1L,
-            type = "RDBMS_POSTGRESQL",
-            name = "testDataSource",
-            server = container.containerIpAddress,
-            port = container.firstMappedPort,
-            username = container.username,
-            password = container.password,
-            database = container.databaseName,
-            aggregationEnabled = true,
-        )
+        dataSourceNoAggregation =
+            DataSourceInfo(
+                id = 1L,
+                type = "RDBMS_POSTGRESQL",
+                name = "testDataSource",
+                server = container.containerIpAddress,
+                port = container.firstMappedPort,
+                username = container.username,
+                password = container.password,
+                database = container.databaseName,
+                aggregationEnabled = false,
+            )
+        dataSourceWithAggregation =
+            DataSourceInfo(
+                id = 1L,
+                type = "RDBMS_POSTGRESQL",
+                name = "testDataSource",
+                server = container.containerIpAddress,
+                port = container.firstMappedPort,
+                username = container.username,
+                password = container.password,
+                database = container.databaseName,
+                aggregationEnabled = true,
+            )
 
         providerNoAggregation = RDBMSMetadataProvider()
         providerWithAggregation = RDBMSMetadataProvider()
@@ -74,7 +75,8 @@ class PostgreSQLMetadataProviderTest {
     fun shouldFetchMetadata() {
         val metadata = providerNoAggregation.fetchMetadata(dataSourceNoAggregation)
 
-        assertThat(metadata.nodesClasses).isNotEmpty
+        assertThat(metadata.nodesClasses)
+            .isNotEmpty
             .containsKeys("actor", "address", "category", "city", "country", "customer", "film", "rental", "payment", "language")
 
         assertThat(metadata.edgesClasses).isNotEmpty
@@ -91,146 +93,146 @@ class PostgreSQLMetadataProviderTest {
 
         val nodesClasses = metadata.nodesClasses
         val edgesClasses = metadata.edgesClasses
-        Assert.assertEquals(15, nodesClasses.size)
-        Assert.assertEquals(12, edgesClasses.size)
+        assertThat(nodesClasses.size).isEqualTo(15)
+        assertThat(edgesClasses.size).isEqualTo(12)
 
         /*
          * Vertices Classes check
          */
 
         var currVertexClassName = "actor"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(200, currVertexClassInfo.cardinality)
-            Assert.assertEquals(4, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(200)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(4)
         }
 
         currVertexClassName = "address"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(603, currVertexClassInfo.cardinality)
-            Assert.assertEquals(8, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(603)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(8)
         }
 
         currVertexClassName = "category"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(16, currVertexClassInfo.cardinality)
-            Assert.assertEquals(3, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(16)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(3)
         }
 
         currVertexClassName = "city"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(600, currVertexClassInfo.cardinality)
-            Assert.assertEquals(4, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(600)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(4)
         }
 
         currVertexClassName = "country"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(109, currVertexClassInfo.cardinality)
-            Assert.assertEquals(3, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(109)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(3)
         }
 
         currVertexClassName = "customer"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(599, currVertexClassInfo.cardinality)
-            Assert.assertEquals(10, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(599)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(10)
         }
 
         currVertexClassName = "film"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(1000, currVertexClassInfo.cardinality)
-            Assert.assertEquals(13, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(1000)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(13)
         }
 
         currVertexClassName = "film_actor"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(5462, currVertexClassInfo.cardinality)
-            Assert.assertEquals(3, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(5462)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(3)
         }
 
         currVertexClassName = "film_category"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(1000, currVertexClassInfo.cardinality)
-            Assert.assertEquals(3, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(1000)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(3)
         }
 
         currVertexClassName = "inventory"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(4581, currVertexClassInfo.cardinality)
-            Assert.assertEquals(4, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(4581)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(4)
         }
 
         currVertexClassName = "language"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(6, currVertexClassInfo.cardinality)
-            Assert.assertEquals(3, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(6)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(3)
         }
 
         currVertexClassName = "payment"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(14596, currVertexClassInfo.cardinality)
-            Assert.assertEquals(6, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(14596)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(6)
         }
 
         currVertexClassName = "rental"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(16044, currVertexClassInfo.cardinality)
-            Assert.assertEquals(7, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(16044)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(7)
         }
 
         currVertexClassName = "staff"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(2, currVertexClassInfo.cardinality)
-            Assert.assertEquals(11, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(2)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(11)
         }
 
         currVertexClassName = "store"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(2, currVertexClassInfo.cardinality)
-            Assert.assertEquals(4, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(2)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(4)
         }
 
         /*
@@ -238,111 +240,111 @@ class PostgreSQLMetadataProviderTest {
          */
 
         var currEdgeClassName = "has_actor"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(5462, currVertexClassInfo.cardinality)
-            Assert.assertEquals(0, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(5462)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(0)
         }
 
         currEdgeClassName = "has_address"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(603, currVertexClassInfo.cardinality)
-            Assert.assertEquals(0, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(603)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(0)
         }
 
         currEdgeClassName = "has_category"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(1000, currVertexClassInfo.cardinality)
-            Assert.assertEquals(0, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(1000)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(0)
         }
 
         currEdgeClassName = "has_city"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(603, currVertexClassInfo.cardinality)
-            Assert.assertEquals(0, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(603)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(0)
         }
 
         currEdgeClassName = "has_country"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(600, currVertexClassInfo.cardinality)
-            Assert.assertEquals(0, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(600)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(0)
         }
 
         currEdgeClassName = "has_customer"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(30640, currVertexClassInfo.cardinality)
-            Assert.assertEquals(0, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(30640)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(0)
         }
 
         currEdgeClassName = "has_film"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(11043, currVertexClassInfo.cardinality)
-            Assert.assertEquals(0, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(11043)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(0)
         }
 
         currEdgeClassName = "has_inventory"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(16044, currVertexClassInfo.cardinality)
-            Assert.assertEquals(0, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(16044)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(0)
         }
 
         currEdgeClassName = "has_language"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(1000, currVertexClassInfo.cardinality)
-            Assert.assertEquals(0, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(1000)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(0)
         }
 
         currEdgeClassName = "has_manager_staff"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(2, currVertexClassInfo.cardinality)
-            Assert.assertEquals(0, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(2)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(0)
         }
 
         currEdgeClassName = "has_rental"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(14596, currVertexClassInfo.cardinality)
-            Assert.assertEquals(0, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(14596)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(0)
         }
 
         currEdgeClassName = "has_staff"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(30640, currVertexClassInfo.cardinality)
-            Assert.assertEquals(0, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(30640)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(0)
         }
     }
 
@@ -357,128 +359,128 @@ class PostgreSQLMetadataProviderTest {
 
         val nodesClasses = metadata.nodesClasses
         val edgesClasses = metadata.edgesClasses
-        Assert.assertEquals(13, nodesClasses.size)
-        Assert.assertEquals(12, edgesClasses.size)
+        assertThat(nodesClasses.size).isEqualTo(13)
+        assertThat(edgesClasses.size).isEqualTo(12)
 
         /*
          * Vertices Classes check
          */
 
         var currVertexClassName = "actor"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(200, currVertexClassInfo.cardinality)
-            Assert.assertEquals(4, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(200)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(4)
         }
 
         currVertexClassName = "address"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(603, currVertexClassInfo.cardinality)
-            Assert.assertEquals(8, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(603)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(8)
         }
 
         currVertexClassName = "category"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(16, currVertexClassInfo.cardinality)
-            Assert.assertEquals(3, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(16)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(3)
         }
 
         currVertexClassName = "city"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(600, currVertexClassInfo.cardinality)
-            Assert.assertEquals(4, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(600)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(4)
         }
 
         currVertexClassName = "country"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(109, currVertexClassInfo.cardinality)
-            Assert.assertEquals(3, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(109)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(3)
         }
 
         currVertexClassName = "customer"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(599, currVertexClassInfo.cardinality)
-            Assert.assertEquals(10, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(599)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(10)
         }
 
         currVertexClassName = "film"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(1000, currVertexClassInfo.cardinality)
-            Assert.assertEquals(13, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(1000)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(13)
         }
 
         currVertexClassName = "inventory"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(4581, currVertexClassInfo.cardinality)
-            Assert.assertEquals(4, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(4581)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(4)
         }
 
         currVertexClassName = "language"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(6, currVertexClassInfo.cardinality)
-            Assert.assertEquals(3, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(6)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(3)
         }
 
         currVertexClassName = "payment"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(14596, currVertexClassInfo.cardinality)
-            Assert.assertEquals(6, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(14596)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(6)
         }
 
         currVertexClassName = "rental"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(16044, currVertexClassInfo.cardinality)
-            Assert.assertEquals(7, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(16044)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(7)
         }
 
         currVertexClassName = "staff"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(2, currVertexClassInfo.cardinality)
-            Assert.assertEquals(11, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(2)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(11)
         }
 
         currVertexClassName = "store"
-        Assert.assertTrue(nodesClasses.keys.contains(currVertexClassName))
-        Assert.assertNotNull(nodesClasses.get(currVertexClassName))
+        assertTrue(nodesClasses.keys.contains(currVertexClassName))
+        assertThat(nodesClasses.get(currVertexClassName)).isNotNull()
         nodesClasses.get(currVertexClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currVertexClassName, currVertexClassInfo.name)
-            Assert.assertEquals(2, currVertexClassInfo.cardinality)
-            Assert.assertEquals(4, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currVertexClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(2)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(4)
         }
 
         /*
@@ -486,111 +488,111 @@ class PostgreSQLMetadataProviderTest {
          */
 
         var currEdgeClassName = "film_actor"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(5462, currVertexClassInfo.cardinality)
-            Assert.assertEquals(1, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(5462)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(1)
         }
 
         currEdgeClassName = "film_category"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(1000, currVertexClassInfo.cardinality)
-            Assert.assertEquals(1, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(1000)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(1)
         }
 
         currEdgeClassName = "has_address"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(603, currVertexClassInfo.cardinality)
-            Assert.assertEquals(0, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(603)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(0)
         }
 
         currEdgeClassName = "has_city"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(603, currVertexClassInfo.cardinality)
-            Assert.assertEquals(0, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(603)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(0)
         }
 
         currEdgeClassName = "has_country"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(600, currVertexClassInfo.cardinality)
-            Assert.assertEquals(0, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(600)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(0)
         }
 
         currEdgeClassName = "has_customer"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(30640, currVertexClassInfo.cardinality)
-            Assert.assertEquals(0, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(30640)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(0)
         }
 
         currEdgeClassName = "has_film"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(4581, currVertexClassInfo.cardinality)
-            Assert.assertEquals(0, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(4581)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(0)
         }
 
         currEdgeClassName = "has_inventory"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(16044, currVertexClassInfo.cardinality)
-            Assert.assertEquals(0, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(16044)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(0)
         }
 
         currEdgeClassName = "has_language"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(1000, currVertexClassInfo.cardinality)
-            Assert.assertEquals(0, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(1000)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(0)
         }
 
         currEdgeClassName = "has_manager_staff"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(2, currVertexClassInfo.cardinality)
-            Assert.assertEquals(0, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(2)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(0)
         }
 
         currEdgeClassName = "has_rental"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(14596, currVertexClassInfo.cardinality)
-            Assert.assertEquals(0, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(14596)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(0)
         }
 
         currEdgeClassName = "has_staff"
-        Assert.assertTrue(edgesClasses.keys.contains(currEdgeClassName))
-        Assert.assertNotNull(edgesClasses.get(currEdgeClassName))
+        assertTrue(edgesClasses.keys.contains(currEdgeClassName))
+        assertThat(edgesClasses.get(currEdgeClassName)).isNotNull()
         edgesClasses.get(currEdgeClassName)?.let { currVertexClassInfo ->
-            Assert.assertEquals(currEdgeClassName, currVertexClassInfo.name)
-            Assert.assertEquals(30640, currVertexClassInfo.cardinality)
-            Assert.assertEquals(0, currVertexClassInfo.properties.size)
+            assertThat(currVertexClassInfo.name).isEqualTo(currEdgeClassName)
+            assertThat(currVertexClassInfo.cardinality).isEqualTo(30640)
+            assertThat(currVertexClassInfo.properties.size).isEqualTo(0)
         }
     }
 }

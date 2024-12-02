@@ -29,7 +29,6 @@ import org.junit.jupiter.api.Test
 import org.testcontainers.containers.PostgreSQLContainer
 
 internal class RDBMSTableDataProviderTest {
-
     private val container: PostgreSQLContainer<Nothing> = PostgreSQLContainerHolder.container as PostgreSQLContainer<Nothing>
 
     private lateinit var provider: RDBMSTableDataProvider
@@ -39,33 +38,35 @@ internal class RDBMSTableDataProviderTest {
     @BeforeEach
     @Throws(Exception::class)
     fun setUp() {
-        dataSourceInfo = DataSourceInfo(
-            id = 1L,
-            type = "RDBMS_POSTGRESQL",
-            name = "testDataSource",
-            server = container.containerIpAddress,
-            port = container.firstMappedPort,
-            username = container.username,
-            password = container.password,
-            database = container.databaseName,
-            aggregationEnabled = true,
-        )
+        dataSourceInfo =
+            DataSourceInfo(
+                id = 1L,
+                type = "RDBMS_POSTGRESQL",
+                name = "testDataSource",
+                server = container.containerIpAddress,
+                port = container.firstMappedPort,
+                username = container.username,
+                password = container.password,
+                database = container.databaseName,
+                aggregationEnabled = true,
+            )
 
         provider = RDBMSTableDataProvider()
     }
 
     @Test
     fun fetchData() {
-        val data = provider.fetchData(
-            dataSourceInfo,
-            """SELECT customer_id, SUM (amount) total_amount
+        val data =
+            provider.fetchData(
+                dataSourceInfo,
+                """SELECT customer_id, SUM (amount) total_amount
             | FROM  payment
             | GROUP BY customer_id
             | ORDER BY total_amount DESC
             |
-            """.trimMargin(),
-            100,
-        )
+                """.trimMargin(),
+                100,
+            )
 
         val tableClass = data.nodesClasses[TABLE_CLASS]
 
@@ -78,7 +79,8 @@ internal class RDBMSTableDataProviderTest {
         val cytoData = data.nodes.first()
         Assertions.assertThat(cytoData.classes).isEqualTo(TABLE_CLASS)
 
-        Assertions.assertThat(cytoData.group)
+        Assertions
+            .assertThat(cytoData.group)
             .isEqualTo("nodes")
 
         Assertions.assertThat(cytoData.data.id).isEqualTo("0")

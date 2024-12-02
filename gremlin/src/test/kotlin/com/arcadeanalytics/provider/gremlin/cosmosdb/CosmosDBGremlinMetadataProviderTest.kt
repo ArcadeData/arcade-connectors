@@ -28,23 +28,23 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 class CosmosDBGremlinMetadataProviderTest {
-
     private lateinit var dataSource: DataSourceInfo
 
     private lateinit var provider: DataSourceMetadataProvider
 
     @BeforeEach
     fun setup() {
-        dataSource = DataSourceInfo(
-            id = 1L,
-            type = "GREMLIN_COSMOSDB",
-            name = "testDataSource",
-            server = "4c7bff3b-0ee0-4-231-b9ee.gremlin.cosmosdb.azure.com",
-            port = 443,
-            username = "\"/dbs/arcade/colls/arcade-graph\"",
-            password = "arcade",
-            database = JanusgraphGremlinDataProviderIntTest::class.java.simpleName,
-        )
+        dataSource =
+            DataSourceInfo(
+                id = 1L,
+                type = "GREMLIN_COSMOSDB",
+                name = "testDataSource",
+                server = "4c7bff3b-0ee0-4-231-b9ee.gremlin.cosmosdb.azure.com",
+                port = 443,
+                username = "\"/dbs/arcade/colls/arcade-graph\"",
+                password = "arcade",
+                database = JanusgraphGremlinDataProviderIntTest::class.java.simpleName,
+            )
 
         provider = CosmosDBGremlinMetadataProvider()
     }
@@ -56,13 +56,15 @@ class CosmosDBGremlinMetadataProviderTest {
 
         println("metadata = $metadata")
 
-        Assertions.assertThat(metadata.nodesClasses)
+        Assertions
+            .assertThat(metadata.nodesClasses)
             .hasSize(2)
             .containsKeys("Office")
 
         Assertions.assertThat(metadata.nodesClasses["Office"]!!.cardinality).isEqualTo(6)
 
-        Assertions.assertThat(metadata.edgesClasses)
+        Assertions
+            .assertThat(metadata.edgesClasses)
             .hasSize(2)
             .containsKeys("works_for")
 

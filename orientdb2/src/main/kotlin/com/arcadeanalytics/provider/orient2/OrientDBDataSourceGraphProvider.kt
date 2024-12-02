@@ -31,30 +31,31 @@ import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
 
 class OrientDBDataSourceGraphProvider : DataSourceGraphProvider {
-
     private val log = LoggerFactory.getLogger(OrientDBDataSourceGraphProvider::class.java)
 
     private val queries: List<String>
 
-    private val ALL_V = "SELECT FROM V LIMIT 1000"
+    private val allV = "SELECT FROM V LIMIT 1000"
 
-    private val ALL_E = "SELECT FROM E LIMIT 1000"
+    private val allE = "SELECT FROM E LIMIT 1000"
 
     private val allFields: Pattern = Pattern.compile(".*")
 
     init {
 
-        this.queries = listOf(ALL_V, ALL_E)
+        this.queries = listOf(allV, allE)
     }
 
-    override fun supportedDataSourceTypes(): Set<String> {
-        return setOf("ORIENTDB")
-    }
+    override fun supportedDataSourceTypes(): Set<String> = setOf("ORIENTDB")
 
-    override fun provideTo(dataSource: DataSourceInfo, player: SpritePlayer) {
+    override fun provideTo(
+        dataSource: DataSourceInfo,
+        player: SpritePlayer,
+    ) {
         open(dataSource).use { db ->
 
-            queries.asSequence()
+            queries
+                .asSequence()
                 .onEach { query -> log.info("fetching documents from datasource {} with query ' {} ' ", dataSource.id, query) }
                 .forEach { sql ->
 
@@ -63,7 +64,8 @@ class OrientDBDataSourceGraphProvider : DataSourceGraphProvider {
                     var resultset = db.query<List<*>>(query)
 
                     while (!resultset.isEmpty()) {
-                        resultset.asSequence()
+                        resultset
+                            .asSequence()
                             .map { res -> res as ODocument }
                             .filter { doc -> doc.fields() > 0 }
                             .map { doc -> toSprite(doc) }
@@ -79,22 +81,22 @@ class OrientDBDataSourceGraphProvider : DataSourceGraphProvider {
     private fun toSprite(document: ODocument): Sprite {
         val rid = document.identity
 
-        val sprite = Sprite()
-            .load(document.toMap())
-            .addAll(
-                "@class",
-                document.schemaClass
-                    .allSuperClasses
-                    .asSequence()
-                    .map { c -> c.name }
-                    .toList(),
-            )
-            .apply<Any, String>(allFields) { v -> v.toString() }
-            .remove("@class", "V")
-            .remove("@class", "E")
-            .remove("@rid")
-            .add(ARCADE_ID, "${rid.clusterId}_${rid.clusterPosition}")
-            .add(ARCADE_TYPE, document.type())
+        val sprite =
+            Sprite()
+                .load(document.toMap())
+                .addAll(
+                    "@class",
+                    document.schemaClass
+                        .allSuperClasses
+                        .asSequence()
+                        .map { c -> c.name }
+                        .toList(),
+                ).apply<Any, String>(allFields) { v -> v.toString() }
+                .remove("@class", "V")
+                .remove("@class", "E")
+                .remove("@rid")
+                .add(ARCADE_ID, "${rid.clusterId}_${rid.clusterPosition}")
+                .add(ARCADE_TYPE, document.type())
         return sprite
     }
 }

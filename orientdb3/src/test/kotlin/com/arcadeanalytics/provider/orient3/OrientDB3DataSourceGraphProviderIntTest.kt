@@ -33,25 +33,25 @@ import java.util.ArrayList
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OrientDB3DataSourceGraphProviderIntTest {
-
     private val provider: OrientDB3DataSourceGraphProvider = OrientDB3DataSourceGraphProvider()
 
     @Test
     fun shouldFetchAllVerticesAndEdges() {
         val docs = ArrayList<Sprite>()
 
-        val indexer = object : SpritePlayer {
-            override fun begin() {
-            }
+        val indexer =
+            object : SpritePlayer {
+                override fun begin() {
+                }
 
-            override fun end() {
-            }
+                override fun end() {
+                }
 
-            override fun play(document: Sprite) {
-                docs.add(document)
-                assertThat(document.valuesOf("@class")).doesNotContain("V", "E")
+                override fun play(document: Sprite) {
+                    docs.add(document)
+                    assertThat(document.valuesOf("@class")).doesNotContain("V", "E")
+                }
             }
-        }
 
         provider.provideTo(OrientDB3Container.dataSource, indexer)
 

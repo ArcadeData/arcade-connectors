@@ -42,6 +42,5 @@ data class DataSourceMetadata(
 )
 
 interface DataSourceMetadataProvider : DataSourceProvider {
-
     fun fetchMetadata(dataSource: DataSourceInfo): DataSourceMetadata
 }

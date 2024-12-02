@@ -28,18 +28,18 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 
 internal class DataSourceTableDataProviderFactoryTest {
-
     companion object {
         @JvmStatic
-        fun types2implementation() = listOf(
-            Arguments.of("ORIENTDB3", "OrientDB3DataSourceTableDataProvider"),
-            Arguments.of("RDBMS_POSTGRESQL", "RDBMSTableDataProvider"),
-            Arguments.of("RDBMS_MYSQL", "RDBMSTableDataProvider"),
-            Arguments.of("RDBMS_MSSQLSERVER", "RDBMSTableDataProvider"),
-            Arguments.of("RDBMS_HSQL", "RDBMSTableDataProvider"),
-            Arguments.of("RDBMS_ORACLE", "RDBMSTableDataProvider"),
-            Arguments.of("RDBMS_DATA_WORLD", "RDBMSTableDataProvider"),
-        )
+        fun types2implementation() =
+            listOf(
+                Arguments.of("ORIENTDB3", "OrientDB3DataSourceTableDataProvider"),
+                Arguments.of("RDBMS_POSTGRESQL", "RDBMSTableDataProvider"),
+                Arguments.of("RDBMS_MYSQL", "RDBMSTableDataProvider"),
+                Arguments.of("RDBMS_MSSQLSERVER", "RDBMSTableDataProvider"),
+                Arguments.of("RDBMS_HSQL", "RDBMSTableDataProvider"),
+                Arguments.of("RDBMS_ORACLE", "RDBMSTableDataProvider"),
+                Arguments.of("RDBMS_DATA_WORLD", "RDBMSTableDataProvider"),
+            )
     }
 
     private lateinit var factory: DataSourceProviderFactory<DataSourceTableDataProvider>
@@ -70,16 +70,17 @@ internal class DataSourceTableDataProviderFactoryTest {
         type: String,
         impl: String,
     ) {
-        val dataSource = DataSourceInfo(
-            id = 1L,
-            type = type,
-            name = "testDataSource",
-            server = "1.2.3.4",
-            port = 1234,
-            username = "admin",
-            password = "admin",
-            database = "testDb",
-        )
+        val dataSource =
+            DataSourceInfo(
+                id = 1L,
+                type = type,
+                name = "testDataSource",
+                server = "1.2.3.4",
+                port = 1234,
+                username = "admin",
+                password = "admin",
+                database = "testDb",
+            )
 
         val provider = factory.create(dataSource)
         Assertions.assertThat(provider).isNotNull

@@ -25,14 +25,14 @@ import org.junit.jupiter.api.Test;
 
 public abstract class AbstractRDBMSProviderWithAggregationTest {
 
-    protected RDBMSDataProvider provider;
+  protected RDBMSDataProvider provider;
 
-    @BeforeEach
-    public abstract void setUp() throws Exception;
+  @BeforeEach
+  public abstract void setUp() throws Exception;
 
-    @Test
-    public abstract void fetchDataThroughTableScanTest();
+  @Test
+  public abstract void fetchDataThroughTableScanTest();
 
-    @Test
-    public abstract void expandN2NRelationship();
+  @Test
+  public abstract void expandN2NRelationship();
 }

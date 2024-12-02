@@ -25,28 +25,29 @@ import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.utility.DockerImageName
 
 object OrientDBGremlinContainer {
+    private val container: KGenericContainer =
+        KGenericContainer(DockerImageName.parse("arcadeanalytics/orientdb3"))
+            .apply {
 
-    private val container: KGenericContainer = KGenericContainer(DockerImageName.parse("arcadeanalytics/orientdb3"))
-        .apply {
-
-            withExposedPorts(8182, 2424)
-            withEnv("ORIENTDB_ROOT_PASSWORD", "arcade")
-            waitingFor(Wait.defaultWaitStrategy())
-            start()
-        }
+                withExposedPorts(8182, 2424)
+                withEnv("ORIENTDB_ROOT_PASSWORD", "arcade")
+                waitingFor(Wait.defaultWaitStrategy())
+                start()
+            }
 
     val dataSource: DataSourceInfo
 
     init {
-        dataSource = DataSourceInfo(
-            id = 1L,
-            type = "GREMLIN_ORIENTDB",
-            name = "testDataSource",
-            server = container.containerIpAddress,
-            port = container.firstMappedPort,
-            username = "root",
-            password = "arcade",
-            database = "demodb",
-        )
+        dataSource =
+            DataSourceInfo(
+                id = 1L,
+                type = "GREMLIN_ORIENTDB",
+                name = "testDataSource",
+                server = container.containerIpAddress,
+                port = container.firstMappedPort,
+                username = "root",
+                password = "arcade",
+                database = "demodb",
+            )
     }
 }

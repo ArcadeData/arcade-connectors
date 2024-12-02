@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory
  */
 
 class Neo4jDataProvider : DataSourceGraphDataProvider {
-
     private val log = LoggerFactory.getLogger(Neo4jDataProvider::class.java)
 
     override fun fetchData(
@@ -70,11 +69,12 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
     ): GraphData {
         val label: String = if (edgeLabel.isEmpty()) "[rel]" else "[rel:$edgeLabel]"
 
-        val rel = when (direction) {
-            "out" -> "-$label->"
-            "in" -> "<-$label-"
-            else -> "<-$label->"
-        }
+        val rel =
+            when (direction) {
+                "out" -> "-$label->"
+                "in" -> "<-$label-"
+                else -> "<-$label->"
+            }
 
         val cleanedIds = cleanIds(ids, dataSource)
 
@@ -83,7 +83,12 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
         return fetchData(dataSource, query, maxTraversal)
     }
 
-    override fun edges(dataSource: DataSourceInfo, fromIds: Array<String>, edgesLabel: Array<String>, toIds: Array<String>): GraphData {
+    override fun edges(
+        dataSource: DataSourceInfo,
+        fromIds: Array<String>,
+        edgesLabel: Array<String>,
+        toIds: Array<String>,
+    ): GraphData {
         val cleanedFromIds = cleanIds(fromIds, dataSource)
         val cleanedToIds = cleanIds(toIds, dataSource)
 
@@ -96,7 +101,10 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
         return fetchData(dataSource, query, 10000)
     }
 
-    override fun load(dataSource: DataSourceInfo, ids: Array<String>): GraphData {
+    override fun load(
+        dataSource: DataSourceInfo,
+        ids: Array<String>,
+    ): GraphData {
         val cleanedIds = cleanIds(ids, dataSource)
 
         val query =
@@ -109,19 +117,32 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
         return graphData
     }
 
-    private fun cleanIds(ids: Array<String>, dataSource: DataSourceInfo): String {
-        return ids.asSequence()
+    private fun cleanIds(
+        ids: Array<String>,
+        dataSource: DataSourceInfo,
+    ): String =
+        ids
+            .asSequence()
             .map { id -> toNeo4jId(dataSource, id) }
             .distinct()
             .joinToString(",")
-    }
 
-    override fun loadFromClass(dataSource: DataSourceInfo, className: String, limit: Int): GraphData {
+    override fun loadFromClass(
+        dataSource: DataSourceInfo,
+        className: String,
+        limit: Int,
+    ): GraphData {
         val query = "MATCH (element:$className) RETURN element LIMIT $limit"
         return this.fetchData(dataSource, query, limit)
     }
 
-    override fun loadFromClass(dataSource: DataSourceInfo, className: String, propName: String, propertyValue: String, limit: Int): GraphData {
+    override fun loadFromClass(
+        dataSource: DataSourceInfo,
+        className: String,
+        propName: String,
+        propertyValue: String,
+        limit: Int,
+    ): GraphData {
         val query = "MATCH (element:$className) WHERE element.$propName = '$propertyValue' RETURN element LIMIT $limit"
         return this.fetchData(dataSource, query, limit)
     }
@@ -158,13 +179,23 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
 
         val graphData = mapper.map(result)
 
-        log.debug("run query and map -results:: nodes {} - edges {} - truncated {} ", graphData.nodes.size, graphData.edges.size, graphData.truncated)
+        log.debug(
+            "run query and map -results:: nodes {} - edges {} - truncated {} ",
+            graphData.nodes.size,
+            graphData.edges.size,
+            graphData.truncated,
+        )
 
         return graphData
     }
 
-    private fun countInAndOutOnNode(session: Session, dataSource: DataSourceInfo, nodes: Set<CytoData>): Set<CytoData> {
-        nodes.asSequence()
+    private fun countInAndOutOnNode(
+        session: Session,
+        dataSource: DataSourceInfo,
+        nodes: Set<CytoData>,
+    ): Set<CytoData> {
+        nodes
+            .asSequence()
             .forEach { data ->
                 val id = toNeo4jId(dataSource, data.data.id)
                 val record = data.data.record
@@ -207,7 +238,5 @@ class Neo4jDataProvider : DataSourceGraphDataProvider {
         return nodes
     }
 
-    override fun supportedDataSourceTypes(): Set<String> {
-        return setOf(NEO4J.name, NEO4J_MEMGRAPH.name)
-    }
+    override fun supportedDataSourceTypes(): Set<String> = setOf(NEO4J.name, NEO4J_MEMGRAPH.name)
 }

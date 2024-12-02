@@ -25,23 +25,22 @@ package com.arcadeanalytics.provider.rdbms.exception;
  *
  * @author Gabriele Ponzi
  */
-
 @SuppressWarnings("serial")
 public class RDBMSProviderRuntimeException extends RuntimeException {
 
-    public RDBMSProviderRuntimeException() {
-        super();
-    }
+  public RDBMSProviderRuntimeException() {
+    super();
+  }
 
-    public RDBMSProviderRuntimeException(String message) {
-        super(message);
-    }
+  public RDBMSProviderRuntimeException(String message) {
+    super(message);
+  }
 
-    public RDBMSProviderRuntimeException(String message, Throwable cause) {
-        super(message, cause);
-    }
+  public RDBMSProviderRuntimeException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
-    public RDBMSProviderRuntimeException(Throwable cause) {
-        super(cause);
-    }
+  public RDBMSProviderRuntimeException(Throwable cause) {
+    super(cause);
+  }
 }

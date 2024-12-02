@@ -20,21 +20,23 @@ package com.arcadeanalytics.provider.rdbms.graphprovider;
  * #L%
  */
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.arcadeanalytics.provider.DataSourceInfo;
 import com.arcadeanalytics.provider.rdbms.dataprovider.PostgreSQLContainerHolder;
 import com.arcadeanalytics.provider.rdbms.dataprovider.RDBMSGraphProvider;
-import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
 
-public class PostgreSQLGraphProviderTest extends AbstractRDBMSGraphProvider {
+class PostgreSQLGraphProviderTest extends AbstractRDBMSGraphProvider {
 
-    final PostgreSQLContainer container = PostgreSQLContainerHolder.container;
+  final PostgreSQLContainer container = PostgreSQLContainerHolder.container;
 
-    @Test
-    public void shouldFetchAllVertexes() {
-        // setting the aggregationEnabled flag in the dataSource
-        DataSourceInfo dataSource = new DataSourceInfo(
+  @Test
+  public void shouldFetchAllVertexes() {
+    // setting the aggregationEnabled flag in the dataSource
+    DataSourceInfo dataSource =
+        new DataSourceInfo(
             1L,
             "RDBMS_POSTGRESQL",
             "testDataSource",
@@ -51,22 +53,22 @@ public class PostgreSQLGraphProviderTest extends AbstractRDBMSGraphProvider {
             "",
             22,
             "",
-            false
-        );
+            false);
 
-        provider = new RDBMSGraphProvider();
+    provider = new RDBMSGraphProvider();
 
-        provider.provideTo(dataSource, player);
-        Assert.assertEquals(44820, player.processed());
+    provider.provideTo(dataSource, player);
+    assertThat(player.processed()).isEqualTo(44820);
 
-        Assert.assertEquals(44820, nodes);
-        Assert.assertEquals(0, edges);
-    }
+    assertThat(nodes).isEqualTo(44820);
+    assertThat(edges).isEqualTo(0);
+  }
 
-    @Test
-    public void shouldFetchAllVertexesExceptJoinTables() {
-        // setting the aggregationEnabled flag in the dataSource
-        DataSourceInfo dataSource = new DataSourceInfo(
+  @Test
+  public void shouldFetchAllVertexesExceptJoinTables() {
+    // setting the aggregationEnabled flag in the dataSource
+    DataSourceInfo dataSource =
+        new DataSourceInfo(
             1L,
             "RDBMS_POSTGRESQL",
             "testDataSource",
@@ -83,15 +85,14 @@ public class PostgreSQLGraphProviderTest extends AbstractRDBMSGraphProvider {
             "",
             22,
             "",
-            false
-        );
+            false);
 
-        provider = new RDBMSGraphProvider();
+    provider = new RDBMSGraphProvider();
 
-        provider.provideTo(dataSource, player);
-        Assert.assertEquals(player.processed(), 44820);
+    provider.provideTo(dataSource, player);
+    assertThat(player.processed()).isEqualTo(44820);
 
-        Assert.assertEquals(38358, nodes);
-        Assert.assertEquals(6462, edges);
-    }
+    assertThat(nodes).isEqualTo(38358);
+    assertThat(edges).isEqualTo(6462);
+  }
 }

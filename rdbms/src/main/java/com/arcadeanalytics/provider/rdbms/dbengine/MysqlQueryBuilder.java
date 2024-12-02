@@ -24,64 +24,142 @@ import com.arcadeanalytics.provider.rdbms.model.dbschema.Entity;
 import java.util.List;
 
 /**
- * Query Builder for MySQL DBMS. It extends the CommonQueryBuilder class and overrides only the needed methods.
+ * Query Builder for MySQL DBMS. It extends the CommonQueryBuilder class and overrides only the
+ * needed methods.
  *
  * @author Gabriele Ponzi
  */
-
 public class MysqlQueryBuilder extends CommonQueryBuilder {
 
-    public MysqlQueryBuilder() {
-        this.quote = "`";
+  public MysqlQueryBuilder() {
+    this.quote = "`";
+  }
+
+  /**
+   * MySQL does not allow full outer join, so this query is expressed as UNION of LEFT and RIGHT
+   * JOIN.
+   *
+   * @param mappedEntities the mapped entities
+   * @param columns colums
+   * @return query produced
+   */
+  @Override
+  public String getRecordsFromMultipleEntities(List<Entity> mappedEntities, String[][] columns) {
+    String query;
+
+    Entity first = mappedEntities.get(0);
+    if (first.getSchemaName() != null)
+      query =
+          "select * from "
+              + first.getSchemaName()
+              + "."
+              + this.quote
+              + first.getName()
+              + this.quote
+              + " as t0\n";
+    else query = "select * from " + this.quote + first.getName() + this.quote + " as t0\n";
+
+    for (int i = 1; i < mappedEntities.size(); i++) {
+      Entity currentEntity = mappedEntities.get(i);
+      query +=
+          " left join "
+              + currentEntity.getSchemaName()
+              + "."
+              + this.quote
+              + currentEntity.getName()
+              + this.quote
+              + " as t"
+              + i;
+      query +=
+          " on t"
+              + (i - 1)
+              + "."
+              + this.quote
+              + columns[i - 1][0]
+              + this.quote
+              + " = t"
+              + i
+              + "."
+              + this.quote
+              + columns[i][0]
+              + this.quote;
+
+      for (int k = 1; k < columns[i].length; k++) {
+        query +=
+            " and t"
+                + (i - 1)
+                + "."
+                + this.quote
+                + columns[i - 1][k]
+                + this.quote
+                + " = t"
+                + i
+                + "."
+                + this.quote
+                + columns[i][k]
+                + this.quote;
+      }
+
+      query += "\n";
     }
 
-    /**
-     * MySQL does not allow full outer join, so this query is expressed as UNION of LEFT and RIGHT JOIN.
-     *
-     * @param mappedEntities the mapped entities
-     * @param columns colums
-     * @return query produced
-     */
+    query += "UNION\n";
 
-    @Override
-    public String getRecordsFromMultipleEntities(List<Entity> mappedEntities, String[][] columns) {
-        String query;
+    if (first.getSchemaName() != null)
+      query +=
+          "select * from "
+              + first.getSchemaName()
+              + "."
+              + this.quote
+              + first.getName()
+              + this.quote
+              + " as t0\n";
+    else query += "select * from " + this.quote + first.getName() + this.quote + " as t0\n";
 
-        Entity first = mappedEntities.get(0);
-        if (first.getSchemaName() != null) query =
-            "select * from " + first.getSchemaName() + "." + this.quote + first.getName() + this.quote + " as t0\n"; else query =
-            "select * from " + this.quote + first.getName() + this.quote + " as t0\n";
+    for (int i = 1; i < mappedEntities.size(); i++) {
+      Entity currentEntity = mappedEntities.get(i);
+      query +=
+          " right join "
+              + currentEntity.getSchemaName()
+              + "."
+              + this.quote
+              + currentEntity.getName()
+              + this.quote
+              + " as t"
+              + i;
+      query +=
+          " on t"
+              + (i - 1)
+              + "."
+              + this.quote
+              + columns[i - 1][0]
+              + this.quote
+              + " = t"
+              + i
+              + "."
+              + this.quote
+              + columns[i][0]
+              + this.quote;
 
-        for (int i = 1; i < mappedEntities.size(); i++) {
-            Entity currentEntity = mappedEntities.get(i);
-            query += " left join " + currentEntity.getSchemaName() + "." + this.quote + currentEntity.getName() + this.quote + " as t" + i;
-            query += " on t" + (i - 1) + "." + this.quote + columns[i - 1][0] + this.quote + " = t" + i + "." + this.quote + columns[i][0] + this.quote;
+      for (int k = 1; k < columns[i].length; k++) {
+        query +=
+            " and t"
+                + (i - 1)
+                + "."
+                + this.quote
+                + columns[i - 1][k]
+                + this.quote
+                + " = t"
+                + i
+                + "."
+                + this.quote
+                + columns[i][k]
+                + this.quote;
+      }
 
-            for (int k = 1; k < columns[i].length; k++) {
-                query += " and t" + (i - 1) + "." + this.quote + columns[i - 1][k] + this.quote + " = t" + i + "." + this.quote + columns[i][k] + this.quote;
-            }
-
-            query += "\n";
-        }
-
-        query += "UNION\n";
-
-        if (first.getSchemaName() != null) query +=
-            "select * from " + first.getSchemaName() + "." + this.quote + first.getName() + this.quote + " as t0\n"; else query +=
-            "select * from " + this.quote + first.getName() + this.quote + " as t0\n";
-
-        for (int i = 1; i < mappedEntities.size(); i++) {
-            Entity currentEntity = mappedEntities.get(i);
-            query += " right join " + currentEntity.getSchemaName() + "." + this.quote + currentEntity.getName() + this.quote + " as t" + i;
-            query += " on t" + (i - 1) + "." + this.quote + columns[i - 1][0] + this.quote + " = t" + i + "." + this.quote + columns[i][0] + this.quote;
-
-            for (int k = 1; k < columns[i].length; k++) {
-                query += " and t" + (i - 1) + "." + this.quote + columns[i - 1][k] + this.quote + " = t" + i + "." + this.quote + columns[i][k] + this.quote;
-            }
-
-            query += "\n";
-        }
-
-        return query;
+      query += "\n";
     }
+
+    return query;
+  }
 }

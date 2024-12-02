@@ -40,12 +40,8 @@ package com.arcadeanalytics.provider.rdbms.filter;
  * #L%
  */
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import com.arcadeanalytics.provider.DataSourceInfo;
 import com.arcadeanalytics.provider.rdbms.context.Statistics;
@@ -75,3847 +71,5091 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Gabriele Ponzi
  */
+class FilterTableMappingTest {
 
-public class FilterTableMappingTest {
+  private static final String XML_TABLE_PER_CLASS =
+      "src/test/resources/provider/rdbms/inheritance/hibernate/tablePerClassHierarchyImportTest.xml";
+  private static final String XML_TABLE_PER_SUBCLASS1 =
+      "src/test/resources/provider/rdbms/inheritance/hibernate/tablePerSubclassImportTest1.xml";
+  private static final String XML_TABLE_PER_SUBCLASS2 =
+      "src/test/resources/provider/rdbms/inheritance/hibernate/tablePerSubclassImportTest2.xml";
+  private static final String XML_TABLE_PER_CONCRETE_CLASS =
+      "src/test/resources/provider/rdbms/inheritance/hibernate/tablePerConcreteClassImportTest.xml";
+  private ER2GraphMapper mapper;
+  private DBQueryEngine dbQueryEngine;
+  private String driver = "org.hsqldb.jdbc.JDBCDriver";
+  private String jurl = "jdbc:hsqldb:mem:mydb";
+  private String username = "SA";
+  private String password = "";
+  private SourceDatabaseInfo sourceDBInfo;
+  private DataSourceInfo dataSource;
+  private String executionStrategy;
+  private NameResolver nameResolver;
+  private DBMSDataTypeHandler dataTypeHandler;
+  private Statistics statistics;
 
-    private static final String XML_TABLE_PER_CLASS = "src/test/resources/provider/rdbms/inheritance/hibernate/tablePerClassHierarchyImportTest.xml";
-    private static final String XML_TABLE_PER_SUBCLASS1 = "src/test/resources/provider/rdbms/inheritance/hibernate/tablePerSubclassImportTest1.xml";
-    private static final String XML_TABLE_PER_SUBCLASS2 = "src/test/resources/provider/rdbms/inheritance/hibernate/tablePerSubclassImportTest2.xml";
-    private static final String XML_TABLE_PER_CONCRETE_CLASS = "src/test/resources/provider/rdbms/inheritance/hibernate/tablePerConcreteClassImportTest.xml";
-    private ER2GraphMapper mapper;
-    private DBQueryEngine dbQueryEngine;
-    private String driver = "org.hsqldb.jdbc.JDBCDriver";
-    private String jurl = "jdbc:hsqldb:mem:mydb";
-    private String username = "SA";
-    private String password = "";
-    private SourceDatabaseInfo sourceDBInfo;
-    private DataSourceInfo dataSource;
-    private String executionStrategy;
-    private NameResolver nameResolver;
-    private DBMSDataTypeHandler dataTypeHandler;
-    private Statistics statistics;
+  @BeforeEach
+  void init() {
+    this.dataSource =
+        new DataSourceInfo(
+            1L,
+            "RDBMS_HSQL",
+            "testDataSource",
+            "desc",
+            "mem",
+            1234,
+            "mydb",
+            username,
+            password,
+            false,
+            "{}",
+            false,
+            false,
+            "",
+            22,
+            "",
+            false);
 
-    @BeforeEach
-    public void init() {
-        this.dataSource =
-            new DataSourceInfo(
-                1L,
-                "RDBMS_HSQL",
-                "testDataSource",
-                "desc",
-                "mem",
-                1234,
-                "mydb",
-                username,
-                password,
-                false,
-                "{}",
-                false,
-                false,
-                "",
-                22,
-                "",
-                false
-            );
+    dbQueryEngine = new DBQueryEngine(dataSource, 300);
+    executionStrategy = "not_specified";
+    nameResolver = new JavaConventionNameResolver();
+    dataTypeHandler = new HSQLDBDataTypeHandler();
+    statistics = new Statistics();
+  }
 
-        dbQueryEngine = new DBQueryEngine(dataSource, 300);
-        executionStrategy = "not_specified";
-        nameResolver = new JavaConventionNameResolver();
-        dataTypeHandler = new HSQLDBDataTypeHandler();
-        statistics = new Statistics();
+  /*
+   * Filtering out a table through include-tables (without inheritance).
+   */ @Test
+  void filterOutThroughIncludeWithNoInheritance() {
+    Connection connection = null;
+    Statement st = null;
+
+    try {
+      Class.forName(this.driver);
+      connection = DriverManager.getConnection(this.jurl, this.username, this.password);
+
+      String countryTableBuilding =
+          "create memory table COUNTRY(ID varchar(256) not null, NAME varchar(256), CONTINENT"
+              + " varchar(256), primary key (ID))";
+      st = connection.createStatement();
+      st.execute(countryTableBuilding);
+
+      String residenceTableBuilding =
+          "create memory table RESIDENCE(ID varchar(256) not null, CITY varchar(256), COUNTRY"
+              + " varchar(256), primary key (ID), foreign key (COUNTRY) references COUNTRY(ID))";
+      st.execute(residenceTableBuilding);
+
+      String managerTableBuilding =
+          "create memory table MANAGER(ID varchar(256) not null, NAME varchar(256), PROJECT"
+              + " varchar(256), primary key (ID))";
+      st.execute(managerTableBuilding);
+
+      String employeeTableBuilding =
+          "create memory table EMPLOYEE (ID varchar(256) not null, NAME varchar(256), SALARY"
+              + " decimal(10,2), RESIDENCE varchar(256), MANAGER varchar(256), primary key (ID),"
+              + " foreign key (RESIDENCE) references RESIDENCE(ID), foreign key (MANAGER)"
+              + " references MANAGER(ID))";
+      st.execute(employeeTableBuilding);
+
+      // Records Inserting
+
+      String countryFilling =
+          "insert into COUNTRY (ID,NAME,CONTINENT) values (" + "('C001','Italy','Europe'))";
+      st.execute(countryFilling);
+
+      String residenceFilling =
+          "insert into RESIDENCE (ID,CITY,COUNTRY) values ("
+              + "('R001','Rome','C001'),"
+              + "('R002','Milan','C001'))";
+      st.execute(residenceFilling);
+
+      String managerFilling =
+          "insert into MANAGER (ID,NAME,PROJECT) values (" + "('M001','Bill Right','New World'))";
+      st.execute(managerFilling);
+
+      String employeeFilling =
+          "insert into EMPLOYEE (ID,NAME,SALARY,RESIDENCE,MANAGER) values ("
+              + "('E001','John Black',1500.00,'R001',null),"
+              + "('E002','Andrew Brown','1000.00','R001','M001'),"
+              + "('E003','Jack Johnson',2000.00,'R002',null))";
+      st.execute(employeeFilling);
+
+      List<String> includedTables = new ArrayList<String>();
+      includedTables.add("COUNTRY");
+      includedTables.add("MANAGER");
+      includedTables.add("EMPLOYEE");
+
+      this.mapper =
+          new ER2GraphMapper(
+              dataSource,
+              includedTables,
+              null,
+              dbQueryEngine,
+              dataTypeHandler,
+              executionStrategy,
+              nameResolver,
+              statistics);
+      mapper.buildSourceDatabaseSchema();
+      mapper.buildGraphModel(new JavaConventionNameResolver());
+
+      /*
+       *  Testing context information
+       */
+
+      assertThat(statistics.totalNumberOfEntities).isEqualTo(3);
+      assertThat(statistics.builtEntities).isEqualTo(3);
+      assertThat(statistics.totalNumberOfRelationships).isEqualTo(1);
+      assertThat(statistics.builtRelationships).isEqualTo(1);
+
+      assertThat(statistics.totalNumberOfModelVertices).isEqualTo(3);
+      assertThat(statistics.builtModelVertexTypes).isEqualTo(3);
+      assertThat(statistics.totalNumberOfModelEdges).isEqualTo(1);
+      assertThat(statistics.builtModelEdgeTypes).isEqualTo(1);
+
+      /*
+       *  Testing built source db schema
+       */
+
+      Entity employeeEntity = mapper.getDataBaseSchema().getEntityByName("EMPLOYEE");
+      Entity countryEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("COUNTRY");
+      Entity managerEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("MANAGER");
+      Entity residenceEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("RESIDENCE");
+
+      // entities check
+      assertThat(mapper.getDataBaseSchema().getEntities().size()).isEqualTo(3);
+      assertThat(mapper.getDataBaseSchema().getCanonicalRelationships().size()).isEqualTo(1);
+      assertThat(employeeEntity).isNotNull();
+      assertThat(countryEntity).isNotNull();
+      assertThat(managerEntity).isNotNull();
+      assertThat(residenceEntity).isNull();
+
+      // attributes check
+      assertThat(employeeEntity.getAttributes().size()).isEqualTo(5);
+
+      assertThat(employeeEntity.getAttributeByName("ID")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(employeeEntity.getAttributeByName("ID").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("ID").getOrdinalPosition()).isEqualTo(1);
+      assertThat(employeeEntity.getAttributeByName("ID").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(employeeEntity.getAttributeByName("NAME")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("NAME").getName()).isEqualTo("NAME");
+      assertThat(employeeEntity.getAttributeByName("NAME").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("NAME").getOrdinalPosition()).isEqualTo(2);
+      assertThat(employeeEntity.getAttributeByName("NAME").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(employeeEntity.getAttributeByName("SALARY")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("SALARY").getName()).isEqualTo("SALARY");
+      assertThat(employeeEntity.getAttributeByName("SALARY").getDataType()).isEqualTo("DECIMAL");
+      assertThat(employeeEntity.getAttributeByName("SALARY").getOrdinalPosition()).isEqualTo(3);
+      assertThat(employeeEntity.getAttributeByName("SALARY").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getName()).isEqualTo("RESIDENCE");
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getOrdinalPosition()).isEqualTo(4);
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(employeeEntity.getAttributeByName("MANAGER")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getName()).isEqualTo("MANAGER");
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getOrdinalPosition()).isEqualTo(5);
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(countryEntity.getAttributes().size()).isEqualTo(3);
+
+      assertThat(countryEntity.getAttributeByName("ID")).isNotNull();
+      assertThat(countryEntity.getAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(countryEntity.getAttributeByName("ID").getDataType()).isEqualTo("VARCHAR");
+      assertThat(countryEntity.getAttributeByName("ID").getOrdinalPosition()).isEqualTo(1);
+      assertThat(countryEntity.getAttributeByName("ID").getBelongingEntity().getName())
+          .isEqualTo("COUNTRY");
+
+      assertThat(countryEntity.getAttributeByName("NAME")).isNotNull();
+      assertThat(countryEntity.getAttributeByName("NAME").getName()).isEqualTo("NAME");
+      assertThat(countryEntity.getAttributeByName("NAME").getDataType()).isEqualTo("VARCHAR");
+      assertThat(countryEntity.getAttributeByName("NAME").getOrdinalPosition()).isEqualTo(2);
+      assertThat(countryEntity.getAttributeByName("NAME").getBelongingEntity().getName())
+          .isEqualTo("COUNTRY");
+
+      assertThat(countryEntity.getAttributeByName("CONTINENT")).isNotNull();
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getName()).isEqualTo("CONTINENT");
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getDataType()).isEqualTo("VARCHAR");
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getOrdinalPosition()).isEqualTo(3);
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getBelongingEntity().getName())
+          .isEqualTo("COUNTRY");
+
+      assertThat(managerEntity.getAttributes().size()).isEqualTo(3);
+
+      assertThat(managerEntity.getAttributeByName("ID")).isNotNull();
+      assertThat(managerEntity.getAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(managerEntity.getAttributeByName("ID").getDataType()).isEqualTo("VARCHAR");
+      assertThat(managerEntity.getAttributeByName("ID").getOrdinalPosition()).isEqualTo(1);
+      assertThat(managerEntity.getAttributeByName("ID").getBelongingEntity().getName())
+          .isEqualTo("MANAGER");
+
+      assertThat(managerEntity.getAttributeByName("NAME")).isNotNull();
+      assertThat(managerEntity.getAttributeByName("NAME").getName()).isEqualTo("NAME");
+      assertThat(managerEntity.getAttributeByName("NAME").getDataType()).isEqualTo("VARCHAR");
+      assertThat(managerEntity.getAttributeByName("NAME").getOrdinalPosition()).isEqualTo(2);
+      assertThat(managerEntity.getAttributeByName("NAME").getBelongingEntity().getName())
+          .isEqualTo("MANAGER");
+
+      assertThat(managerEntity.getAttributeByName("PROJECT")).isNotNull();
+      assertThat(managerEntity.getAttributeByName("PROJECT").getName()).isEqualTo("PROJECT");
+      assertThat(managerEntity.getAttributeByName("PROJECT").getDataType()).isEqualTo("VARCHAR");
+      assertThat(managerEntity.getAttributeByName("PROJECT").getOrdinalPosition()).isEqualTo(3);
+      assertThat(managerEntity.getAttributeByName("PROJECT").getBelongingEntity().getName())
+          .isEqualTo("MANAGER");
+
+      // relationship, primary and foreign key check
+      assertThat(employeeEntity.getOutCanonicalRelationships().size()).isEqualTo(1);
+      assertThat(managerEntity.getOutCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(countryEntity.getOutCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(employeeEntity.getInCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(managerEntity.getInCanonicalRelationships().size()).isEqualTo(1);
+      assertThat(countryEntity.getOutCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(employeeEntity.getForeignKeys().size()).isEqualTo(1);
+
+      Iterator<CanonicalRelationship> itEmp =
+          employeeEntity.getOutCanonicalRelationships().iterator();
+      CanonicalRelationship currentEmpRel = itEmp.next();
+      assertThat(currentEmpRel.getParentEntity().getName()).isEqualTo("MANAGER");
+      assertThat(currentEmpRel.getForeignEntity().getName()).isEqualTo("EMPLOYEE");
+      assertThat(currentEmpRel.getPrimaryKey()).isEqualTo(managerEntity.getPrimaryKey());
+      assertThat(currentEmpRel.getForeignKey()).isEqualTo(employeeEntity.getForeignKeys().get(0));
+      assertThat(itEmp.hasNext()).isFalse();
+
+      Iterator<CanonicalRelationship> itManager =
+          managerEntity.getInCanonicalRelationships().iterator();
+      CanonicalRelationship currentManRel = itManager.next();
+      assertThat(currentManRel).isEqualTo(currentEmpRel);
+
+      /*
+       *  Testing built graph model
+       */
+
+      VertexType employeeVertexType = mapper.getGraphModel().getVertexTypeByName("Employee");
+      VertexType countryVertexType = mapper.getGraphModel().getVertexTypeByName("Country");
+      VertexType managerVertexType = mapper.getGraphModel().getVertexTypeByName("Manager");
+      VertexType residenceVertexType = mapper.getGraphModel().getVertexTypeByName("Residence");
+
+      // vertices check
+      assertThat(mapper.getGraphModel().getVerticesType().size()).isEqualTo(3);
+      assertThat(employeeVertexType).isNotNull();
+      assertThat(countryVertexType).isNotNull();
+      assertThat(managerVertexType).isNotNull();
+      assertThat(residenceVertexType).isNull();
+
+      // properties check
+      assertThat(employeeVertexType.getProperties().size()).isEqualTo(5);
+
+      assertThat(employeeVertexType.getPropertyByName("id")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+      assertThat(employeeVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+      assertThat(employeeVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
+
+      assertThat(employeeVertexType.getPropertyByName("name")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+      assertThat(employeeVertexType.getPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(2);
+      assertThat(employeeVertexType.getPropertyByName("name").isFromPrimaryKey()).isFalse();
+
+      assertThat(employeeVertexType.getPropertyByName("salary")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("salary").getName()).isEqualTo("salary");
+      assertThat(employeeVertexType.getPropertyByName("salary").getOriginalType())
+          .isEqualTo("DECIMAL");
+      assertThat(employeeVertexType.getPropertyByName("salary").getOrdinalPosition()).isEqualTo(3);
+      assertThat(employeeVertexType.getPropertyByName("salary").isFromPrimaryKey()).isFalse();
+
+      assertThat(employeeVertexType.getPropertyByName("residence")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("residence").getName())
+          .isEqualTo("residence");
+      assertThat(employeeVertexType.getPropertyByName("residence").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("residence").getOrdinalPosition())
+          .isEqualTo(4);
+      assertThat(employeeVertexType.getPropertyByName("residence").isFromPrimaryKey()).isFalse();
+
+      assertThat(employeeVertexType.getPropertyByName("manager")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("manager").getName()).isEqualTo("manager");
+      assertThat(employeeVertexType.getPropertyByName("manager").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("manager").getOrdinalPosition()).isEqualTo(5);
+      assertThat(employeeVertexType.getPropertyByName("manager").isFromPrimaryKey()).isFalse();
+
+      assertThat(countryVertexType.getProperties().size()).isEqualTo(3);
+
+      assertThat(countryVertexType.getPropertyByName("id")).isNotNull();
+      assertThat(countryVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+      assertThat(countryVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+      assertThat(countryVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+      assertThat(countryVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
+
+      assertThat(countryVertexType.getPropertyByName("name")).isNotNull();
+      assertThat(countryVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+      assertThat(countryVertexType.getPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(countryVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(2);
+      assertThat(countryVertexType.getPropertyByName("name").isFromPrimaryKey()).isFalse();
+
+      assertThat(countryVertexType.getPropertyByName("continent")).isNotNull();
+      assertThat(countryVertexType.getPropertyByName("continent").getName()).isEqualTo("continent");
+      assertThat(countryVertexType.getPropertyByName("continent").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(countryVertexType.getPropertyByName("continent").getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(countryVertexType.getPropertyByName("continent").isFromPrimaryKey()).isFalse();
+
+      assertThat(managerVertexType.getProperties().size()).isEqualTo(3);
+
+      assertThat(managerVertexType.getPropertyByName("id")).isNotNull();
+      assertThat(managerVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+      assertThat(managerVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+      assertThat(managerVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+      assertThat(managerVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
+
+      assertThat(managerVertexType.getPropertyByName("name")).isNotNull();
+      assertThat(managerVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+      assertThat(managerVertexType.getPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(managerVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(2);
+      assertThat(managerVertexType.getPropertyByName("name").isFromPrimaryKey()).isFalse();
+
+      assertThat(managerVertexType.getPropertyByName("project")).isNotNull();
+      assertThat(managerVertexType.getPropertyByName("project").getName()).isEqualTo("project");
+      assertThat(managerVertexType.getPropertyByName("project").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(managerVertexType.getPropertyByName("project").getOrdinalPosition()).isEqualTo(3);
+      assertThat(managerVertexType.getPropertyByName("project").isFromPrimaryKey()).isFalse();
+
+      // edges check
+
+      assertThat(mapper.getRelationship2edgeType().size()).isEqualTo(1);
+
+      assertThat(mapper.getGraphModel().getEdgesType().size()).isEqualTo(1);
+      assertThat(mapper.getGraphModel().getEdgesType().get(0).getName()).isEqualTo("HasManager");
+
+      assertThat(employeeVertexType.getOutEdgesType().size()).isEqualTo(1);
+      assertThat(employeeVertexType.getOutEdgesType().get(0).getName()).isEqualTo("HasManager");
+
+      /*
+       * Rules check
+       */
+
+      // Classes Mapping
+
+      assertThat(mapper.getVertexType2EVClassMappers().size()).isEqualTo(3);
+      assertThat(mapper.getEntity2EVClassMappers().size()).isEqualTo(3);
+
+      assertThat(mapper.getEVClassMappersByVertex(employeeVertexType).size()).isEqualTo(1);
+      EVClassMapper employeeClassMapper =
+          mapper.getEVClassMappersByVertex(employeeVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(employeeEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(employeeEntity).get(0))
+          .isEqualTo(employeeClassMapper);
+      assertThat(employeeEntity).isEqualTo(employeeClassMapper.getEntity());
+      assertThat(employeeVertexType).isEqualTo(employeeClassMapper.getVertexType());
+
+      assertThat(employeeClassMapper.getAttribute2property().size()).isEqualTo(5);
+      assertThat(employeeClassMapper.getProperty2attribute().size()).isEqualTo(5);
+      assertThat(employeeClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+      assertThat(employeeClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+      assertThat(employeeClassMapper.getAttribute2property().get("SALARY")).isEqualTo("salary");
+      assertThat(employeeClassMapper.getAttribute2property().get("RESIDENCE"))
+          .isEqualTo("residence");
+      assertThat(employeeClassMapper.getAttribute2property().get("MANAGER")).isEqualTo("manager");
+      assertThat(employeeClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+      assertThat(employeeClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
+      assertThat(employeeClassMapper.getProperty2attribute().get("salary")).isEqualTo("SALARY");
+      assertThat(employeeClassMapper.getProperty2attribute().get("residence"))
+          .isEqualTo("RESIDENCE");
+      assertThat(employeeClassMapper.getProperty2attribute().get("manager")).isEqualTo("MANAGER");
+
+      assertThat(mapper.getEVClassMappersByVertex(countryVertexType).size()).isEqualTo(1);
+      EVClassMapper countryClassMapper = mapper.getEVClassMappersByVertex(countryVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(countryEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(countryEntity).get(0))
+          .isEqualTo(countryClassMapper);
+      assertThat(countryEntity).isEqualTo(countryClassMapper.getEntity());
+      assertThat(countryVertexType).isEqualTo(countryClassMapper.getVertexType());
+
+      assertThat(countryClassMapper.getAttribute2property().size()).isEqualTo(3);
+      assertThat(countryClassMapper.getProperty2attribute().size()).isEqualTo(3);
+      assertThat(countryClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+      assertThat(countryClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+      assertThat(countryClassMapper.getAttribute2property().get("CONTINENT"))
+          .isEqualTo("continent");
+      assertThat(countryClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+      assertThat(countryClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
+      assertThat(countryClassMapper.getProperty2attribute().get("continent"))
+          .isEqualTo("CONTINENT");
+
+      assertThat(mapper.getEVClassMappersByVertex(managerVertexType).size()).isEqualTo(1);
+      EVClassMapper managerClassMapper = mapper.getEVClassMappersByVertex(managerVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(managerEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(managerEntity).get(0))
+          .isEqualTo(managerClassMapper);
+      assertThat(managerEntity).isEqualTo(managerClassMapper.getEntity());
+      assertThat(managerVertexType).isEqualTo(managerClassMapper.getVertexType());
+
+      assertThat(managerClassMapper.getAttribute2property().size()).isEqualTo(3);
+      assertThat(managerClassMapper.getProperty2attribute().size()).isEqualTo(3);
+      assertThat(managerClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+      assertThat(managerClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+      assertThat(managerClassMapper.getAttribute2property().get("PROJECT")).isEqualTo("project");
+      assertThat(managerClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+      assertThat(managerClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
+      assertThat(managerClassMapper.getProperty2attribute().get("project")).isEqualTo("PROJECT");
+
+      // Relationships-Edges Mapping
+
+      Iterator<CanonicalRelationship> it = employeeEntity.getOutCanonicalRelationships().iterator();
+      CanonicalRelationship hasManagerRelationship = it.next();
+      assertThat(it.hasNext()).isFalse();
+
+      EdgeType hasManagerEdgeType = mapper.getGraphModel().getEdgeTypeByName("HasManager");
+
+      assertThat(mapper.getRelationship2edgeType().size()).isEqualTo(1);
+      assertThat(mapper.getRelationship2edgeType().get(hasManagerRelationship))
+          .isEqualTo(hasManagerEdgeType);
+
+      assertThat(mapper.getEdgeType2relationships().size()).isEqualTo(1);
+      assertThat(mapper.getEdgeType2relationships().get(hasManagerEdgeType).size()).isEqualTo(1);
+      assertThat(
+              mapper
+                  .getEdgeType2relationships()
+                  .get(hasManagerEdgeType)
+                  .contains(hasManagerRelationship))
+          .isTrue();
+
+      // JoinVertexes-AggregatorEdges Mapping
+
+      assertThat(mapper.getJoinVertex2aggregatorEdges().size()).isEqualTo(0);
+    } catch (Exception e) {
+      e.printStackTrace();
+      fail("");
+    } finally {
+      try {
+        // Dropping Source DB Schema and OrientGraph
+        String dbDropping = "drop schema public cascade";
+        st.execute(dbDropping);
+        connection.close();
+      } catch (Exception e) {
+        e.printStackTrace();
+        fail("");
+      }
     }
-
-    @Test
-    /*
-     * Filtering out a table through include-tables (without inheritance).
-     */public void filterOutThroughIncludeWithNoInheritance() {
-        Connection connection = null;
-        Statement st = null;
-
-        try {
-            Class.forName(this.driver);
-            connection = DriverManager.getConnection(this.jurl, this.username, this.password);
-
-            String countryTableBuilding = "create memory table COUNTRY(ID varchar(256) not null, NAME varchar(256), CONTINENT varchar(256), primary key (ID))";
-            st = connection.createStatement();
-            st.execute(countryTableBuilding);
-
-            String residenceTableBuilding =
-                "create memory table RESIDENCE(ID varchar(256) not null, CITY varchar(256), COUNTRY varchar(256), " +
-                "primary key (ID), foreign key (COUNTRY) references COUNTRY(ID))";
-            st.execute(residenceTableBuilding);
-
-            String managerTableBuilding = "create memory table MANAGER(ID varchar(256) not null, NAME varchar(256), PROJECT varchar(256), primary key (ID))";
-            st.execute(managerTableBuilding);
-
-            String employeeTableBuilding =
-                "create memory table EMPLOYEE (ID varchar(256) not null," +
-                " NAME varchar(256), SALARY decimal(10,2), RESIDENCE varchar(256), MANAGER varchar(256), " +
-                "primary key (ID), foreign key (RESIDENCE) references RESIDENCE(ID), foreign key (MANAGER) references MANAGER(ID))";
-            st.execute(employeeTableBuilding);
-
-            // Records Inserting
-
-            String countryFilling = "insert into COUNTRY (ID,NAME,CONTINENT) values (" + "('C001','Italy','Europe'))";
-            st.execute(countryFilling);
-
-            String residenceFilling = "insert into RESIDENCE (ID,CITY,COUNTRY) values (" + "('R001','Rome','C001')," + "('R002','Milan','C001'))";
-            st.execute(residenceFilling);
-
-            String managerFilling = "insert into MANAGER (ID,NAME,PROJECT) values (" + "('M001','Bill Right','New World'))";
-            st.execute(managerFilling);
-
-            String employeeFilling =
-                "insert into EMPLOYEE (ID,NAME,SALARY,RESIDENCE,MANAGER) values (" +
-                "('E001','John Black',1500.00,'R001',null)," +
-                "('E002','Andrew Brown','1000.00','R001','M001')," +
-                "('E003','Jack Johnson',2000.00,'R002',null))";
-            st.execute(employeeFilling);
-
-            List<String> includedTables = new ArrayList<String>();
-            includedTables.add("COUNTRY");
-            includedTables.add("MANAGER");
-            includedTables.add("EMPLOYEE");
-
-            this.mapper = new ER2GraphMapper(dataSource, includedTables, null, dbQueryEngine, dataTypeHandler, executionStrategy, nameResolver, statistics);
-            mapper.buildSourceDatabaseSchema();
-            mapper.buildGraphModel(new JavaConventionNameResolver());
-
-            /*
-             *  Testing context information
-             */
-
-            assertEquals(3, statistics.totalNumberOfEntities);
-            assertEquals(3, statistics.builtEntities);
-            assertEquals(1, statistics.totalNumberOfRelationships);
-            assertEquals(1, statistics.builtRelationships);
-
-            assertEquals(3, statistics.totalNumberOfModelVertices);
-            assertEquals(3, statistics.builtModelVertexTypes);
-            assertEquals(1, statistics.totalNumberOfModelEdges);
-            assertEquals(1, statistics.builtModelEdgeTypes);
-
-            /*
-             *  Testing built source db schema
-             */
-
-            Entity employeeEntity = mapper.getDataBaseSchema().getEntityByName("EMPLOYEE");
-            Entity countryEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("COUNTRY");
-            Entity managerEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("MANAGER");
-            Entity residenceEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("RESIDENCE");
-
-            // entities check
-            assertEquals(3, mapper.getDataBaseSchema().getEntities().size());
-            assertEquals(1, mapper.getDataBaseSchema().getCanonicalRelationships().size());
-            assertNotNull(employeeEntity);
-            assertNotNull(countryEntity);
-            assertNotNull(managerEntity);
-            assertNull(residenceEntity);
-
-            // attributes check
-            assertEquals(5, employeeEntity.getAttributes().size());
-
-            assertNotNull(employeeEntity.getAttributeByName("ID"));
-            assertEquals("ID", employeeEntity.getAttributeByName("ID").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("ID").getDataType());
-            assertEquals(1, employeeEntity.getAttributeByName("ID").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(employeeEntity.getAttributeByName("NAME"));
-            assertEquals("NAME", employeeEntity.getAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("NAME").getDataType());
-            assertEquals(2, employeeEntity.getAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertNotNull(employeeEntity.getAttributeByName("SALARY"));
-            assertEquals("SALARY", employeeEntity.getAttributeByName("SALARY").getName());
-            assertEquals("DECIMAL", employeeEntity.getAttributeByName("SALARY").getDataType());
-            assertEquals(3, employeeEntity.getAttributeByName("SALARY").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("SALARY").getBelongingEntity().getName());
-
-            assertNotNull(employeeEntity.getAttributeByName("RESIDENCE"));
-            assertEquals("RESIDENCE", employeeEntity.getAttributeByName("RESIDENCE").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("RESIDENCE").getDataType());
-            assertEquals(4, employeeEntity.getAttributeByName("RESIDENCE").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("RESIDENCE").getBelongingEntity().getName());
-
-            assertNotNull(employeeEntity.getAttributeByName("MANAGER"));
-            assertEquals("MANAGER", employeeEntity.getAttributeByName("MANAGER").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("MANAGER").getDataType());
-            assertEquals(5, employeeEntity.getAttributeByName("MANAGER").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("MANAGER").getBelongingEntity().getName());
-
-            assertEquals(3, countryEntity.getAttributes().size());
-
-            assertNotNull(countryEntity.getAttributeByName("ID"));
-            assertEquals("ID", countryEntity.getAttributeByName("ID").getName());
-            assertEquals("VARCHAR", countryEntity.getAttributeByName("ID").getDataType());
-            assertEquals(1, countryEntity.getAttributeByName("ID").getOrdinalPosition());
-            assertEquals("COUNTRY", countryEntity.getAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(countryEntity.getAttributeByName("NAME"));
-            assertEquals("NAME", countryEntity.getAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", countryEntity.getAttributeByName("NAME").getDataType());
-            assertEquals(2, countryEntity.getAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("COUNTRY", countryEntity.getAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertNotNull(countryEntity.getAttributeByName("CONTINENT"));
-            assertEquals("CONTINENT", countryEntity.getAttributeByName("CONTINENT").getName());
-            assertEquals("VARCHAR", countryEntity.getAttributeByName("CONTINENT").getDataType());
-            assertEquals(3, countryEntity.getAttributeByName("CONTINENT").getOrdinalPosition());
-            assertEquals("COUNTRY", countryEntity.getAttributeByName("CONTINENT").getBelongingEntity().getName());
-
-            assertEquals(3, managerEntity.getAttributes().size());
-
-            assertNotNull(managerEntity.getAttributeByName("ID"));
-            assertEquals("ID", managerEntity.getAttributeByName("ID").getName());
-            assertEquals("VARCHAR", managerEntity.getAttributeByName("ID").getDataType());
-            assertEquals(1, managerEntity.getAttributeByName("ID").getOrdinalPosition());
-            assertEquals("MANAGER", managerEntity.getAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(managerEntity.getAttributeByName("NAME"));
-            assertEquals("NAME", managerEntity.getAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", managerEntity.getAttributeByName("NAME").getDataType());
-            assertEquals(2, managerEntity.getAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("MANAGER", managerEntity.getAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertNotNull(managerEntity.getAttributeByName("PROJECT"));
-            assertEquals("PROJECT", managerEntity.getAttributeByName("PROJECT").getName());
-            assertEquals("VARCHAR", managerEntity.getAttributeByName("PROJECT").getDataType());
-            assertEquals(3, managerEntity.getAttributeByName("PROJECT").getOrdinalPosition());
-            assertEquals("MANAGER", managerEntity.getAttributeByName("PROJECT").getBelongingEntity().getName());
-
-            // relationship, primary and foreign key check
-            assertEquals(1, employeeEntity.getOutCanonicalRelationships().size());
-            assertEquals(0, managerEntity.getOutCanonicalRelationships().size());
-            assertEquals(0, countryEntity.getOutCanonicalRelationships().size());
-            assertEquals(0, employeeEntity.getInCanonicalRelationships().size());
-            assertEquals(1, managerEntity.getInCanonicalRelationships().size());
-            assertEquals(0, countryEntity.getOutCanonicalRelationships().size());
-            assertEquals(1, employeeEntity.getForeignKeys().size());
-
-            Iterator<CanonicalRelationship> itEmp = employeeEntity.getOutCanonicalRelationships().iterator();
-            CanonicalRelationship currentEmpRel = itEmp.next();
-            assertEquals("MANAGER", currentEmpRel.getParentEntity().getName());
-            assertEquals("EMPLOYEE", currentEmpRel.getForeignEntity().getName());
-            assertEquals(managerEntity.getPrimaryKey(), currentEmpRel.getPrimaryKey());
-            assertEquals(employeeEntity.getForeignKeys().get(0), currentEmpRel.getForeignKey());
-            assertFalse(itEmp.hasNext());
-
-            Iterator<CanonicalRelationship> itManager = managerEntity.getInCanonicalRelationships().iterator();
-            CanonicalRelationship currentManRel = itManager.next();
-            assertEquals(currentEmpRel, currentManRel);
-
-            /*
-             *  Testing built graph model
-             */
-
-            VertexType employeeVertexType = mapper.getGraphModel().getVertexTypeByName("Employee");
-            VertexType countryVertexType = mapper.getGraphModel().getVertexTypeByName("Country");
-            VertexType managerVertexType = mapper.getGraphModel().getVertexTypeByName("Manager");
-            VertexType residenceVertexType = mapper.getGraphModel().getVertexTypeByName("Residence");
-
-            // vertices check
-            assertEquals(3, mapper.getGraphModel().getVerticesType().size());
-            assertNotNull(employeeVertexType);
-            assertNotNull(countryVertexType);
-            assertNotNull(managerVertexType);
-            assertNull(residenceVertexType);
-
-            // properties check
-            assertEquals(5, employeeVertexType.getProperties().size());
-
-            assertNotNull(employeeVertexType.getPropertyByName("id"));
-            assertEquals("id", employeeVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, employeeVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, employeeVertexType.getPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(employeeVertexType.getPropertyByName("name"));
-            assertEquals("name", employeeVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(2, employeeVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, employeeVertexType.getPropertyByName("name").isFromPrimaryKey());
-
-            assertNotNull(employeeVertexType.getPropertyByName("salary"));
-            assertEquals("salary", employeeVertexType.getPropertyByName("salary").getName());
-            assertEquals("DECIMAL", employeeVertexType.getPropertyByName("salary").getOriginalType());
-            assertEquals(3, employeeVertexType.getPropertyByName("salary").getOrdinalPosition());
-            assertEquals(false, employeeVertexType.getPropertyByName("salary").isFromPrimaryKey());
-
-            assertNotNull(employeeVertexType.getPropertyByName("residence"));
-            assertEquals("residence", employeeVertexType.getPropertyByName("residence").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("residence").getOriginalType());
-            assertEquals(4, employeeVertexType.getPropertyByName("residence").getOrdinalPosition());
-            assertEquals(false, employeeVertexType.getPropertyByName("residence").isFromPrimaryKey());
-
-            assertNotNull(employeeVertexType.getPropertyByName("manager"));
-            assertEquals("manager", employeeVertexType.getPropertyByName("manager").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("manager").getOriginalType());
-            assertEquals(5, employeeVertexType.getPropertyByName("manager").getOrdinalPosition());
-            assertEquals(false, employeeVertexType.getPropertyByName("manager").isFromPrimaryKey());
-
-            assertEquals(3, countryVertexType.getProperties().size());
-
-            assertNotNull(countryVertexType.getPropertyByName("id"));
-            assertEquals("id", countryVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", countryVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, countryVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, countryVertexType.getPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(countryVertexType.getPropertyByName("name"));
-            assertEquals("name", countryVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", countryVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(2, countryVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, countryVertexType.getPropertyByName("name").isFromPrimaryKey());
-
-            assertNotNull(countryVertexType.getPropertyByName("continent"));
-            assertEquals("continent", countryVertexType.getPropertyByName("continent").getName());
-            assertEquals("VARCHAR", countryVertexType.getPropertyByName("continent").getOriginalType());
-            assertEquals(3, countryVertexType.getPropertyByName("continent").getOrdinalPosition());
-            assertEquals(false, countryVertexType.getPropertyByName("continent").isFromPrimaryKey());
-
-            assertEquals(3, managerVertexType.getProperties().size());
-
-            assertNotNull(managerVertexType.getPropertyByName("id"));
-            assertEquals("id", managerVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", managerVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, managerVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, managerVertexType.getPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(managerVertexType.getPropertyByName("name"));
-            assertEquals("name", managerVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", managerVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(2, managerVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, managerVertexType.getPropertyByName("name").isFromPrimaryKey());
-
-            assertNotNull(managerVertexType.getPropertyByName("project"));
-            assertEquals("project", managerVertexType.getPropertyByName("project").getName());
-            assertEquals("VARCHAR", managerVertexType.getPropertyByName("project").getOriginalType());
-            assertEquals(3, managerVertexType.getPropertyByName("project").getOrdinalPosition());
-            assertEquals(false, managerVertexType.getPropertyByName("project").isFromPrimaryKey());
-
-            // edges check
-
-            assertEquals(1, mapper.getRelationship2edgeType().size());
-
-            assertEquals(1, mapper.getGraphModel().getEdgesType().size());
-            assertEquals("HasManager", mapper.getGraphModel().getEdgesType().get(0).getName());
-
-            assertEquals(1, employeeVertexType.getOutEdgesType().size());
-            assertEquals("HasManager", employeeVertexType.getOutEdgesType().get(0).getName());
-
-            /*
-             * Rules check
-             */
-
-            // Classes Mapping
-
-            assertEquals(3, mapper.getVertexType2EVClassMappers().size());
-            assertEquals(3, mapper.getEntity2EVClassMappers().size());
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(employeeVertexType).size());
-            EVClassMapper employeeClassMapper = mapper.getEVClassMappersByVertex(employeeVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(employeeEntity).size());
-            assertEquals(employeeClassMapper, mapper.getEVClassMappersByEntity(employeeEntity).get(0));
-            assertEquals(employeeClassMapper.getEntity(), employeeEntity);
-            assertEquals(employeeClassMapper.getVertexType(), employeeVertexType);
-
-            assertEquals(5, employeeClassMapper.getAttribute2property().size());
-            assertEquals(5, employeeClassMapper.getProperty2attribute().size());
-            assertEquals("id", employeeClassMapper.getAttribute2property().get("ID"));
-            assertEquals("name", employeeClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("salary", employeeClassMapper.getAttribute2property().get("SALARY"));
-            assertEquals("residence", employeeClassMapper.getAttribute2property().get("RESIDENCE"));
-            assertEquals("manager", employeeClassMapper.getAttribute2property().get("MANAGER"));
-            assertEquals("ID", employeeClassMapper.getProperty2attribute().get("id"));
-            assertEquals("NAME", employeeClassMapper.getProperty2attribute().get("name"));
-            assertEquals("SALARY", employeeClassMapper.getProperty2attribute().get("salary"));
-            assertEquals("RESIDENCE", employeeClassMapper.getProperty2attribute().get("residence"));
-            assertEquals("MANAGER", employeeClassMapper.getProperty2attribute().get("manager"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(countryVertexType).size());
-            EVClassMapper countryClassMapper = mapper.getEVClassMappersByVertex(countryVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(countryEntity).size());
-            assertEquals(countryClassMapper, mapper.getEVClassMappersByEntity(countryEntity).get(0));
-            assertEquals(countryClassMapper.getEntity(), countryEntity);
-            assertEquals(countryClassMapper.getVertexType(), countryVertexType);
-
-            assertEquals(3, countryClassMapper.getAttribute2property().size());
-            assertEquals(3, countryClassMapper.getProperty2attribute().size());
-            assertEquals("id", countryClassMapper.getAttribute2property().get("ID"));
-            assertEquals("name", countryClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("continent", countryClassMapper.getAttribute2property().get("CONTINENT"));
-            assertEquals("ID", countryClassMapper.getProperty2attribute().get("id"));
-            assertEquals("NAME", countryClassMapper.getProperty2attribute().get("name"));
-            assertEquals("CONTINENT", countryClassMapper.getProperty2attribute().get("continent"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(managerVertexType).size());
-            EVClassMapper managerClassMapper = mapper.getEVClassMappersByVertex(managerVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(managerEntity).size());
-            assertEquals(managerClassMapper, mapper.getEVClassMappersByEntity(managerEntity).get(0));
-            assertEquals(managerClassMapper.getEntity(), managerEntity);
-            assertEquals(managerClassMapper.getVertexType(), managerVertexType);
-
-            assertEquals(3, managerClassMapper.getAttribute2property().size());
-            assertEquals(3, managerClassMapper.getProperty2attribute().size());
-            assertEquals("id", managerClassMapper.getAttribute2property().get("ID"));
-            assertEquals("name", managerClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("project", managerClassMapper.getAttribute2property().get("PROJECT"));
-            assertEquals("ID", managerClassMapper.getProperty2attribute().get("id"));
-            assertEquals("NAME", managerClassMapper.getProperty2attribute().get("name"));
-            assertEquals("PROJECT", managerClassMapper.getProperty2attribute().get("project"));
-
-            // Relationships-Edges Mapping
-
-            Iterator<CanonicalRelationship> it = employeeEntity.getOutCanonicalRelationships().iterator();
-            CanonicalRelationship hasManagerRelationship = it.next();
-            assertFalse(it.hasNext());
-
-            EdgeType hasManagerEdgeType = mapper.getGraphModel().getEdgeTypeByName("HasManager");
-
-            assertEquals(1, mapper.getRelationship2edgeType().size());
-            assertEquals(hasManagerEdgeType, mapper.getRelationship2edgeType().get(hasManagerRelationship));
-
-            assertEquals(1, mapper.getEdgeType2relationships().size());
-            assertEquals(1, mapper.getEdgeType2relationships().get(hasManagerEdgeType).size());
-            assertTrue(mapper.getEdgeType2relationships().get(hasManagerEdgeType).contains(hasManagerRelationship));
-
-            // JoinVertexes-AggregatorEdges Mapping
-
-            assertEquals(0, mapper.getJoinVertex2aggregatorEdges().size());
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail();
-        } finally {
-            try {
-                // Dropping Source DB Schema and OrientGraph
-                String dbDropping = "drop schema public cascade";
-                st.execute(dbDropping);
-                connection.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-                fail();
-            }
-        }
+  }
+
+  /*
+   * Filtering out a table through exclude-tables (without inheritance).
+   */ @Test
+  void filterOutThroughExcludeWithNoInheritance() {
+    Connection connection = null;
+    Statement st = null;
+
+    try {
+      Class.forName(this.driver);
+      connection = DriverManager.getConnection(this.jurl, this.username, this.password);
+
+      String countryTableBuilding =
+          "create memory table COUNTRY(ID varchar(256) not null, NAME varchar(256), CONTINENT"
+              + " varchar(256), primary key (ID))";
+      st = connection.createStatement();
+      st.execute(countryTableBuilding);
+
+      String residenceTableBuilding =
+          "create memory table RESIDENCE(ID varchar(256) not null, CITY varchar(256), COUNTRY"
+              + " varchar(256), primary key (ID), foreign key (COUNTRY) references COUNTRY(ID))";
+      st.execute(residenceTableBuilding);
+
+      String managerTableBuilding =
+          "create memory table MANAGER(ID varchar(256) not null, NAME varchar(256), PROJECT"
+              + " varchar(256), primary key (ID))";
+      st.execute(managerTableBuilding);
+
+      String employeeTableBuilding =
+          "create memory table EMPLOYEE (ID varchar(256) not null, NAME varchar(256), SALARY"
+              + " decimal(10,2), RESIDENCE varchar(256), MANAGER varchar(256), primary key (id),"
+              + " foreign key (RESIDENCE) references RESIDENCE(ID), foreign key (MANAGER)"
+              + " references MANAGER(ID))";
+      st.execute(employeeTableBuilding);
+
+      // Records Inserting
+
+      String countryFilling =
+          "insert into COUNTRY (ID,NAME,CONTINENT) values (" + "('C001','Italy','Europe'))";
+      st.execute(countryFilling);
+
+      String residenceFilling =
+          "insert into RESIDENCE (ID,CITY,COUNTRY) values ("
+              + "('R001','Rome','C001'),"
+              + "('R002','Milan','C001'))";
+      st.execute(residenceFilling);
+
+      String managerFilling =
+          "insert into MANAGER (ID,NAME,PROJECT) values (" + "('M001','Bill Right','New World'))";
+      st.execute(managerFilling);
+
+      String employeeFilling =
+          "insert into EMPLOYEE (ID,NAME,SALARY,RESIDENCE,MANAGER) values ("
+              + "('E001','John Black',1500.00,'R001',null),"
+              + "('E002','Andrew Brown','1000.00','R001','M001'),"
+              + "('E003','Jack Johnson',2000.00,'R002',null))";
+      st.execute(employeeFilling);
+
+      List<String> excludedTables = new ArrayList<String>();
+      excludedTables.add("RESIDENCE");
+
+      this.mapper =
+          new ER2GraphMapper(
+              dataSource,
+              null,
+              excludedTables,
+              dbQueryEngine,
+              dataTypeHandler,
+              executionStrategy,
+              nameResolver,
+              statistics);
+
+      mapper.buildSourceDatabaseSchema();
+      mapper.buildGraphModel(new JavaConventionNameResolver());
+
+      /*
+       *  Testing context information
+       */
+
+      assertThat(statistics.totalNumberOfEntities).isEqualTo(3);
+      assertThat(statistics.builtEntities).isEqualTo(3);
+      assertThat(statistics.totalNumberOfRelationships).isEqualTo(1);
+      assertThat(statistics.builtRelationships).isEqualTo(1);
+
+      assertThat(statistics.totalNumberOfModelVertices).isEqualTo(3);
+      assertThat(statistics.builtModelVertexTypes).isEqualTo(3);
+      assertThat(statistics.totalNumberOfModelEdges).isEqualTo(1);
+      assertThat(statistics.builtModelEdgeTypes).isEqualTo(1);
+
+      /*
+       *  Testing built source db schema
+       */
+
+      Entity employeeEntity = mapper.getDataBaseSchema().getEntityByName("EMPLOYEE");
+      Entity countryEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("COUNTRY");
+      Entity managerEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("MANAGER");
+      Entity residenceEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("RESIDENCE");
+
+      // entities check
+      assertThat(mapper.getDataBaseSchema().getEntities().size()).isEqualTo(3);
+      assertThat(mapper.getDataBaseSchema().getCanonicalRelationships().size()).isEqualTo(1);
+      assertThat(employeeEntity).isNotNull();
+      assertThat(countryEntity).isNotNull();
+      assertThat(managerEntity).isNotNull();
+      assertThat(residenceEntity).isNull();
+
+      // attributes check
+      assertThat(employeeEntity.getAttributes().size()).isEqualTo(5);
+
+      assertThat(employeeEntity.getAttributeByName("ID")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(employeeEntity.getAttributeByName("ID").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("ID").getOrdinalPosition()).isEqualTo(1);
+      assertThat(employeeEntity.getAttributeByName("ID").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(employeeEntity.getAttributeByName("NAME")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("NAME").getName()).isEqualTo("NAME");
+      assertThat(employeeEntity.getAttributeByName("NAME").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("NAME").getOrdinalPosition()).isEqualTo(2);
+      assertThat(employeeEntity.getAttributeByName("NAME").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(employeeEntity.getAttributeByName("SALARY")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("SALARY").getName()).isEqualTo("SALARY");
+      assertThat(employeeEntity.getAttributeByName("SALARY").getDataType()).isEqualTo("DECIMAL");
+      assertThat(employeeEntity.getAttributeByName("SALARY").getOrdinalPosition()).isEqualTo(3);
+      assertThat(employeeEntity.getAttributeByName("SALARY").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getName()).isEqualTo("RESIDENCE");
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getOrdinalPosition()).isEqualTo(4);
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(employeeEntity.getAttributeByName("MANAGER")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getName()).isEqualTo("MANAGER");
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getOrdinalPosition()).isEqualTo(5);
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(countryEntity.getAttributes().size()).isEqualTo(3);
+
+      assertThat(countryEntity.getAttributeByName("ID")).isNotNull();
+      assertThat(countryEntity.getAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(countryEntity.getAttributeByName("ID").getDataType()).isEqualTo("VARCHAR");
+      assertThat(countryEntity.getAttributeByName("ID").getOrdinalPosition()).isEqualTo(1);
+      assertThat(countryEntity.getAttributeByName("ID").getBelongingEntity().getName())
+          .isEqualTo("COUNTRY");
+
+      assertThat(countryEntity.getAttributeByName("NAME")).isNotNull();
+      assertThat(countryEntity.getAttributeByName("NAME").getName()).isEqualTo("NAME");
+      assertThat(countryEntity.getAttributeByName("NAME").getDataType()).isEqualTo("VARCHAR");
+      assertThat(countryEntity.getAttributeByName("NAME").getOrdinalPosition()).isEqualTo(2);
+      assertThat(countryEntity.getAttributeByName("NAME").getBelongingEntity().getName())
+          .isEqualTo("COUNTRY");
+
+      assertThat(countryEntity.getAttributeByName("CONTINENT")).isNotNull();
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getName()).isEqualTo("CONTINENT");
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getDataType()).isEqualTo("VARCHAR");
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getOrdinalPosition()).isEqualTo(3);
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getBelongingEntity().getName())
+          .isEqualTo("COUNTRY");
+
+      assertThat(managerEntity.getAttributes().size()).isEqualTo(3);
+
+      assertThat(managerEntity.getAttributeByName("ID")).isNotNull();
+      assertThat(managerEntity.getAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(managerEntity.getAttributeByName("ID").getDataType()).isEqualTo("VARCHAR");
+      assertThat(managerEntity.getAttributeByName("ID").getOrdinalPosition()).isEqualTo(1);
+      assertThat(managerEntity.getAttributeByName("ID").getBelongingEntity().getName())
+          .isEqualTo("MANAGER");
+
+      assertThat(managerEntity.getAttributeByName("NAME")).isNotNull();
+      assertThat(managerEntity.getAttributeByName("NAME").getName()).isEqualTo("NAME");
+      assertThat(managerEntity.getAttributeByName("NAME").getDataType()).isEqualTo("VARCHAR");
+      assertThat(managerEntity.getAttributeByName("NAME").getOrdinalPosition()).isEqualTo(2);
+      assertThat(managerEntity.getAttributeByName("NAME").getBelongingEntity().getName())
+          .isEqualTo("MANAGER");
+
+      assertThat(managerEntity.getAttributeByName("PROJECT")).isNotNull();
+      assertThat(managerEntity.getAttributeByName("PROJECT").getName()).isEqualTo("PROJECT");
+      assertThat(managerEntity.getAttributeByName("PROJECT").getDataType()).isEqualTo("VARCHAR");
+      assertThat(managerEntity.getAttributeByName("PROJECT").getOrdinalPosition()).isEqualTo(3);
+      assertThat(managerEntity.getAttributeByName("PROJECT").getBelongingEntity().getName())
+          .isEqualTo("MANAGER");
+
+      // relationship, primary and foreign key check
+      assertThat(employeeEntity.getOutCanonicalRelationships().size()).isEqualTo(1);
+      assertThat(managerEntity.getOutCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(employeeEntity.getInCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(managerEntity.getInCanonicalRelationships().size()).isEqualTo(1);
+      assertThat(employeeEntity.getForeignKeys().size()).isEqualTo(1);
+
+      Iterator<CanonicalRelationship> itEmp =
+          employeeEntity.getOutCanonicalRelationships().iterator();
+      CanonicalRelationship currentEmpRel = itEmp.next();
+      assertThat(currentEmpRel.getParentEntity().getName()).isEqualTo("MANAGER");
+      assertThat(currentEmpRel.getForeignEntity().getName()).isEqualTo("EMPLOYEE");
+      assertThat(currentEmpRel.getPrimaryKey()).isEqualTo(managerEntity.getPrimaryKey());
+      assertThat(currentEmpRel.getForeignKey()).isEqualTo(employeeEntity.getForeignKeys().get(0));
+      assertThat(itEmp.hasNext()).isFalse();
+
+      Iterator<CanonicalRelationship> itManager =
+          managerEntity.getInCanonicalRelationships().iterator();
+      CanonicalRelationship currentManRel = itManager.next();
+      assertThat(currentManRel).isEqualTo(currentEmpRel);
+
+      /*
+       *  Testing built graph model
+       */
+
+      VertexType employeeVertexType = mapper.getGraphModel().getVertexTypeByName("Employee");
+      VertexType countryVertexType = mapper.getGraphModel().getVertexTypeByName("Country");
+      VertexType managerVertexType = mapper.getGraphModel().getVertexTypeByName("Manager");
+      VertexType residenceVertexType = mapper.getGraphModel().getVertexTypeByName("Residence");
+
+      // vertices check
+      assertThat(mapper.getGraphModel().getVerticesType().size()).isEqualTo(3);
+      assertThat(employeeVertexType).isNotNull();
+      assertThat(countryVertexType).isNotNull();
+      assertThat(managerVertexType).isNotNull();
+      assertThat(residenceVertexType).isNull();
+
+      // properties check
+      assertThat(employeeVertexType.getProperties().size()).isEqualTo(5);
+
+      assertThat(employeeVertexType.getPropertyByName("id")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+      assertThat(employeeVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+      assertThat(employeeVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
+
+      assertThat(employeeVertexType.getPropertyByName("name")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+      assertThat(employeeVertexType.getPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(2);
+      assertThat(employeeVertexType.getPropertyByName("name").isFromPrimaryKey()).isFalse();
+
+      assertThat(employeeVertexType.getPropertyByName("salary")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("salary").getName()).isEqualTo("salary");
+      assertThat(employeeVertexType.getPropertyByName("salary").getOriginalType())
+          .isEqualTo("DECIMAL");
+      assertThat(employeeVertexType.getPropertyByName("salary").getOrdinalPosition()).isEqualTo(3);
+      assertThat(employeeVertexType.getPropertyByName("salary").isFromPrimaryKey()).isFalse();
+
+      assertThat(employeeVertexType.getPropertyByName("residence")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("residence").getName())
+          .isEqualTo("residence");
+      assertThat(employeeVertexType.getPropertyByName("residence").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("residence").getOrdinalPosition())
+          .isEqualTo(4);
+      assertThat(employeeVertexType.getPropertyByName("residence").isFromPrimaryKey()).isFalse();
+
+      assertThat(employeeVertexType.getPropertyByName("manager")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("manager").getName()).isEqualTo("manager");
+      assertThat(employeeVertexType.getPropertyByName("manager").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("manager").getOrdinalPosition()).isEqualTo(5);
+      assertThat(employeeVertexType.getPropertyByName("manager").isFromPrimaryKey()).isFalse();
+
+      assertThat(countryVertexType.getProperties().size()).isEqualTo(3);
+
+      assertThat(countryVertexType.getPropertyByName("id")).isNotNull();
+      assertThat(countryVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+      assertThat(countryVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+      assertThat(countryVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+      assertThat(countryVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
+
+      assertThat(countryVertexType.getPropertyByName("name")).isNotNull();
+      assertThat(countryVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+      assertThat(countryVertexType.getPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(countryVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(2);
+      assertThat(countryVertexType.getPropertyByName("name").isFromPrimaryKey()).isFalse();
+
+      assertThat(countryVertexType.getPropertyByName("continent")).isNotNull();
+      assertThat(countryVertexType.getPropertyByName("continent").getName()).isEqualTo("continent");
+      assertThat(countryVertexType.getPropertyByName("continent").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(countryVertexType.getPropertyByName("continent").getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(countryVertexType.getPropertyByName("continent").isFromPrimaryKey()).isFalse();
+
+      assertThat(managerVertexType.getProperties().size()).isEqualTo(3);
+
+      assertThat(managerVertexType.getPropertyByName("id")).isNotNull();
+      assertThat(managerVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+      assertThat(managerVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+      assertThat(managerVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+      assertThat(managerVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
+
+      assertThat(managerVertexType.getPropertyByName("name")).isNotNull();
+      assertThat(managerVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+      assertThat(managerVertexType.getPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(managerVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(2);
+      assertThat(managerVertexType.getPropertyByName("name").isFromPrimaryKey()).isFalse();
+
+      assertThat(managerVertexType.getPropertyByName("project")).isNotNull();
+      assertThat(managerVertexType.getPropertyByName("project").getName()).isEqualTo("project");
+      assertThat(managerVertexType.getPropertyByName("project").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(managerVertexType.getPropertyByName("project").getOrdinalPosition()).isEqualTo(3);
+      assertThat(managerVertexType.getPropertyByName("project").isFromPrimaryKey()).isFalse();
+
+      // edges check
+
+      assertThat(mapper.getRelationship2edgeType().size()).isEqualTo(1);
+
+      assertThat(mapper.getGraphModel().getEdgesType().size()).isEqualTo(1);
+      assertThat(mapper.getGraphModel().getEdgesType().get(0).getName()).isEqualTo("HasManager");
+
+      assertThat(employeeVertexType.getOutEdgesType().size()).isEqualTo(1);
+      assertThat(employeeVertexType.getOutEdgesType().get(0).getName()).isEqualTo("HasManager");
+
+      /*
+       * Rules check
+       */
+
+      // Classes Mapping
+
+      assertThat(mapper.getVertexType2EVClassMappers().size()).isEqualTo(3);
+      assertThat(mapper.getEntity2EVClassMappers().size()).isEqualTo(3);
+
+      assertThat(mapper.getEVClassMappersByVertex(employeeVertexType).size()).isEqualTo(1);
+      EVClassMapper employeeClassMapper =
+          mapper.getEVClassMappersByVertex(employeeVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(employeeEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(employeeEntity).get(0))
+          .isEqualTo(employeeClassMapper);
+      assertThat(employeeEntity).isEqualTo(employeeClassMapper.getEntity());
+      assertThat(employeeVertexType).isEqualTo(employeeClassMapper.getVertexType());
+
+      assertThat(employeeClassMapper.getAttribute2property().size()).isEqualTo(5);
+      assertThat(employeeClassMapper.getProperty2attribute().size()).isEqualTo(5);
+      assertThat(employeeClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+      assertThat(employeeClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+      assertThat(employeeClassMapper.getAttribute2property().get("SALARY")).isEqualTo("salary");
+      assertThat(employeeClassMapper.getAttribute2property().get("RESIDENCE"))
+          .isEqualTo("residence");
+      assertThat(employeeClassMapper.getAttribute2property().get("MANAGER")).isEqualTo("manager");
+      assertThat(employeeClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+      assertThat(employeeClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
+      assertThat(employeeClassMapper.getProperty2attribute().get("salary")).isEqualTo("SALARY");
+      assertThat(employeeClassMapper.getProperty2attribute().get("residence"))
+          .isEqualTo("RESIDENCE");
+      assertThat(employeeClassMapper.getProperty2attribute().get("manager")).isEqualTo("MANAGER");
+
+      assertThat(mapper.getEVClassMappersByVertex(countryVertexType).size()).isEqualTo(1);
+      EVClassMapper countryClassMapper = mapper.getEVClassMappersByVertex(countryVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(countryEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(countryEntity).get(0))
+          .isEqualTo(countryClassMapper);
+      assertThat(countryEntity).isEqualTo(countryClassMapper.getEntity());
+      assertThat(countryVertexType).isEqualTo(countryClassMapper.getVertexType());
+
+      assertThat(countryClassMapper.getAttribute2property().size()).isEqualTo(3);
+      assertThat(countryClassMapper.getProperty2attribute().size()).isEqualTo(3);
+      assertThat(countryClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+      assertThat(countryClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+      assertThat(countryClassMapper.getAttribute2property().get("CONTINENT"))
+          .isEqualTo("continent");
+      assertThat(countryClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+      assertThat(countryClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
+      assertThat(countryClassMapper.getProperty2attribute().get("continent"))
+          .isEqualTo("CONTINENT");
+
+      assertThat(mapper.getEVClassMappersByVertex(managerVertexType).size()).isEqualTo(1);
+      EVClassMapper managerClassMapper = mapper.getEVClassMappersByVertex(managerVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(managerEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(managerEntity).get(0))
+          .isEqualTo(managerClassMapper);
+      assertThat(managerEntity).isEqualTo(managerClassMapper.getEntity());
+      assertThat(managerVertexType).isEqualTo(managerClassMapper.getVertexType());
+
+      assertThat(managerClassMapper.getAttribute2property().size()).isEqualTo(3);
+      assertThat(managerClassMapper.getProperty2attribute().size()).isEqualTo(3);
+      assertThat(managerClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+      assertThat(managerClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+      assertThat(managerClassMapper.getAttribute2property().get("PROJECT")).isEqualTo("project");
+      assertThat(managerClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+      assertThat(managerClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
+      assertThat(managerClassMapper.getProperty2attribute().get("project")).isEqualTo("PROJECT");
+
+      // Relationships-Edges Mapping
+
+      Iterator<CanonicalRelationship> it = employeeEntity.getOutCanonicalRelationships().iterator();
+      CanonicalRelationship hasManagerRelationship = it.next();
+      assertThat(it.hasNext()).isFalse();
+
+      EdgeType hasManagerEdgeType = mapper.getGraphModel().getEdgeTypeByName("HasManager");
+
+      assertThat(mapper.getRelationship2edgeType().size()).isEqualTo(1);
+      assertThat(mapper.getRelationship2edgeType().get(hasManagerRelationship))
+          .isEqualTo(hasManagerEdgeType);
+
+      assertThat(mapper.getEdgeType2relationships().size()).isEqualTo(1);
+      assertThat(mapper.getEdgeType2relationships().get(hasManagerEdgeType).size()).isEqualTo(1);
+      assertThat(
+              mapper
+                  .getEdgeType2relationships()
+                  .get(hasManagerEdgeType)
+                  .contains(hasManagerRelationship))
+          .isTrue();
+
+      // JoinVertexes-AggregatorEdges Mapping
+
+      assertThat(mapper.getJoinVertex2aggregatorEdges().size()).isEqualTo(0);
+    } catch (Exception e) {
+      e.printStackTrace();
+      fail("");
+    } finally {
+      try {
+        // Dropping Source DB Schema and OrientGraph
+        String dbDropping = "drop schema public cascade";
+        st.execute(dbDropping);
+        connection.close();
+      } catch (Exception e) {
+        e.printStackTrace();
+        fail("");
+      }
     }
-
-    @Test
-    /*
-     * Filtering out a table through exclude-tables (without inheritance).
-     */public void filterOutThroughExcludeWithNoInheritance() {
-        Connection connection = null;
-        Statement st = null;
-
-        try {
-            Class.forName(this.driver);
-            connection = DriverManager.getConnection(this.jurl, this.username, this.password);
-
-            String countryTableBuilding = "create memory table COUNTRY(ID varchar(256) not null, NAME varchar(256), CONTINENT varchar(256), primary key (ID))";
-            st = connection.createStatement();
-            st.execute(countryTableBuilding);
-
-            String residenceTableBuilding =
-                "create memory table RESIDENCE(ID varchar(256) not null, CITY varchar(256), COUNTRY varchar(256), " +
-                "primary key (ID), foreign key (COUNTRY) references COUNTRY(ID))";
-            st.execute(residenceTableBuilding);
-
-            String managerTableBuilding = "create memory table MANAGER(ID varchar(256) not null, NAME varchar(256), PROJECT varchar(256), primary key (ID))";
-            st.execute(managerTableBuilding);
-
-            String employeeTableBuilding =
-                "create memory table EMPLOYEE (ID varchar(256) not null," +
-                " NAME varchar(256), SALARY decimal(10,2), RESIDENCE varchar(256), MANAGER varchar(256), " +
-                "primary key (id), foreign key (RESIDENCE) references RESIDENCE(ID), foreign key (MANAGER) references MANAGER(ID))";
-            st.execute(employeeTableBuilding);
-
-            // Records Inserting
-
-            String countryFilling = "insert into COUNTRY (ID,NAME,CONTINENT) values (" + "('C001','Italy','Europe'))";
-            st.execute(countryFilling);
-
-            String residenceFilling = "insert into RESIDENCE (ID,CITY,COUNTRY) values (" + "('R001','Rome','C001')," + "('R002','Milan','C001'))";
-            st.execute(residenceFilling);
-
-            String managerFilling = "insert into MANAGER (ID,NAME,PROJECT) values (" + "('M001','Bill Right','New World'))";
-            st.execute(managerFilling);
-
-            String employeeFilling =
-                "insert into EMPLOYEE (ID,NAME,SALARY,RESIDENCE,MANAGER) values (" +
-                "('E001','John Black',1500.00,'R001',null)," +
-                "('E002','Andrew Brown','1000.00','R001','M001')," +
-                "('E003','Jack Johnson',2000.00,'R002',null))";
-            st.execute(employeeFilling);
-
-            List<String> excludedTables = new ArrayList<String>();
-            excludedTables.add("RESIDENCE");
-
-            this.mapper = new ER2GraphMapper(dataSource, null, excludedTables, dbQueryEngine, dataTypeHandler, executionStrategy, nameResolver, statistics);
-
-            mapper.buildSourceDatabaseSchema();
-            mapper.buildGraphModel(new JavaConventionNameResolver());
-
-            /*
-             *  Testing context information
-             */
-
-            assertEquals(3, statistics.totalNumberOfEntities);
-            assertEquals(3, statistics.builtEntities);
-            assertEquals(1, statistics.totalNumberOfRelationships);
-            assertEquals(1, statistics.builtRelationships);
-
-            assertEquals(3, statistics.totalNumberOfModelVertices);
-            assertEquals(3, statistics.builtModelVertexTypes);
-            assertEquals(1, statistics.totalNumberOfModelEdges);
-            assertEquals(1, statistics.builtModelEdgeTypes);
-
-            /*
-             *  Testing built source db schema
-             */
-
-            Entity employeeEntity = mapper.getDataBaseSchema().getEntityByName("EMPLOYEE");
-            Entity countryEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("COUNTRY");
-            Entity managerEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("MANAGER");
-            Entity residenceEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("RESIDENCE");
-
-            // entities check
-            assertEquals(3, mapper.getDataBaseSchema().getEntities().size());
-            assertEquals(1, mapper.getDataBaseSchema().getCanonicalRelationships().size());
-            assertNotNull(employeeEntity);
-            assertNotNull(countryEntity);
-            assertNotNull(managerEntity);
-            assertNull(residenceEntity);
-
-            // attributes check
-            assertEquals(5, employeeEntity.getAttributes().size());
-
-            assertNotNull(employeeEntity.getAttributeByName("ID"));
-            assertEquals("ID", employeeEntity.getAttributeByName("ID").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("ID").getDataType());
-            assertEquals(1, employeeEntity.getAttributeByName("ID").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(employeeEntity.getAttributeByName("NAME"));
-            assertEquals("NAME", employeeEntity.getAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("NAME").getDataType());
-            assertEquals(2, employeeEntity.getAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertNotNull(employeeEntity.getAttributeByName("SALARY"));
-            assertEquals("SALARY", employeeEntity.getAttributeByName("SALARY").getName());
-            assertEquals("DECIMAL", employeeEntity.getAttributeByName("SALARY").getDataType());
-            assertEquals(3, employeeEntity.getAttributeByName("SALARY").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("SALARY").getBelongingEntity().getName());
-
-            assertNotNull(employeeEntity.getAttributeByName("RESIDENCE"));
-            assertEquals("RESIDENCE", employeeEntity.getAttributeByName("RESIDENCE").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("RESIDENCE").getDataType());
-            assertEquals(4, employeeEntity.getAttributeByName("RESIDENCE").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("RESIDENCE").getBelongingEntity().getName());
-
-            assertNotNull(employeeEntity.getAttributeByName("MANAGER"));
-            assertEquals("MANAGER", employeeEntity.getAttributeByName("MANAGER").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("MANAGER").getDataType());
-            assertEquals(5, employeeEntity.getAttributeByName("MANAGER").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("MANAGER").getBelongingEntity().getName());
-
-            assertEquals(3, countryEntity.getAttributes().size());
-
-            assertNotNull(countryEntity.getAttributeByName("ID"));
-            assertEquals("ID", countryEntity.getAttributeByName("ID").getName());
-            assertEquals("VARCHAR", countryEntity.getAttributeByName("ID").getDataType());
-            assertEquals(1, countryEntity.getAttributeByName("ID").getOrdinalPosition());
-            assertEquals("COUNTRY", countryEntity.getAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(countryEntity.getAttributeByName("NAME"));
-            assertEquals("NAME", countryEntity.getAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", countryEntity.getAttributeByName("NAME").getDataType());
-            assertEquals(2, countryEntity.getAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("COUNTRY", countryEntity.getAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertNotNull(countryEntity.getAttributeByName("CONTINENT"));
-            assertEquals("CONTINENT", countryEntity.getAttributeByName("CONTINENT").getName());
-            assertEquals("VARCHAR", countryEntity.getAttributeByName("CONTINENT").getDataType());
-            assertEquals(3, countryEntity.getAttributeByName("CONTINENT").getOrdinalPosition());
-            assertEquals("COUNTRY", countryEntity.getAttributeByName("CONTINENT").getBelongingEntity().getName());
-
-            assertEquals(3, managerEntity.getAttributes().size());
-
-            assertNotNull(managerEntity.getAttributeByName("ID"));
-            assertEquals("ID", managerEntity.getAttributeByName("ID").getName());
-            assertEquals("VARCHAR", managerEntity.getAttributeByName("ID").getDataType());
-            assertEquals(1, managerEntity.getAttributeByName("ID").getOrdinalPosition());
-            assertEquals("MANAGER", managerEntity.getAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(managerEntity.getAttributeByName("NAME"));
-            assertEquals("NAME", managerEntity.getAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", managerEntity.getAttributeByName("NAME").getDataType());
-            assertEquals(2, managerEntity.getAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("MANAGER", managerEntity.getAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertNotNull(managerEntity.getAttributeByName("PROJECT"));
-            assertEquals("PROJECT", managerEntity.getAttributeByName("PROJECT").getName());
-            assertEquals("VARCHAR", managerEntity.getAttributeByName("PROJECT").getDataType());
-            assertEquals(3, managerEntity.getAttributeByName("PROJECT").getOrdinalPosition());
-            assertEquals("MANAGER", managerEntity.getAttributeByName("PROJECT").getBelongingEntity().getName());
-
-            // relationship, primary and foreign key check
-            assertEquals(1, employeeEntity.getOutCanonicalRelationships().size());
-            assertEquals(0, managerEntity.getOutCanonicalRelationships().size());
-            assertEquals(0, employeeEntity.getInCanonicalRelationships().size());
-            assertEquals(1, managerEntity.getInCanonicalRelationships().size());
-            assertEquals(1, employeeEntity.getForeignKeys().size());
-
-            Iterator<CanonicalRelationship> itEmp = employeeEntity.getOutCanonicalRelationships().iterator();
-            CanonicalRelationship currentEmpRel = itEmp.next();
-            assertEquals("MANAGER", currentEmpRel.getParentEntity().getName());
-            assertEquals("EMPLOYEE", currentEmpRel.getForeignEntity().getName());
-            assertEquals(managerEntity.getPrimaryKey(), currentEmpRel.getPrimaryKey());
-            assertEquals(employeeEntity.getForeignKeys().get(0), currentEmpRel.getForeignKey());
-            assertFalse(itEmp.hasNext());
-
-            Iterator<CanonicalRelationship> itManager = managerEntity.getInCanonicalRelationships().iterator();
-            CanonicalRelationship currentManRel = itManager.next();
-            assertEquals(currentEmpRel, currentManRel);
-
-            /*
-             *  Testing built graph model
-             */
-
-            VertexType employeeVertexType = mapper.getGraphModel().getVertexTypeByName("Employee");
-            VertexType countryVertexType = mapper.getGraphModel().getVertexTypeByName("Country");
-            VertexType managerVertexType = mapper.getGraphModel().getVertexTypeByName("Manager");
-            VertexType residenceVertexType = mapper.getGraphModel().getVertexTypeByName("Residence");
-
-            // vertices check
-            assertEquals(3, mapper.getGraphModel().getVerticesType().size());
-            assertNotNull(employeeVertexType);
-            assertNotNull(countryVertexType);
-            assertNotNull(managerVertexType);
-            assertNull(residenceVertexType);
-
-            // properties check
-            assertEquals(5, employeeVertexType.getProperties().size());
-
-            assertNotNull(employeeVertexType.getPropertyByName("id"));
-            assertEquals("id", employeeVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, employeeVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, employeeVertexType.getPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(employeeVertexType.getPropertyByName("name"));
-            assertEquals("name", employeeVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(2, employeeVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, employeeVertexType.getPropertyByName("name").isFromPrimaryKey());
-
-            assertNotNull(employeeVertexType.getPropertyByName("salary"));
-            assertEquals("salary", employeeVertexType.getPropertyByName("salary").getName());
-            assertEquals("DECIMAL", employeeVertexType.getPropertyByName("salary").getOriginalType());
-            assertEquals(3, employeeVertexType.getPropertyByName("salary").getOrdinalPosition());
-            assertEquals(false, employeeVertexType.getPropertyByName("salary").isFromPrimaryKey());
-
-            assertNotNull(employeeVertexType.getPropertyByName("residence"));
-            assertEquals("residence", employeeVertexType.getPropertyByName("residence").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("residence").getOriginalType());
-            assertEquals(4, employeeVertexType.getPropertyByName("residence").getOrdinalPosition());
-            assertEquals(false, employeeVertexType.getPropertyByName("residence").isFromPrimaryKey());
-
-            assertNotNull(employeeVertexType.getPropertyByName("manager"));
-            assertEquals("manager", employeeVertexType.getPropertyByName("manager").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("manager").getOriginalType());
-            assertEquals(5, employeeVertexType.getPropertyByName("manager").getOrdinalPosition());
-            assertEquals(false, employeeVertexType.getPropertyByName("manager").isFromPrimaryKey());
-
-            assertEquals(3, countryVertexType.getProperties().size());
-
-            assertNotNull(countryVertexType.getPropertyByName("id"));
-            assertEquals("id", countryVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", countryVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, countryVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, countryVertexType.getPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(countryVertexType.getPropertyByName("name"));
-            assertEquals("name", countryVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", countryVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(2, countryVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, countryVertexType.getPropertyByName("name").isFromPrimaryKey());
-
-            assertNotNull(countryVertexType.getPropertyByName("continent"));
-            assertEquals("continent", countryVertexType.getPropertyByName("continent").getName());
-            assertEquals("VARCHAR", countryVertexType.getPropertyByName("continent").getOriginalType());
-            assertEquals(3, countryVertexType.getPropertyByName("continent").getOrdinalPosition());
-            assertEquals(false, countryVertexType.getPropertyByName("continent").isFromPrimaryKey());
-
-            assertEquals(3, managerVertexType.getProperties().size());
-
-            assertNotNull(managerVertexType.getPropertyByName("id"));
-            assertEquals("id", managerVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", managerVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, managerVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, managerVertexType.getPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(managerVertexType.getPropertyByName("name"));
-            assertEquals("name", managerVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", managerVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(2, managerVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, managerVertexType.getPropertyByName("name").isFromPrimaryKey());
-
-            assertNotNull(managerVertexType.getPropertyByName("project"));
-            assertEquals("project", managerVertexType.getPropertyByName("project").getName());
-            assertEquals("VARCHAR", managerVertexType.getPropertyByName("project").getOriginalType());
-            assertEquals(3, managerVertexType.getPropertyByName("project").getOrdinalPosition());
-            assertEquals(false, managerVertexType.getPropertyByName("project").isFromPrimaryKey());
-
-            // edges check
-
-            assertEquals(1, mapper.getRelationship2edgeType().size());
-
-            assertEquals(1, mapper.getGraphModel().getEdgesType().size());
-            assertEquals("HasManager", mapper.getGraphModel().getEdgesType().get(0).getName());
-
-            assertEquals(1, employeeVertexType.getOutEdgesType().size());
-            assertEquals("HasManager", employeeVertexType.getOutEdgesType().get(0).getName());
-
-            /*
-             * Rules check
-             */
-
-            // Classes Mapping
-
-            assertEquals(3, mapper.getVertexType2EVClassMappers().size());
-            assertEquals(3, mapper.getEntity2EVClassMappers().size());
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(employeeVertexType).size());
-            EVClassMapper employeeClassMapper = mapper.getEVClassMappersByVertex(employeeVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(employeeEntity).size());
-            assertEquals(employeeClassMapper, mapper.getEVClassMappersByEntity(employeeEntity).get(0));
-            assertEquals(employeeClassMapper.getEntity(), employeeEntity);
-            assertEquals(employeeClassMapper.getVertexType(), employeeVertexType);
-
-            assertEquals(5, employeeClassMapper.getAttribute2property().size());
-            assertEquals(5, employeeClassMapper.getProperty2attribute().size());
-            assertEquals("id", employeeClassMapper.getAttribute2property().get("ID"));
-            assertEquals("name", employeeClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("salary", employeeClassMapper.getAttribute2property().get("SALARY"));
-            assertEquals("residence", employeeClassMapper.getAttribute2property().get("RESIDENCE"));
-            assertEquals("manager", employeeClassMapper.getAttribute2property().get("MANAGER"));
-            assertEquals("ID", employeeClassMapper.getProperty2attribute().get("id"));
-            assertEquals("NAME", employeeClassMapper.getProperty2attribute().get("name"));
-            assertEquals("SALARY", employeeClassMapper.getProperty2attribute().get("salary"));
-            assertEquals("RESIDENCE", employeeClassMapper.getProperty2attribute().get("residence"));
-            assertEquals("MANAGER", employeeClassMapper.getProperty2attribute().get("manager"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(countryVertexType).size());
-            EVClassMapper countryClassMapper = mapper.getEVClassMappersByVertex(countryVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(countryEntity).size());
-            assertEquals(countryClassMapper, mapper.getEVClassMappersByEntity(countryEntity).get(0));
-            assertEquals(countryClassMapper.getEntity(), countryEntity);
-            assertEquals(countryClassMapper.getVertexType(), countryVertexType);
-
-            assertEquals(3, countryClassMapper.getAttribute2property().size());
-            assertEquals(3, countryClassMapper.getProperty2attribute().size());
-            assertEquals("id", countryClassMapper.getAttribute2property().get("ID"));
-            assertEquals("name", countryClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("continent", countryClassMapper.getAttribute2property().get("CONTINENT"));
-            assertEquals("ID", countryClassMapper.getProperty2attribute().get("id"));
-            assertEquals("NAME", countryClassMapper.getProperty2attribute().get("name"));
-            assertEquals("CONTINENT", countryClassMapper.getProperty2attribute().get("continent"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(managerVertexType).size());
-            EVClassMapper managerClassMapper = mapper.getEVClassMappersByVertex(managerVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(managerEntity).size());
-            assertEquals(managerClassMapper, mapper.getEVClassMappersByEntity(managerEntity).get(0));
-            assertEquals(managerClassMapper.getEntity(), managerEntity);
-            assertEquals(managerClassMapper.getVertexType(), managerVertexType);
-
-            assertEquals(3, managerClassMapper.getAttribute2property().size());
-            assertEquals(3, managerClassMapper.getProperty2attribute().size());
-            assertEquals("id", managerClassMapper.getAttribute2property().get("ID"));
-            assertEquals("name", managerClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("project", managerClassMapper.getAttribute2property().get("PROJECT"));
-            assertEquals("ID", managerClassMapper.getProperty2attribute().get("id"));
-            assertEquals("NAME", managerClassMapper.getProperty2attribute().get("name"));
-            assertEquals("PROJECT", managerClassMapper.getProperty2attribute().get("project"));
-
-            // Relationships-Edges Mapping
-
-            Iterator<CanonicalRelationship> it = employeeEntity.getOutCanonicalRelationships().iterator();
-            CanonicalRelationship hasManagerRelationship = it.next();
-            assertFalse(it.hasNext());
-
-            EdgeType hasManagerEdgeType = mapper.getGraphModel().getEdgeTypeByName("HasManager");
-
-            assertEquals(1, mapper.getRelationship2edgeType().size());
-            assertEquals(hasManagerEdgeType, mapper.getRelationship2edgeType().get(hasManagerRelationship));
-
-            assertEquals(1, mapper.getEdgeType2relationships().size());
-            assertEquals(1, mapper.getEdgeType2relationships().get(hasManagerEdgeType).size());
-            assertTrue(mapper.getEdgeType2relationships().get(hasManagerEdgeType).contains(hasManagerRelationship));
-
-            // JoinVertexes-AggregatorEdges Mapping
-
-            assertEquals(0, mapper.getJoinVertex2aggregatorEdges().size());
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail();
-        } finally {
-            try {
-                // Dropping Source DB Schema and OrientGraph
-                String dbDropping = "drop schema public cascade";
-                st.execute(dbDropping);
-                connection.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-                fail();
-            }
-        }
+  }
+
+  /*
+   * Filtering out a table through include-tables (with Table per Hierarchy inheritance).
+   */ @Test
+  void filterOutThroughIncludeWithTablePerHierarchyInheritance() {
+    Connection connection = null;
+    Statement st = null;
+
+    try {
+      Class.forName(this.driver);
+      connection = DriverManager.getConnection(this.jurl, this.username, this.password);
+
+      String countryTableBuilding =
+          "create memory table COUNTRY(ID varchar(256) not null, NAME varchar(256), CONTINENT"
+              + " varchar(256), primary key (ID))";
+      st = connection.createStatement();
+      st.execute(countryTableBuilding);
+
+      String residenceTableBuilding =
+          "create memory table RESIDENCE(ID varchar(256) not null, CITY varchar(256), COUNTRY"
+              + " varchar(256), primary key (ID), foreign key (COUNTRY) references COUNTRY(ID))";
+      st.execute(residenceTableBuilding);
+
+      String managerTableBuilding =
+          "create memory table MANAGER(ID varchar(256) not null, TYPE varchar(256), NAME"
+              + " varchar(256), PROJECT varchar(256), primary key (ID))";
+      st.execute(managerTableBuilding);
+
+      String employeeTableBuilding =
+          "create memory table EMPLOYEE (ID varchar(256) not null, TYPE varchar(256), NAME"
+              + " varchar(256), SALARY decimal(10,2), BONUS decimal(10,0), PAY_PER_HOUR"
+              + " decimal(10,2), CONTRACT_DURATION varchar(256), RESIDENCE varchar(256), MANAGER"
+              + " varchar(256), primary key (id), foreign key (RESIDENCE) references RESIDENCE(ID),"
+              + " foreign key (MANAGER) references MANAGER(ID))";
+      st.execute(employeeTableBuilding);
+
+      // Records Inserting
+
+      String countryFilling =
+          "insert into country (ID,NAME,CONTINENT) values (" + "('C001','Italy','Europe'))";
+      st.execute(countryFilling);
+
+      String residenceFilling =
+          "insert into RESIDENCE (ID,CITY,COUNTRY) values ("
+              + "('R001','Rome','C001'),"
+              + "('R002','Milan','C001'))";
+      st.execute(residenceFilling);
+
+      String managerFilling =
+          "insert into MANAGER (ID,TYPE,NAME,PROJECT) values ("
+              + "('M001','prj_mgr','Bill Right','New World'))";
+      st.execute(managerFilling);
+
+      String employeeFilling =
+          "insert into EMPLOYEE"
+              + " (ID,TYPE,NAME,SALARY,BONUS,PAY_PER_HOUR,CONTRACT_DURATION,RESIDENCE,MANAGER)"
+              + " values (('E001','emp','John"
+              + " Black',null,null,null,null,'R001',null),('E002','reg_emp','Andrew"
+              + " Brown','1000.00','10',null,null,'R001','M001'),('E003','cont_emp','Jack"
+              + " Johnson',null,null,'50.00','6','R002',null))";
+      st.execute(employeeFilling);
+
+      List<String> includedTables = new ArrayList<String>();
+      includedTables.add("COUNTRY");
+      includedTables.add("MANAGER");
+      includedTables.add("EMPLOYEE");
+
+      this.mapper =
+          new Hibernate2GraphMapper(
+              dataSource,
+              FilterTableMappingTest.XML_TABLE_PER_CLASS,
+              includedTables,
+              null,
+              dbQueryEngine,
+              dataTypeHandler,
+              executionStrategy,
+              nameResolver,
+              statistics);
+      mapper.buildSourceDatabaseSchema();
+      mapper.buildGraphModel(new JavaConventionNameResolver());
+
+      /*
+       *  Testing context information
+       */
+
+      assertThat(statistics.totalNumberOfEntities).isEqualTo(3);
+      assertThat(statistics.builtEntities).isEqualTo(3);
+      assertThat(statistics.totalNumberOfRelationships).isEqualTo(1);
+      assertThat(statistics.builtRelationships).isEqualTo(1);
+
+      assertThat(statistics.totalNumberOfModelVertices).isEqualTo(6);
+      assertThat(statistics.builtModelVertexTypes).isEqualTo(6);
+      assertThat(statistics.totalNumberOfModelEdges).isEqualTo(1);
+      assertThat(statistics.builtModelEdgeTypes).isEqualTo(1);
+
+      /*
+       *  Testing built source db schema
+       */
+
+      Entity employeeEntity = mapper.getDataBaseSchema().getEntityByName("EMPLOYEE");
+      Entity regularEmployeeEntity =
+          mapper.getDataBaseSchema().getEntityByNameIgnoreCase("REGULAR_EMPLOYEE");
+      Entity contractEmployeeEntity =
+          mapper.getDataBaseSchema().getEntityByNameIgnoreCase("CONTRACT_EMPLOYEE");
+      Entity countryEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("COUNTRY");
+      Entity managerEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("MANAGER");
+      Entity projectManagerEntity =
+          mapper.getDataBaseSchema().getEntityByNameIgnoreCase("PROJECT_MANAGER");
+      Entity residenceEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("RESIDENCE");
+
+      // entities check
+      assertThat(mapper.getDataBaseSchema().getEntities().size()).isEqualTo(6);
+      assertThat(mapper.getDataBaseSchema().getCanonicalRelationships().size()).isEqualTo(1);
+      assertThat(employeeEntity).isNotNull();
+      assertThat(regularEmployeeEntity).isNotNull();
+      assertThat(contractEmployeeEntity).isNotNull();
+      assertThat(countryEntity).isNotNull();
+      assertThat(managerEntity).isNotNull();
+      assertThat(residenceEntity).isNull();
+
+      // attributes check
+      assertThat(employeeEntity.getAttributes().size()).isEqualTo(4);
+
+      assertThat(employeeEntity.getAttributeByName("ID")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(employeeEntity.getAttributeByName("ID").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("ID").getOrdinalPosition()).isEqualTo(1);
+      assertThat(employeeEntity.getAttributeByName("ID").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(employeeEntity.getAttributeByName("NAME")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("NAME").getName()).isEqualTo("NAME");
+      assertThat(employeeEntity.getAttributeByName("NAME").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("NAME").getOrdinalPosition()).isEqualTo(2);
+      assertThat(employeeEntity.getAttributeByName("NAME").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getName()).isEqualTo("RESIDENCE");
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getOrdinalPosition()).isEqualTo(3);
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(employeeEntity.getAttributeByName("MANAGER")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getName()).isEqualTo("MANAGER");
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getOrdinalPosition()).isEqualTo(4);
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(regularEmployeeEntity.getAttributes().size()).isEqualTo(2);
+
+      assertThat(regularEmployeeEntity.getAttributeByName("SALARY")).isNotNull();
+      assertThat(regularEmployeeEntity.getAttributeByName("SALARY").getName()).isEqualTo("SALARY");
+      assertThat(regularEmployeeEntity.getAttributeByName("SALARY").getDataType())
+          .isEqualTo("DECIMAL");
+      assertThat(regularEmployeeEntity.getAttributeByName("SALARY").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(regularEmployeeEntity.getAttributeByName("SALARY").getBelongingEntity().getName())
+          .isEqualTo("Regular_Employee");
+
+      assertThat(regularEmployeeEntity.getAttributeByName("BONUS")).isNotNull();
+      assertThat(regularEmployeeEntity.getAttributeByName("BONUS").getName()).isEqualTo("BONUS");
+      assertThat(regularEmployeeEntity.getAttributeByName("BONUS").getDataType())
+          .isEqualTo("DECIMAL");
+      assertThat(regularEmployeeEntity.getAttributeByName("BONUS").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(regularEmployeeEntity.getAttributeByName("BONUS").getBelongingEntity().getName())
+          .isEqualTo("Regular_Employee");
+
+      assertThat(contractEmployeeEntity.getAttributes().size()).isEqualTo(2);
+
+      assertThat(contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR")).isNotNull();
+      assertThat(contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getName())
+          .isEqualTo("PAY_PER_HOUR");
+      assertThat(contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getDataType())
+          .isEqualTo("DECIMAL");
+      assertThat(contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(
+              contractEmployeeEntity
+                  .getAttributeByName("PAY_PER_HOUR")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("Contract_Employee");
+
+      assertThat(contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION")).isNotNull();
+      assertThat(contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getName())
+          .isEqualTo("CONTRACT_DURATION");
+      assertThat(contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(
+              contractEmployeeEntity
+                  .getAttributeByName("CONTRACT_DURATION")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("Contract_Employee");
+
+      assertThat(countryEntity.getAttributes().size()).isEqualTo(3);
+
+      assertThat(countryEntity.getAttributeByName("ID")).isNotNull();
+      assertThat(countryEntity.getAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(countryEntity.getAttributeByName("ID").getDataType()).isEqualTo("VARCHAR");
+      assertThat(countryEntity.getAttributeByName("ID").getOrdinalPosition()).isEqualTo(1);
+      assertThat(countryEntity.getAttributeByName("ID").getBelongingEntity().getName())
+          .isEqualTo("COUNTRY");
+
+      assertThat(countryEntity.getAttributeByName("NAME")).isNotNull();
+      assertThat(countryEntity.getAttributeByName("NAME").getName()).isEqualTo("NAME");
+      assertThat(countryEntity.getAttributeByName("NAME").getDataType()).isEqualTo("VARCHAR");
+      assertThat(countryEntity.getAttributeByName("NAME").getOrdinalPosition()).isEqualTo(2);
+      assertThat(countryEntity.getAttributeByName("NAME").getBelongingEntity().getName())
+          .isEqualTo("COUNTRY");
+
+      assertThat(countryEntity.getAttributeByName("CONTINENT")).isNotNull();
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getName()).isEqualTo("CONTINENT");
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getDataType()).isEqualTo("VARCHAR");
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getOrdinalPosition()).isEqualTo(3);
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getBelongingEntity().getName())
+          .isEqualTo("COUNTRY");
+
+      assertThat(managerEntity.getAttributes().size()).isEqualTo(2);
+
+      assertThat(managerEntity.getAttributeByName("ID")).isNotNull();
+      assertThat(managerEntity.getAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(managerEntity.getAttributeByName("ID").getDataType()).isEqualTo("VARCHAR");
+      assertThat(managerEntity.getAttributeByName("ID").getOrdinalPosition()).isEqualTo(1);
+      assertThat(managerEntity.getAttributeByName("ID").getBelongingEntity().getName())
+          .isEqualTo("MANAGER");
+
+      assertThat(managerEntity.getAttributeByName("NAME")).isNotNull();
+      assertThat(managerEntity.getAttributeByName("NAME").getName()).isEqualTo("NAME");
+      assertThat(managerEntity.getAttributeByName("NAME").getDataType()).isEqualTo("VARCHAR");
+      assertThat(managerEntity.getAttributeByName("NAME").getOrdinalPosition()).isEqualTo(2);
+      assertThat(managerEntity.getAttributeByName("NAME").getBelongingEntity().getName())
+          .isEqualTo("MANAGER");
+
+      assertThat(projectManagerEntity.getAttributes().size()).isEqualTo(1);
+
+      assertThat(projectManagerEntity.getAttributeByName("PROJECT")).isNotNull();
+      assertThat(projectManagerEntity.getAttributeByName("PROJECT").getName()).isEqualTo("PROJECT");
+      assertThat(projectManagerEntity.getAttributeByName("PROJECT").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerEntity.getAttributeByName("PROJECT").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(projectManagerEntity.getAttributeByName("PROJECT").getBelongingEntity().getName())
+          .isEqualTo("Project_Manager");
+
+      // inherited attributes check
+      assertThat(employeeEntity.getInheritedAttributes().size()).isEqualTo(0);
+
+      assertThat(regularEmployeeEntity.getInheritedAttributes().size()).isEqualTo(4);
+
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("ID")).isNotNull();
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("ID").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("ID").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(
+              regularEmployeeEntity
+                  .getInheritedAttributeByName("ID")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("NAME")).isNotNull();
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("NAME").getName())
+          .isEqualTo("NAME");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("NAME").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("NAME").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(
+              regularEmployeeEntity
+                  .getInheritedAttributeByName("NAME")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE")).isNotNull();
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getName())
+          .isEqualTo("RESIDENCE");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(
+              regularEmployeeEntity
+                  .getInheritedAttributeByName("RESIDENCE")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("MANAGER")).isNotNull();
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getName())
+          .isEqualTo("MANAGER");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getOrdinalPosition())
+          .isEqualTo(4);
+      assertThat(
+              regularEmployeeEntity
+                  .getInheritedAttributeByName("MANAGER")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getInheritedAttributes().size()).isEqualTo(4);
+
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("ID")).isNotNull();
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("ID").getName())
+          .isEqualTo("ID");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("ID").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("ID").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(
+              contractEmployeeEntity
+                  .getInheritedAttributeByName("ID")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("NAME")).isNotNull();
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("NAME").getName())
+          .isEqualTo("NAME");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("NAME").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("NAME").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(
+              contractEmployeeEntity
+                  .getInheritedAttributeByName("NAME")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE")).isNotNull();
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getName())
+          .isEqualTo("RESIDENCE");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(
+              contractEmployeeEntity
+                  .getInheritedAttributeByName("RESIDENCE")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("MANAGER")).isNotNull();
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getName())
+          .isEqualTo("MANAGER");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getOrdinalPosition())
+          .isEqualTo(4);
+      assertThat(
+              contractEmployeeEntity
+                  .getInheritedAttributeByName("MANAGER")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(projectManagerEntity.getInheritedAttributes().size()).isEqualTo(2);
+
+      assertThat(projectManagerEntity.getInheritedAttributeByName("ID")).isNotNull();
+      assertThat(projectManagerEntity.getInheritedAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(projectManagerEntity.getInheritedAttributeByName("ID").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerEntity.getInheritedAttributeByName("ID").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(
+              projectManagerEntity.getInheritedAttributeByName("ID").getBelongingEntity().getName())
+          .isEqualTo("MANAGER");
+
+      assertThat(projectManagerEntity.getInheritedAttributeByName("NAME")).isNotNull();
+      assertThat(projectManagerEntity.getInheritedAttributeByName("NAME").getName())
+          .isEqualTo("NAME");
+      assertThat(projectManagerEntity.getInheritedAttributeByName("NAME").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerEntity.getInheritedAttributeByName("NAME").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(
+              projectManagerEntity
+                  .getInheritedAttributeByName("NAME")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("MANAGER");
+
+      assertThat(countryEntity.getInheritedAttributes().size()).isEqualTo(0);
+      assertThat(managerEntity.getInheritedAttributes().size()).isEqualTo(0);
+
+      // primary key check
+      assertThat(regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().size()).isEqualTo(1);
+      assertThat(regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName())
+          .isEqualTo("ID");
+      assertThat(regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              regularEmployeeEntity
+                  .getPrimaryKey()
+                  .getInvolvedAttributes()
+                  .get(0)
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().size())
+          .isEqualTo(1);
+      assertThat(contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName())
+          .isEqualTo("ID");
+      assertThat(
+              contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeEntity
+                  .getPrimaryKey()
+                  .getInvolvedAttributes()
+                  .get(0)
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(projectManagerEntity.getPrimaryKey().getInvolvedAttributes().size()).isEqualTo(1);
+      assertThat(projectManagerEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName())
+          .isEqualTo("ID");
+      assertThat(projectManagerEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              projectManagerEntity
+                  .getPrimaryKey()
+                  .getInvolvedAttributes()
+                  .get(0)
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("MANAGER");
+
+      // relationship, primary and foreign key check
+      assertThat(regularEmployeeEntity.getOutCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(contractEmployeeEntity.getOutCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(employeeEntity.getOutCanonicalRelationships().size()).isEqualTo(1);
+      assertThat(countryEntity.getOutCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(managerEntity.getOutCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(regularEmployeeEntity.getInCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(contractEmployeeEntity.getInCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(employeeEntity.getInCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(countryEntity.getInCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(managerEntity.getInCanonicalRelationships().size()).isEqualTo(1);
+
+      assertThat(regularEmployeeEntity.getForeignKeys().size()).isEqualTo(0);
+      assertThat(contractEmployeeEntity.getForeignKeys().size()).isEqualTo(0);
+      assertThat(employeeEntity.getForeignKeys().size()).isEqualTo(1);
+      assertThat(countryEntity.getForeignKeys().size()).isEqualTo(0);
+      assertThat(managerEntity.getForeignKeys().size()).isEqualTo(0);
+
+      Iterator<CanonicalRelationship> itEmp =
+          employeeEntity.getOutCanonicalRelationships().iterator();
+      CanonicalRelationship currentEmpRel = itEmp.next();
+      assertThat(currentEmpRel.getParentEntity().getName()).isEqualTo("MANAGER");
+      assertThat(currentEmpRel.getForeignEntity().getName()).isEqualTo("EMPLOYEE");
+      assertThat(currentEmpRel.getPrimaryKey()).isEqualTo(managerEntity.getPrimaryKey());
+      assertThat(currentEmpRel.getForeignKey()).isEqualTo(employeeEntity.getForeignKeys().get(0));
+      assertThat(itEmp.hasNext()).isFalse();
+
+      Iterator<CanonicalRelationship> itManager =
+          managerEntity.getInCanonicalRelationships().iterator();
+      CanonicalRelationship currentManRel = itManager.next();
+      assertThat(currentManRel).isEqualTo(currentEmpRel);
+
+      // inherited relationships check
+      assertThat(regularEmployeeEntity.getInheritedOutCanonicalRelationships().size()).isEqualTo(1);
+      assertThat(contractEmployeeEntity.getInheritedOutCanonicalRelationships().size())
+          .isEqualTo(1);
+      assertThat(employeeEntity.getInheritedOutCanonicalRelationships().size()).isEqualTo(0);
+
+      Iterator<CanonicalRelationship> itRegEmp =
+          regularEmployeeEntity.getInheritedOutCanonicalRelationships().iterator();
+      Iterator<CanonicalRelationship> itContEmp =
+          contractEmployeeEntity.getInheritedOutCanonicalRelationships().iterator();
+      CanonicalRelationship currentRegEmpRel = itRegEmp.next();
+      CanonicalRelationship currentContEmpRel = itContEmp.next();
+      assertThat(currentRegEmpRel.getParentEntity().getName()).isEqualTo("MANAGER");
+      assertThat(currentRegEmpRel.getForeignEntity().getName()).isEqualTo("EMPLOYEE");
+      assertThat(currentContEmpRel.getParentEntity().getName()).isEqualTo("MANAGER");
+      assertThat(currentContEmpRel.getForeignEntity().getName()).isEqualTo("EMPLOYEE");
+      assertThat(currentRegEmpRel.getPrimaryKey()).isEqualTo(managerEntity.getPrimaryKey());
+      assertThat(currentRegEmpRel.getFromColumns().size()).isEqualTo(1);
+      assertThat(currentRegEmpRel.getFromColumns().get(0).getName()).isEqualTo("MANAGER");
+      assertThat(currentContEmpRel.getPrimaryKey()).isEqualTo(managerEntity.getPrimaryKey());
+      assertThat(currentContEmpRel.getFromColumns().size()).isEqualTo(1);
+      assertThat(currentContEmpRel.getFromColumns().get(0).getName()).isEqualTo("MANAGER");
+      assertThat(itRegEmp.hasNext()).isFalse();
+      assertThat(itContEmp.hasNext()).isFalse();
+
+      // inheritance check
+      assertThat(regularEmployeeEntity.getParentEntity()).isEqualTo(employeeEntity);
+      assertThat(contractEmployeeEntity.getParentEntity()).isEqualTo(employeeEntity);
+      assertThat(employeeEntity.getParentEntity()).isNull();
+
+      assertThat(regularEmployeeEntity.getInheritanceLevel()).isEqualTo(1);
+      assertThat(contractEmployeeEntity.getInheritanceLevel()).isEqualTo(1);
+      assertThat(employeeEntity.getInheritanceLevel()).isEqualTo(0);
+
+      // Hierarchical Bag check
+      assertThat(mapper.getDataBaseSchema().getHierarchicalBags().size()).isEqualTo(2);
+
+      HierarchicalBag hierarchicalBag1 = mapper.getDataBaseSchema().getHierarchicalBags().get(0);
+      HierarchicalBag hierarchicalBag2 = mapper.getDataBaseSchema().getHierarchicalBags().get(1);
+      assertThat(hierarchicalBag1.getInheritancePattern()).isEqualTo("table-per-hierarchy");
+      assertThat(hierarchicalBag2.getInheritancePattern()).isEqualTo("table-per-hierarchy");
+
+      assertThat(hierarchicalBag1.getDepth2entities().size()).isEqualTo(2);
+
+      assertThat(hierarchicalBag1.getDepth2entities().get(0).size()).isEqualTo(1);
+      Iterator<Entity> it = hierarchicalBag1.getDepth2entities().get(0).iterator();
+      assertThat(it.next().getName()).isEqualTo("EMPLOYEE");
+      assertThat(it.hasNext()).isFalse();
+
+      assertThat(hierarchicalBag1.getDepth2entities().get(1).size()).isEqualTo(2);
+      it = hierarchicalBag1.getDepth2entities().get(1).iterator();
+      assertThat(it.next().getName()).isEqualTo("Regular_Employee");
+      assertThat(it.next().getName()).isEqualTo("Contract_Employee");
+      assertThat(it.hasNext()).isFalse();
+
+      assertThat(employeeEntity.getHierarchicalBag()).isEqualTo(hierarchicalBag1);
+      assertThat(regularEmployeeEntity.getHierarchicalBag()).isEqualTo(hierarchicalBag1);
+      assertThat(contractEmployeeEntity.getHierarchicalBag()).isEqualTo(hierarchicalBag1);
+
+      assertThat(hierarchicalBag1.getDiscriminatorColumn()).isNotNull();
+      assertThat(hierarchicalBag1.getDiscriminatorColumn()).isEqualTo("TYPE");
+
+      assertThat(hierarchicalBag1.getEntityName2discriminatorValue().size()).isEqualTo(3);
+      assertThat(hierarchicalBag1.getEntityName2discriminatorValue().get("EMPLOYEE"))
+          .isEqualTo("emp");
+      assertThat(hierarchicalBag1.getEntityName2discriminatorValue().get("Regular_Employee"))
+          .isEqualTo("reg_emp");
+      assertThat(hierarchicalBag1.getEntityName2discriminatorValue().get("Contract_Employee"))
+          .isEqualTo("cont_emp");
+
+      assertThat(hierarchicalBag2.getDepth2entities().size()).isEqualTo(2);
+
+      assertThat(hierarchicalBag2.getDepth2entities().get(0).size()).isEqualTo(1);
+      it = hierarchicalBag2.getDepth2entities().get(0).iterator();
+      assertThat(it.next().getName()).isEqualTo("MANAGER");
+      assertThat(it.hasNext()).isFalse();
+
+      assertThat(hierarchicalBag2.getDepth2entities().get(1).size()).isEqualTo(1);
+      it = hierarchicalBag2.getDepth2entities().get(1).iterator();
+      assertThat(it.next().getName()).isEqualTo("Project_Manager");
+      assertThat(it.hasNext()).isFalse();
+
+      assertThat(managerEntity.getHierarchicalBag()).isEqualTo(hierarchicalBag2);
+      assertThat(projectManagerEntity.getHierarchicalBag()).isEqualTo(hierarchicalBag2);
+
+      assertThat(hierarchicalBag2.getDiscriminatorColumn()).isNotNull();
+      assertThat(hierarchicalBag2.getDiscriminatorColumn()).isEqualTo("TYPE");
+
+      assertThat(hierarchicalBag2.getEntityName2discriminatorValue().size()).isEqualTo(2);
+      assertThat(hierarchicalBag2.getEntityName2discriminatorValue().get("MANAGER"))
+          .isEqualTo("mgr");
+      assertThat(hierarchicalBag2.getEntityName2discriminatorValue().get("Project_Manager"))
+          .isEqualTo("prj_mgr");
+
+      /*
+       *  Testing built graph model
+       */
+
+      VertexType employeeVertexType = mapper.getGraphModel().getVertexTypeByName("Employee");
+      VertexType regularEmployeeVertexType =
+          mapper.getGraphModel().getVertexTypeByName("RegularEmployee");
+      VertexType contractEmployeeVertexType =
+          mapper.getGraphModel().getVertexTypeByName("ContractEmployee");
+      VertexType countryVertexType = mapper.getGraphModel().getVertexTypeByName("Country");
+      VertexType managerVertexType = mapper.getGraphModel().getVertexTypeByName("Manager");
+      VertexType projectManagerVertexType =
+          mapper.getGraphModel().getVertexTypeByName("ProjectManager");
+      VertexType residenceVertexType = mapper.getGraphModel().getVertexTypeByName("Residence");
+
+      // vertices check
+      assertThat(mapper.getGraphModel().getVerticesType().size()).isEqualTo(6);
+      assertThat(employeeVertexType).isNotNull();
+      assertThat(regularEmployeeVertexType).isNotNull();
+      assertThat(contractEmployeeVertexType).isNotNull();
+      assertThat(countryVertexType).isNotNull();
+      assertThat(managerVertexType).isNotNull();
+      assertThat(projectManagerVertexType).isNotNull();
+      assertThat(residenceVertexType).isNull();
+
+      // properties check
+      assertThat(employeeVertexType.getProperties().size()).isEqualTo(4);
+
+      assertThat(employeeVertexType.getPropertyByName("id")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+      assertThat(employeeVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+      assertThat(employeeVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
+
+      assertThat(employeeVertexType.getPropertyByName("name")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+      assertThat(employeeVertexType.getPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(2);
+      assertThat(employeeVertexType.getPropertyByName("name").isFromPrimaryKey()).isFalse();
+
+      assertThat(employeeVertexType.getPropertyByName("residence")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("residence").getName())
+          .isEqualTo("residence");
+      assertThat(employeeVertexType.getPropertyByName("residence").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("residence").getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(employeeVertexType.getPropertyByName("residence").isFromPrimaryKey()).isFalse();
+
+      assertThat(employeeVertexType.getPropertyByName("manager")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("manager").getName()).isEqualTo("manager");
+      assertThat(employeeVertexType.getPropertyByName("manager").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("manager").getOrdinalPosition()).isEqualTo(4);
+      assertThat(employeeVertexType.getPropertyByName("manager").isFromPrimaryKey()).isFalse();
+
+      assertThat(regularEmployeeVertexType.getProperties().size()).isEqualTo(2);
+
+      assertThat(regularEmployeeVertexType.getPropertyByName("salary")).isNotNull();
+      assertThat(regularEmployeeVertexType.getPropertyByName("salary").getName())
+          .isEqualTo("salary");
+      assertThat(regularEmployeeVertexType.getPropertyByName("salary").getOriginalType())
+          .isEqualTo("DECIMAL");
+      assertThat(regularEmployeeVertexType.getPropertyByName("salary").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(regularEmployeeVertexType.getPropertyByName("salary").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(regularEmployeeVertexType.getPropertyByName("bonus")).isNotNull();
+      assertThat(regularEmployeeVertexType.getPropertyByName("bonus").getName()).isEqualTo("bonus");
+      assertThat(regularEmployeeVertexType.getPropertyByName("bonus").getOriginalType())
+          .isEqualTo("DECIMAL");
+      assertThat(regularEmployeeVertexType.getPropertyByName("bonus").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(regularEmployeeVertexType.getPropertyByName("bonus").isFromPrimaryKey()).isFalse();
+
+      assertThat(contractEmployeeVertexType.getProperties().size()).isEqualTo(2);
+
+      assertThat(contractEmployeeVertexType.getPropertyByName("payPerHour")).isNotNull();
+      assertThat(contractEmployeeVertexType.getPropertyByName("payPerHour").getName())
+          .isEqualTo("payPerHour");
+      assertThat(contractEmployeeVertexType.getPropertyByName("payPerHour").getOriginalType())
+          .isEqualTo("DECIMAL");
+      assertThat(contractEmployeeVertexType.getPropertyByName("payPerHour").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(contractEmployeeVertexType.getPropertyByName("payPerHour").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(contractEmployeeVertexType.getPropertyByName("contractDuration")).isNotNull();
+      assertThat(contractEmployeeVertexType.getPropertyByName("contractDuration").getName())
+          .isEqualTo("contractDuration");
+      assertThat(contractEmployeeVertexType.getPropertyByName("contractDuration").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeVertexType.getPropertyByName("contractDuration").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(
+              contractEmployeeVertexType.getPropertyByName("contractDuration").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(countryVertexType.getProperties().size()).isEqualTo(3);
+
+      assertThat(countryVertexType.getPropertyByName("id")).isNotNull();
+      assertThat(countryVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+      assertThat(countryVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+      assertThat(countryVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+      assertThat(countryVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
+
+      assertThat(countryVertexType.getPropertyByName("name")).isNotNull();
+      assertThat(countryVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+      assertThat(countryVertexType.getPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(countryVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(2);
+      assertThat(countryVertexType.getPropertyByName("name").isFromPrimaryKey()).isFalse();
+
+      assertThat(countryVertexType.getPropertyByName("continent")).isNotNull();
+      assertThat(countryVertexType.getPropertyByName("continent").getName()).isEqualTo("continent");
+      assertThat(countryVertexType.getPropertyByName("continent").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(countryVertexType.getPropertyByName("continent").getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(countryVertexType.getPropertyByName("continent").isFromPrimaryKey()).isFalse();
+
+      assertThat(managerVertexType.getProperties().size()).isEqualTo(2);
+
+      assertThat(managerVertexType.getPropertyByName("id")).isNotNull();
+      assertThat(managerVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+      assertThat(managerVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+      assertThat(managerVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+      assertThat(managerVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
+
+      assertThat(managerVertexType.getPropertyByName("name")).isNotNull();
+      assertThat(managerVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+      assertThat(managerVertexType.getPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(managerVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(2);
+      assertThat(managerVertexType.getPropertyByName("name").isFromPrimaryKey()).isFalse();
+
+      assertThat(projectManagerVertexType.getProperties().size()).isEqualTo(1);
+
+      assertThat(projectManagerVertexType.getPropertyByName("project")).isNotNull();
+      assertThat(projectManagerVertexType.getPropertyByName("project").getName())
+          .isEqualTo("project");
+      assertThat(projectManagerVertexType.getPropertyByName("project").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerVertexType.getPropertyByName("project").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(projectManagerVertexType.getPropertyByName("project").isFromPrimaryKey())
+          .isFalse();
+
+      // inherited properties check
+      assertThat(employeeVertexType.getInheritedProperties().size()).isEqualTo(0);
+
+      assertThat(regularEmployeeVertexType.getInheritedProperties().size()).isEqualTo(4);
+
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("id")).isNotNull();
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("id").getName())
+          .isEqualTo("id");
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("id").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("id").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("id").isFromPrimaryKey())
+          .isTrue();
+
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("name")).isNotNull();
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("name").getName())
+          .isEqualTo("name");
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("name").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("name").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("residence")).isNotNull();
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("residence").getName())
+          .isEqualTo("residence");
+      assertThat(
+              regularEmployeeVertexType.getInheritedPropertyByName("residence").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              regularEmployeeVertexType
+                  .getInheritedPropertyByName("residence")
+                  .getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(
+              regularEmployeeVertexType.getInheritedPropertyByName("residence").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("manager")).isNotNull();
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("manager").getName())
+          .isEqualTo("manager");
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("manager").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              regularEmployeeVertexType.getInheritedPropertyByName("manager").getOrdinalPosition())
+          .isEqualTo(4);
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("manager").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(contractEmployeeVertexType.getInheritedProperties().size()).isEqualTo(4);
+
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("id")).isNotNull();
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("id").getName())
+          .isEqualTo("id");
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("id").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("id").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("id").isFromPrimaryKey())
+          .isTrue();
+
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("name")).isNotNull();
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("name").getName())
+          .isEqualTo("name");
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("name").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("name").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("residence")).isNotNull();
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("residence").getName())
+          .isEqualTo("residence");
+      assertThat(
+              contractEmployeeVertexType.getInheritedPropertyByName("residence").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeVertexType
+                  .getInheritedPropertyByName("residence")
+                  .getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(
+              contractEmployeeVertexType.getInheritedPropertyByName("residence").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("manager")).isNotNull();
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("manager").getName())
+          .isEqualTo("manager");
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("manager").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeVertexType.getInheritedPropertyByName("manager").getOrdinalPosition())
+          .isEqualTo(4);
+      assertThat(
+              contractEmployeeVertexType.getInheritedPropertyByName("manager").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(projectManagerVertexType.getInheritedProperties().size()).isEqualTo(2);
+
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("id")).isNotNull();
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("id").getName())
+          .isEqualTo("id");
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("id").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("id").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("id").isFromPrimaryKey())
+          .isTrue();
+
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("name")).isNotNull();
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("name").getName())
+          .isEqualTo("name");
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("name").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("name").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(countryVertexType.getInheritedProperties().size()).isEqualTo(0);
+      assertThat(managerVertexType.getInheritedProperties().size()).isEqualTo(0);
+
+      // edges check
+
+      assertThat(mapper.getRelationship2edgeType().size()).isEqualTo(1);
+
+      assertThat(mapper.getGraphModel().getEdgesType().size()).isEqualTo(1);
+      assertThat(mapper.getGraphModel().getEdgesType().get(0).getName()).isEqualTo("HasManager");
+
+      assertThat(employeeVertexType.getOutEdgesType().size()).isEqualTo(1);
+      assertThat(employeeVertexType.getOutEdgesType().get(0).getName()).isEqualTo("HasManager");
+
+      assertThat(regularEmployeeVertexType.getOutEdgesType().size()).isEqualTo(1);
+      assertThat(regularEmployeeVertexType.getOutEdgesType().get(0).getName())
+          .isEqualTo("HasManager");
+
+      assertThat(contractEmployeeVertexType.getOutEdgesType().size()).isEqualTo(1);
+      assertThat(contractEmployeeVertexType.getOutEdgesType().get(0).getName())
+          .isEqualTo("HasManager");
+
+      /*
+       * Rules check
+       */
+
+      // Classes Mapping
+
+      assertThat(mapper.getVertexType2EVClassMappers().size()).isEqualTo(6);
+      assertThat(mapper.getEntity2EVClassMappers().size()).isEqualTo(6);
+
+      assertThat(mapper.getEVClassMappersByVertex(employeeVertexType).size()).isEqualTo(1);
+      EVClassMapper employeeClassMapper =
+          mapper.getEVClassMappersByVertex(employeeVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(employeeEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(employeeEntity).get(0))
+          .isEqualTo(employeeClassMapper);
+      assertThat(employeeEntity).isEqualTo(employeeClassMapper.getEntity());
+      assertThat(employeeVertexType).isEqualTo(employeeClassMapper.getVertexType());
+
+      assertThat(employeeClassMapper.getAttribute2property().size()).isEqualTo(4);
+      assertThat(employeeClassMapper.getProperty2attribute().size()).isEqualTo(4);
+      assertThat(employeeClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+      assertThat(employeeClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+      assertThat(employeeClassMapper.getAttribute2property().get("RESIDENCE"))
+          .isEqualTo("residence");
+      assertThat(employeeClassMapper.getAttribute2property().get("MANAGER")).isEqualTo("manager");
+      assertThat(employeeClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+      assertThat(employeeClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
+      assertThat(employeeClassMapper.getProperty2attribute().get("residence"))
+          .isEqualTo("RESIDENCE");
+      assertThat(employeeClassMapper.getProperty2attribute().get("manager")).isEqualTo("MANAGER");
+
+      assertThat(mapper.getEVClassMappersByVertex(regularEmployeeVertexType).size()).isEqualTo(1);
+      EVClassMapper regularEmployeeClassMapper =
+          mapper.getEVClassMappersByVertex(regularEmployeeVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(regularEmployeeEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(regularEmployeeEntity).get(0))
+          .isEqualTo(regularEmployeeClassMapper);
+      assertThat(regularEmployeeEntity).isEqualTo(regularEmployeeClassMapper.getEntity());
+      assertThat(regularEmployeeVertexType).isEqualTo(regularEmployeeClassMapper.getVertexType());
+
+      assertThat(regularEmployeeClassMapper.getAttribute2property().size()).isEqualTo(2);
+      assertThat(regularEmployeeClassMapper.getProperty2attribute().size()).isEqualTo(2);
+      assertThat(regularEmployeeClassMapper.getAttribute2property().get("SALARY"))
+          .isEqualTo("salary");
+      assertThat(regularEmployeeClassMapper.getAttribute2property().get("BONUS"))
+          .isEqualTo("bonus");
+      assertThat(regularEmployeeClassMapper.getProperty2attribute().get("salary"))
+          .isEqualTo("SALARY");
+      assertThat(regularEmployeeClassMapper.getProperty2attribute().get("bonus"))
+          .isEqualTo("BONUS");
+
+      assertThat(mapper.getEVClassMappersByVertex(contractEmployeeVertexType).size()).isEqualTo(1);
+      EVClassMapper contractEmployeeClassMapper =
+          mapper.getEVClassMappersByVertex(contractEmployeeVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(contractEmployeeEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(contractEmployeeEntity).get(0))
+          .isEqualTo(contractEmployeeClassMapper);
+      assertThat(contractEmployeeEntity).isEqualTo(contractEmployeeClassMapper.getEntity());
+      assertThat(contractEmployeeVertexType).isEqualTo(contractEmployeeClassMapper.getVertexType());
+
+      assertThat(contractEmployeeClassMapper.getAttribute2property().size()).isEqualTo(2);
+      assertThat(contractEmployeeClassMapper.getProperty2attribute().size()).isEqualTo(2);
+      assertThat(contractEmployeeClassMapper.getAttribute2property().get("PAY_PER_HOUR"))
+          .isEqualTo("payPerHour");
+      assertThat(contractEmployeeClassMapper.getAttribute2property().get("CONTRACT_DURATION"))
+          .isEqualTo("contractDuration");
+      assertThat(contractEmployeeClassMapper.getProperty2attribute().get("payPerHour"))
+          .isEqualTo("PAY_PER_HOUR");
+      assertThat(contractEmployeeClassMapper.getProperty2attribute().get("contractDuration"))
+          .isEqualTo("CONTRACT_DURATION");
+
+      assertThat(mapper.getEVClassMappersByVertex(countryVertexType).size()).isEqualTo(1);
+      EVClassMapper countryClassMapper = mapper.getEVClassMappersByVertex(countryVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(countryEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(countryEntity).get(0))
+          .isEqualTo(countryClassMapper);
+      assertThat(countryEntity).isEqualTo(countryClassMapper.getEntity());
+      assertThat(countryVertexType).isEqualTo(countryClassMapper.getVertexType());
+
+      assertThat(countryClassMapper.getAttribute2property().size()).isEqualTo(3);
+      assertThat(countryClassMapper.getProperty2attribute().size()).isEqualTo(3);
+      assertThat(countryClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+      assertThat(countryClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+      assertThat(countryClassMapper.getAttribute2property().get("CONTINENT"))
+          .isEqualTo("continent");
+      assertThat(countryClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+      assertThat(countryClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
+      assertThat(countryClassMapper.getProperty2attribute().get("continent"))
+          .isEqualTo("CONTINENT");
+
+      assertThat(mapper.getEVClassMappersByVertex(managerVertexType).size()).isEqualTo(1);
+      EVClassMapper managerClassMapper = mapper.getEVClassMappersByVertex(managerVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(managerEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(managerEntity).get(0))
+          .isEqualTo(managerClassMapper);
+      assertThat(managerEntity).isEqualTo(managerClassMapper.getEntity());
+      assertThat(managerVertexType).isEqualTo(managerClassMapper.getVertexType());
+
+      assertThat(managerClassMapper.getAttribute2property().size()).isEqualTo(2);
+      assertThat(managerClassMapper.getProperty2attribute().size()).isEqualTo(2);
+      assertThat(managerClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+      assertThat(managerClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+      assertThat(managerClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+      assertThat(managerClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
+
+      assertThat(mapper.getEVClassMappersByVertex(projectManagerVertexType).size()).isEqualTo(1);
+      EVClassMapper projectManagerClassMapper =
+          mapper.getEVClassMappersByVertex(projectManagerVertexType).get(0);
+
+      assertThat(mapper.getEVClassMappersByEntity(projectManagerEntity).get(0))
+          .isEqualTo(projectManagerClassMapper);
+      assertThat(projectManagerEntity).isEqualTo(projectManagerClassMapper.getEntity());
+      assertThat(projectManagerVertexType).isEqualTo(projectManagerClassMapper.getVertexType());
+
+      assertThat(projectManagerClassMapper.getAttribute2property().size()).isEqualTo(1);
+      assertThat(projectManagerClassMapper.getProperty2attribute().size()).isEqualTo(1);
+      assertThat(projectManagerClassMapper.getAttribute2property().get("PROJECT"))
+          .isEqualTo("project");
+      assertThat(projectManagerClassMapper.getProperty2attribute().get("project"))
+          .isEqualTo("PROJECT");
+
+      // Relationships-Edges Mapping
+
+      Iterator<CanonicalRelationship> itRelationships =
+          employeeEntity.getOutCanonicalRelationships().iterator();
+      CanonicalRelationship hasManagerRelationship = itRelationships.next();
+      assertThat(itRelationships.hasNext()).isFalse();
+
+      EdgeType hasManagerEdgeType = mapper.getGraphModel().getEdgeTypeByName("HasManager");
+
+      assertThat(mapper.getRelationship2edgeType().size()).isEqualTo(1);
+      assertThat(mapper.getRelationship2edgeType().get(hasManagerRelationship))
+          .isEqualTo(hasManagerEdgeType);
+
+      assertThat(mapper.getEdgeType2relationships().size()).isEqualTo(1);
+      assertThat(mapper.getEdgeType2relationships().get(hasManagerEdgeType).size()).isEqualTo(1);
+      assertThat(
+              mapper
+                  .getEdgeType2relationships()
+                  .get(hasManagerEdgeType)
+                  .contains(hasManagerRelationship))
+          .isTrue();
+
+      // JoinVertexes-AggregatorEdges Mapping
+
+      assertThat(mapper.getJoinVertex2aggregatorEdges().size()).isEqualTo(0);
+    } catch (Exception e) {
+      e.printStackTrace();
+      fail("");
+    } finally {
+      try {
+        // Dropping Source DB Schema and OrientGraph
+        String dbDropping = "drop schema public cascade";
+        st.execute(dbDropping);
+        connection.close();
+      } catch (Exception e) {
+        e.printStackTrace();
+        fail("");
+      }
     }
-
-    @Test
-    /*
-     * Filtering out a table through include-tables (with Table per Hierarchy inheritance).
-     */public void filterOutThroughIncludeWithTablePerHierarchyInheritance() {
-        Connection connection = null;
-        Statement st = null;
-
-        try {
-            Class.forName(this.driver);
-            connection = DriverManager.getConnection(this.jurl, this.username, this.password);
-
-            String countryTableBuilding = "create memory table COUNTRY(ID varchar(256) not null, NAME varchar(256), CONTINENT varchar(256), primary key (ID))";
-            st = connection.createStatement();
-            st.execute(countryTableBuilding);
-
-            String residenceTableBuilding =
-                "create memory table RESIDENCE(ID varchar(256) not null, CITY varchar(256), COUNTRY varchar(256), " +
-                "primary key (ID), foreign key (COUNTRY) references COUNTRY(ID))";
-            st.execute(residenceTableBuilding);
-
-            String managerTableBuilding =
-                "create memory table MANAGER(ID varchar(256) not null, TYPE varchar(256), NAME varchar(256), PROJECT varchar(256), primary key (ID))";
-            st.execute(managerTableBuilding);
-
-            String employeeTableBuilding =
-                "create memory table EMPLOYEE (ID varchar(256) not null," +
-                " TYPE varchar(256), NAME varchar(256), SALARY decimal(10,2), BONUS decimal(10,0), " +
-                "PAY_PER_HOUR decimal(10,2), CONTRACT_DURATION varchar(256), RESIDENCE varchar(256), MANAGER varchar(256), " +
-                "primary key (id), foreign key (RESIDENCE) references RESIDENCE(ID), foreign key (MANAGER) references MANAGER(ID))";
-            st.execute(employeeTableBuilding);
-
-            // Records Inserting
-
-            String countryFilling = "insert into country (ID,NAME,CONTINENT) values (" + "('C001','Italy','Europe'))";
-            st.execute(countryFilling);
-
-            String residenceFilling = "insert into RESIDENCE (ID,CITY,COUNTRY) values (" + "('R001','Rome','C001')," + "('R002','Milan','C001'))";
-            st.execute(residenceFilling);
-
-            String managerFilling = "insert into MANAGER (ID,TYPE,NAME,PROJECT) values (" + "('M001','prj_mgr','Bill Right','New World'))";
-            st.execute(managerFilling);
-
-            String employeeFilling =
-                "insert into EMPLOYEE (ID,TYPE,NAME,SALARY,BONUS,PAY_PER_HOUR,CONTRACT_DURATION,RESIDENCE,MANAGER) values (" +
-                "('E001','emp','John Black',null,null,null,null,'R001',null)," +
-                "('E002','reg_emp','Andrew Brown','1000.00','10',null,null,'R001','M001')," +
-                "('E003','cont_emp','Jack Johnson',null,null,'50.00','6','R002',null))";
-            st.execute(employeeFilling);
-
-            List<String> includedTables = new ArrayList<String>();
-            includedTables.add("COUNTRY");
-            includedTables.add("MANAGER");
-            includedTables.add("EMPLOYEE");
-
-            this.mapper =
-                new Hibernate2GraphMapper(
-                    dataSource,
-                    FilterTableMappingTest.XML_TABLE_PER_CLASS,
-                    includedTables,
-                    null,
-                    dbQueryEngine,
-                    dataTypeHandler,
-                    executionStrategy,
-                    nameResolver,
-                    statistics
-                );
-            mapper.buildSourceDatabaseSchema();
-            mapper.buildGraphModel(new JavaConventionNameResolver());
-
-            /*
-             *  Testing context information
-             */
-
-            assertEquals(3, statistics.totalNumberOfEntities);
-            assertEquals(3, statistics.builtEntities);
-            assertEquals(1, statistics.totalNumberOfRelationships);
-            assertEquals(1, statistics.builtRelationships);
-
-            assertEquals(6, statistics.totalNumberOfModelVertices);
-            assertEquals(6, statistics.builtModelVertexTypes);
-            assertEquals(1, statistics.totalNumberOfModelEdges);
-            assertEquals(1, statistics.builtModelEdgeTypes);
-
-            /*
-             *  Testing built source db schema
-             */
-
-            Entity employeeEntity = mapper.getDataBaseSchema().getEntityByName("EMPLOYEE");
-            Entity regularEmployeeEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("REGULAR_EMPLOYEE");
-            Entity contractEmployeeEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("CONTRACT_EMPLOYEE");
-            Entity countryEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("COUNTRY");
-            Entity managerEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("MANAGER");
-            Entity projectManagerEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("PROJECT_MANAGER");
-            Entity residenceEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("RESIDENCE");
-
-            // entities check
-            assertEquals(6, mapper.getDataBaseSchema().getEntities().size());
-            assertEquals(1, mapper.getDataBaseSchema().getCanonicalRelationships().size());
-            assertNotNull(employeeEntity);
-            assertNotNull(regularEmployeeEntity);
-            assertNotNull(contractEmployeeEntity);
-            assertNotNull(countryEntity);
-            assertNotNull(managerEntity);
-            assertNull(residenceEntity);
-
-            // attributes check
-            assertEquals(4, employeeEntity.getAttributes().size());
-
-            assertNotNull(employeeEntity.getAttributeByName("ID"));
-            assertEquals("ID", employeeEntity.getAttributeByName("ID").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("ID").getDataType());
-            assertEquals(1, employeeEntity.getAttributeByName("ID").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(employeeEntity.getAttributeByName("NAME"));
-            assertEquals("NAME", employeeEntity.getAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("NAME").getDataType());
-            assertEquals(2, employeeEntity.getAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertNotNull(employeeEntity.getAttributeByName("RESIDENCE"));
-            assertEquals("RESIDENCE", employeeEntity.getAttributeByName("RESIDENCE").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("RESIDENCE").getDataType());
-            assertEquals(3, employeeEntity.getAttributeByName("RESIDENCE").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("RESIDENCE").getBelongingEntity().getName());
-
-            assertNotNull(employeeEntity.getAttributeByName("MANAGER"));
-            assertEquals("MANAGER", employeeEntity.getAttributeByName("MANAGER").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("MANAGER").getDataType());
-            assertEquals(4, employeeEntity.getAttributeByName("MANAGER").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("MANAGER").getBelongingEntity().getName());
-
-            assertEquals(2, regularEmployeeEntity.getAttributes().size());
-
-            assertNotNull(regularEmployeeEntity.getAttributeByName("SALARY"));
-            assertEquals("SALARY", regularEmployeeEntity.getAttributeByName("SALARY").getName());
-            assertEquals("DECIMAL", regularEmployeeEntity.getAttributeByName("SALARY").getDataType());
-            assertEquals(1, regularEmployeeEntity.getAttributeByName("SALARY").getOrdinalPosition());
-            assertEquals("Regular_Employee", regularEmployeeEntity.getAttributeByName("SALARY").getBelongingEntity().getName());
-
-            assertNotNull(regularEmployeeEntity.getAttributeByName("BONUS"));
-            assertEquals("BONUS", regularEmployeeEntity.getAttributeByName("BONUS").getName());
-            assertEquals("DECIMAL", regularEmployeeEntity.getAttributeByName("BONUS").getDataType());
-            assertEquals(2, regularEmployeeEntity.getAttributeByName("BONUS").getOrdinalPosition());
-            assertEquals("Regular_Employee", regularEmployeeEntity.getAttributeByName("BONUS").getBelongingEntity().getName());
-
-            assertEquals(2, contractEmployeeEntity.getAttributes().size());
-
-            assertNotNull(contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR"));
-            assertEquals("PAY_PER_HOUR", contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getName());
-            assertEquals("DECIMAL", contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getDataType());
-            assertEquals(1, contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getOrdinalPosition());
-            assertEquals("Contract_Employee", contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getBelongingEntity().getName());
-
-            assertNotNull(contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION"));
-            assertEquals("CONTRACT_DURATION", contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getDataType());
-            assertEquals(2, contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getOrdinalPosition());
-            assertEquals("Contract_Employee", contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getBelongingEntity().getName());
-
-            assertEquals(3, countryEntity.getAttributes().size());
-
-            assertNotNull(countryEntity.getAttributeByName("ID"));
-            assertEquals("ID", countryEntity.getAttributeByName("ID").getName());
-            assertEquals("VARCHAR", countryEntity.getAttributeByName("ID").getDataType());
-            assertEquals(1, countryEntity.getAttributeByName("ID").getOrdinalPosition());
-            assertEquals("COUNTRY", countryEntity.getAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(countryEntity.getAttributeByName("NAME"));
-            assertEquals("NAME", countryEntity.getAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", countryEntity.getAttributeByName("NAME").getDataType());
-            assertEquals(2, countryEntity.getAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("COUNTRY", countryEntity.getAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertNotNull(countryEntity.getAttributeByName("CONTINENT"));
-            assertEquals("CONTINENT", countryEntity.getAttributeByName("CONTINENT").getName());
-            assertEquals("VARCHAR", countryEntity.getAttributeByName("CONTINENT").getDataType());
-            assertEquals(3, countryEntity.getAttributeByName("CONTINENT").getOrdinalPosition());
-            assertEquals("COUNTRY", countryEntity.getAttributeByName("CONTINENT").getBelongingEntity().getName());
-
-            assertEquals(2, managerEntity.getAttributes().size());
-
-            assertNotNull(managerEntity.getAttributeByName("ID"));
-            assertEquals("ID", managerEntity.getAttributeByName("ID").getName());
-            assertEquals("VARCHAR", managerEntity.getAttributeByName("ID").getDataType());
-            assertEquals(1, managerEntity.getAttributeByName("ID").getOrdinalPosition());
-            assertEquals("MANAGER", managerEntity.getAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(managerEntity.getAttributeByName("NAME"));
-            assertEquals("NAME", managerEntity.getAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", managerEntity.getAttributeByName("NAME").getDataType());
-            assertEquals(2, managerEntity.getAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("MANAGER", managerEntity.getAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertEquals(1, projectManagerEntity.getAttributes().size());
-
-            assertNotNull(projectManagerEntity.getAttributeByName("PROJECT"));
-            assertEquals("PROJECT", projectManagerEntity.getAttributeByName("PROJECT").getName());
-            assertEquals("VARCHAR", projectManagerEntity.getAttributeByName("PROJECT").getDataType());
-            assertEquals(1, projectManagerEntity.getAttributeByName("PROJECT").getOrdinalPosition());
-            assertEquals("Project_Manager", projectManagerEntity.getAttributeByName("PROJECT").getBelongingEntity().getName());
-
-            // inherited attributes check
-            assertEquals(0, employeeEntity.getInheritedAttributes().size());
-
-            assertEquals(4, regularEmployeeEntity.getInheritedAttributes().size());
-
-            assertNotNull(regularEmployeeEntity.getInheritedAttributeByName("ID"));
-            assertEquals("ID", regularEmployeeEntity.getInheritedAttributeByName("ID").getName());
-            assertEquals("VARCHAR", regularEmployeeEntity.getInheritedAttributeByName("ID").getDataType());
-            assertEquals(1, regularEmployeeEntity.getInheritedAttributeByName("ID").getOrdinalPosition());
-            assertEquals("EMPLOYEE", regularEmployeeEntity.getInheritedAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(regularEmployeeEntity.getInheritedAttributeByName("NAME"));
-            assertEquals("NAME", regularEmployeeEntity.getInheritedAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", regularEmployeeEntity.getInheritedAttributeByName("NAME").getDataType());
-            assertEquals(2, regularEmployeeEntity.getInheritedAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("EMPLOYEE", regularEmployeeEntity.getInheritedAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertNotNull(regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE"));
-            assertEquals("RESIDENCE", regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getName());
-            assertEquals("VARCHAR", regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getDataType());
-            assertEquals(3, regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getOrdinalPosition());
-            assertEquals("EMPLOYEE", regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getBelongingEntity().getName());
-
-            assertNotNull(regularEmployeeEntity.getInheritedAttributeByName("MANAGER"));
-            assertEquals("MANAGER", regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getName());
-            assertEquals("VARCHAR", regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getDataType());
-            assertEquals(4, regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getOrdinalPosition());
-            assertEquals("EMPLOYEE", regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getBelongingEntity().getName());
-
-            assertEquals(4, contractEmployeeEntity.getInheritedAttributes().size());
-
-            assertNotNull(contractEmployeeEntity.getInheritedAttributeByName("ID"));
-            assertEquals("ID", contractEmployeeEntity.getInheritedAttributeByName("ID").getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getInheritedAttributeByName("ID").getDataType());
-            assertEquals(1, contractEmployeeEntity.getInheritedAttributeByName("ID").getOrdinalPosition());
-            assertEquals("EMPLOYEE", contractEmployeeEntity.getInheritedAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(contractEmployeeEntity.getInheritedAttributeByName("NAME"));
-            assertEquals("NAME", contractEmployeeEntity.getInheritedAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getInheritedAttributeByName("NAME").getDataType());
-            assertEquals(2, contractEmployeeEntity.getInheritedAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("EMPLOYEE", contractEmployeeEntity.getInheritedAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertNotNull(contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE"));
-            assertEquals("RESIDENCE", contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getDataType());
-            assertEquals(3, contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getOrdinalPosition());
-            assertEquals("EMPLOYEE", contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getBelongingEntity().getName());
-
-            assertNotNull(contractEmployeeEntity.getInheritedAttributeByName("MANAGER"));
-            assertEquals("MANAGER", contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getDataType());
-            assertEquals(4, contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getOrdinalPosition());
-            assertEquals("EMPLOYEE", contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getBelongingEntity().getName());
-
-            assertEquals(2, projectManagerEntity.getInheritedAttributes().size());
-
-            assertNotNull(projectManagerEntity.getInheritedAttributeByName("ID"));
-            assertEquals("ID", projectManagerEntity.getInheritedAttributeByName("ID").getName());
-            assertEquals("VARCHAR", projectManagerEntity.getInheritedAttributeByName("ID").getDataType());
-            assertEquals(1, projectManagerEntity.getInheritedAttributeByName("ID").getOrdinalPosition());
-            assertEquals("MANAGER", projectManagerEntity.getInheritedAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(projectManagerEntity.getInheritedAttributeByName("NAME"));
-            assertEquals("NAME", projectManagerEntity.getInheritedAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", projectManagerEntity.getInheritedAttributeByName("NAME").getDataType());
-            assertEquals(2, projectManagerEntity.getInheritedAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("MANAGER", projectManagerEntity.getInheritedAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertEquals(0, countryEntity.getInheritedAttributes().size());
-            assertEquals(0, managerEntity.getInheritedAttributes().size());
-
-            // primary key check
-            assertEquals(1, regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().size());
-            assertEquals("ID", regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName());
-            assertEquals("VARCHAR", regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType());
-            assertEquals("EMPLOYEE", regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getBelongingEntity().getName());
-
-            assertEquals(1, contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().size());
-            assertEquals("ID", contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType());
-            assertEquals("EMPLOYEE", contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getBelongingEntity().getName());
-
-            assertEquals(1, projectManagerEntity.getPrimaryKey().getInvolvedAttributes().size());
-            assertEquals("ID", projectManagerEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName());
-            assertEquals("VARCHAR", projectManagerEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType());
-            assertEquals("MANAGER", projectManagerEntity.getPrimaryKey().getInvolvedAttributes().get(0).getBelongingEntity().getName());
-
-            // relationship, primary and foreign key check
-            assertEquals(0, regularEmployeeEntity.getOutCanonicalRelationships().size());
-            assertEquals(0, contractEmployeeEntity.getOutCanonicalRelationships().size());
-            assertEquals(1, employeeEntity.getOutCanonicalRelationships().size());
-            assertEquals(0, countryEntity.getOutCanonicalRelationships().size());
-            assertEquals(0, managerEntity.getOutCanonicalRelationships().size());
-            assertEquals(0, regularEmployeeEntity.getInCanonicalRelationships().size());
-            assertEquals(0, contractEmployeeEntity.getInCanonicalRelationships().size());
-            assertEquals(0, employeeEntity.getInCanonicalRelationships().size());
-            assertEquals(0, countryEntity.getInCanonicalRelationships().size());
-            assertEquals(1, managerEntity.getInCanonicalRelationships().size());
-
-            assertEquals(0, regularEmployeeEntity.getForeignKeys().size());
-            assertEquals(0, contractEmployeeEntity.getForeignKeys().size());
-            assertEquals(1, employeeEntity.getForeignKeys().size());
-            assertEquals(0, countryEntity.getForeignKeys().size());
-            assertEquals(0, managerEntity.getForeignKeys().size());
-
-            Iterator<CanonicalRelationship> itEmp = employeeEntity.getOutCanonicalRelationships().iterator();
-            CanonicalRelationship currentEmpRel = itEmp.next();
-            assertEquals("MANAGER", currentEmpRel.getParentEntity().getName());
-            assertEquals("EMPLOYEE", currentEmpRel.getForeignEntity().getName());
-            assertEquals(managerEntity.getPrimaryKey(), currentEmpRel.getPrimaryKey());
-            assertEquals(employeeEntity.getForeignKeys().get(0), currentEmpRel.getForeignKey());
-            assertFalse(itEmp.hasNext());
-
-            Iterator<CanonicalRelationship> itManager = managerEntity.getInCanonicalRelationships().iterator();
-            CanonicalRelationship currentManRel = itManager.next();
-            assertEquals(currentEmpRel, currentManRel);
-
-            // inherited relationships check
-            assertEquals(1, regularEmployeeEntity.getInheritedOutCanonicalRelationships().size());
-            assertEquals(1, contractEmployeeEntity.getInheritedOutCanonicalRelationships().size());
-            assertEquals(0, employeeEntity.getInheritedOutCanonicalRelationships().size());
-
-            Iterator<CanonicalRelationship> itRegEmp = regularEmployeeEntity.getInheritedOutCanonicalRelationships().iterator();
-            Iterator<CanonicalRelationship> itContEmp = contractEmployeeEntity.getInheritedOutCanonicalRelationships().iterator();
-            CanonicalRelationship currentRegEmpRel = itRegEmp.next();
-            CanonicalRelationship currentContEmpRel = itContEmp.next();
-            assertEquals("MANAGER", currentRegEmpRel.getParentEntity().getName());
-            assertEquals("EMPLOYEE", currentRegEmpRel.getForeignEntity().getName());
-            assertEquals("MANAGER", currentContEmpRel.getParentEntity().getName());
-            assertEquals("EMPLOYEE", currentContEmpRel.getForeignEntity().getName());
-            assertEquals(managerEntity.getPrimaryKey(), currentRegEmpRel.getPrimaryKey());
-            assertEquals(1, currentRegEmpRel.getFromColumns().size());
-            assertEquals("MANAGER", currentRegEmpRel.getFromColumns().get(0).getName());
-            assertEquals(managerEntity.getPrimaryKey(), currentContEmpRel.getPrimaryKey());
-            assertEquals(1, currentContEmpRel.getFromColumns().size());
-            assertEquals("MANAGER", currentContEmpRel.getFromColumns().get(0).getName());
-            assertFalse(itRegEmp.hasNext());
-            assertFalse(itContEmp.hasNext());
-
-            // inheritance check
-            assertEquals(employeeEntity, regularEmployeeEntity.getParentEntity());
-            assertEquals(employeeEntity, contractEmployeeEntity.getParentEntity());
-            assertNull(employeeEntity.getParentEntity());
-
-            assertEquals(1, regularEmployeeEntity.getInheritanceLevel());
-            assertEquals(1, contractEmployeeEntity.getInheritanceLevel());
-            assertEquals(0, employeeEntity.getInheritanceLevel());
-
-            // Hierarchical Bag check
-            assertEquals(2, mapper.getDataBaseSchema().getHierarchicalBags().size());
-
-            HierarchicalBag hierarchicalBag1 = mapper.getDataBaseSchema().getHierarchicalBags().get(0);
-            HierarchicalBag hierarchicalBag2 = mapper.getDataBaseSchema().getHierarchicalBags().get(1);
-            assertEquals("table-per-hierarchy", hierarchicalBag1.getInheritancePattern());
-            assertEquals("table-per-hierarchy", hierarchicalBag2.getInheritancePattern());
-
-            assertEquals(2, hierarchicalBag1.getDepth2entities().size());
-
-            assertEquals(1, hierarchicalBag1.getDepth2entities().get(0).size());
-            Iterator<Entity> it = hierarchicalBag1.getDepth2entities().get(0).iterator();
-            assertEquals("EMPLOYEE", it.next().getName());
-            assertTrue(!it.hasNext());
-
-            assertEquals(2, hierarchicalBag1.getDepth2entities().get(1).size());
-            it = hierarchicalBag1.getDepth2entities().get(1).iterator();
-            assertEquals("Regular_Employee", it.next().getName());
-            assertEquals("Contract_Employee", it.next().getName());
-            assertTrue(!it.hasNext());
-
-            assertEquals(hierarchicalBag1, employeeEntity.getHierarchicalBag());
-            assertEquals(hierarchicalBag1, regularEmployeeEntity.getHierarchicalBag());
-            assertEquals(hierarchicalBag1, contractEmployeeEntity.getHierarchicalBag());
-
-            assertNotNull(hierarchicalBag1.getDiscriminatorColumn());
-            assertEquals("TYPE", hierarchicalBag1.getDiscriminatorColumn());
-
-            assertEquals(3, hierarchicalBag1.getEntityName2discriminatorValue().size());
-            assertEquals("emp", hierarchicalBag1.getEntityName2discriminatorValue().get("EMPLOYEE"));
-            assertEquals("reg_emp", hierarchicalBag1.getEntityName2discriminatorValue().get("Regular_Employee"));
-            assertEquals("cont_emp", hierarchicalBag1.getEntityName2discriminatorValue().get("Contract_Employee"));
-
-            assertEquals(2, hierarchicalBag2.getDepth2entities().size());
-
-            assertEquals(1, hierarchicalBag2.getDepth2entities().get(0).size());
-            it = hierarchicalBag2.getDepth2entities().get(0).iterator();
-            assertEquals("MANAGER", it.next().getName());
-            assertTrue(!it.hasNext());
-
-            assertEquals(1, hierarchicalBag2.getDepth2entities().get(1).size());
-            it = hierarchicalBag2.getDepth2entities().get(1).iterator();
-            assertEquals("Project_Manager", it.next().getName());
-            assertTrue(!it.hasNext());
-
-            assertEquals(hierarchicalBag2, managerEntity.getHierarchicalBag());
-            assertEquals(hierarchicalBag2, projectManagerEntity.getHierarchicalBag());
-
-            assertNotNull(hierarchicalBag2.getDiscriminatorColumn());
-            assertEquals("TYPE", hierarchicalBag2.getDiscriminatorColumn());
-
-            assertEquals(2, hierarchicalBag2.getEntityName2discriminatorValue().size());
-            assertEquals("mgr", hierarchicalBag2.getEntityName2discriminatorValue().get("MANAGER"));
-            assertEquals("prj_mgr", hierarchicalBag2.getEntityName2discriminatorValue().get("Project_Manager"));
-
-            /*
-             *  Testing built graph model
-             */
-
-            VertexType employeeVertexType = mapper.getGraphModel().getVertexTypeByName("Employee");
-            VertexType regularEmployeeVertexType = mapper.getGraphModel().getVertexTypeByName("RegularEmployee");
-            VertexType contractEmployeeVertexType = mapper.getGraphModel().getVertexTypeByName("ContractEmployee");
-            VertexType countryVertexType = mapper.getGraphModel().getVertexTypeByName("Country");
-            VertexType managerVertexType = mapper.getGraphModel().getVertexTypeByName("Manager");
-            VertexType projectManagerVertexType = mapper.getGraphModel().getVertexTypeByName("ProjectManager");
-            VertexType residenceVertexType = mapper.getGraphModel().getVertexTypeByName("Residence");
-
-            // vertices check
-            assertEquals(6, mapper.getGraphModel().getVerticesType().size());
-            assertNotNull(employeeVertexType);
-            assertNotNull(regularEmployeeVertexType);
-            assertNotNull(contractEmployeeVertexType);
-            assertNotNull(countryVertexType);
-            assertNotNull(managerVertexType);
-            assertNotNull(projectManagerVertexType);
-            assertNull(residenceVertexType);
-
-            // properties check
-            assertEquals(4, employeeVertexType.getProperties().size());
-
-            assertNotNull(employeeVertexType.getPropertyByName("id"));
-            assertEquals("id", employeeVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, employeeVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, employeeVertexType.getPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(employeeVertexType.getPropertyByName("name"));
-            assertEquals("name", employeeVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(2, employeeVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, employeeVertexType.getPropertyByName("name").isFromPrimaryKey());
-
-            assertNotNull(employeeVertexType.getPropertyByName("residence"));
-            assertEquals("residence", employeeVertexType.getPropertyByName("residence").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("residence").getOriginalType());
-            assertEquals(3, employeeVertexType.getPropertyByName("residence").getOrdinalPosition());
-            assertEquals(false, employeeVertexType.getPropertyByName("residence").isFromPrimaryKey());
-
-            assertNotNull(employeeVertexType.getPropertyByName("manager"));
-            assertEquals("manager", employeeVertexType.getPropertyByName("manager").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("manager").getOriginalType());
-            assertEquals(4, employeeVertexType.getPropertyByName("manager").getOrdinalPosition());
-            assertEquals(false, employeeVertexType.getPropertyByName("manager").isFromPrimaryKey());
-
-            assertEquals(2, regularEmployeeVertexType.getProperties().size());
-
-            assertNotNull(regularEmployeeVertexType.getPropertyByName("salary"));
-            assertEquals("salary", regularEmployeeVertexType.getPropertyByName("salary").getName());
-            assertEquals("DECIMAL", regularEmployeeVertexType.getPropertyByName("salary").getOriginalType());
-            assertEquals(1, regularEmployeeVertexType.getPropertyByName("salary").getOrdinalPosition());
-            assertEquals(false, regularEmployeeVertexType.getPropertyByName("salary").isFromPrimaryKey());
-
-            assertNotNull(regularEmployeeVertexType.getPropertyByName("bonus"));
-            assertEquals("bonus", regularEmployeeVertexType.getPropertyByName("bonus").getName());
-            assertEquals("DECIMAL", regularEmployeeVertexType.getPropertyByName("bonus").getOriginalType());
-            assertEquals(2, regularEmployeeVertexType.getPropertyByName("bonus").getOrdinalPosition());
-            assertEquals(false, regularEmployeeVertexType.getPropertyByName("bonus").isFromPrimaryKey());
-
-            assertEquals(2, contractEmployeeVertexType.getProperties().size());
-
-            assertNotNull(contractEmployeeVertexType.getPropertyByName("payPerHour"));
-            assertEquals("payPerHour", contractEmployeeVertexType.getPropertyByName("payPerHour").getName());
-            assertEquals("DECIMAL", contractEmployeeVertexType.getPropertyByName("payPerHour").getOriginalType());
-            assertEquals(1, contractEmployeeVertexType.getPropertyByName("payPerHour").getOrdinalPosition());
-            assertEquals(false, contractEmployeeVertexType.getPropertyByName("payPerHour").isFromPrimaryKey());
-
-            assertNotNull(contractEmployeeVertexType.getPropertyByName("contractDuration"));
-            assertEquals("contractDuration", contractEmployeeVertexType.getPropertyByName("contractDuration").getName());
-            assertEquals("VARCHAR", contractEmployeeVertexType.getPropertyByName("contractDuration").getOriginalType());
-            assertEquals(2, contractEmployeeVertexType.getPropertyByName("contractDuration").getOrdinalPosition());
-            assertEquals(false, contractEmployeeVertexType.getPropertyByName("contractDuration").isFromPrimaryKey());
-
-            assertEquals(3, countryVertexType.getProperties().size());
-
-            assertNotNull(countryVertexType.getPropertyByName("id"));
-            assertEquals("id", countryVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", countryVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, countryVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, countryVertexType.getPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(countryVertexType.getPropertyByName("name"));
-            assertEquals("name", countryVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", countryVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(2, countryVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, countryVertexType.getPropertyByName("name").isFromPrimaryKey());
-
-            assertNotNull(countryVertexType.getPropertyByName("continent"));
-            assertEquals("continent", countryVertexType.getPropertyByName("continent").getName());
-            assertEquals("VARCHAR", countryVertexType.getPropertyByName("continent").getOriginalType());
-            assertEquals(3, countryVertexType.getPropertyByName("continent").getOrdinalPosition());
-            assertEquals(false, countryVertexType.getPropertyByName("continent").isFromPrimaryKey());
-
-            assertEquals(2, managerVertexType.getProperties().size());
-
-            assertNotNull(managerVertexType.getPropertyByName("id"));
-            assertEquals("id", managerVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", managerVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, managerVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, managerVertexType.getPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(managerVertexType.getPropertyByName("name"));
-            assertEquals("name", managerVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", managerVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(2, managerVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, managerVertexType.getPropertyByName("name").isFromPrimaryKey());
-
-            assertEquals(1, projectManagerVertexType.getProperties().size());
-
-            assertNotNull(projectManagerVertexType.getPropertyByName("project"));
-            assertEquals("project", projectManagerVertexType.getPropertyByName("project").getName());
-            assertEquals("VARCHAR", projectManagerVertexType.getPropertyByName("project").getOriginalType());
-            assertEquals(1, projectManagerVertexType.getPropertyByName("project").getOrdinalPosition());
-            assertEquals(false, projectManagerVertexType.getPropertyByName("project").isFromPrimaryKey());
-
-            // inherited properties check
-            assertEquals(0, employeeVertexType.getInheritedProperties().size());
-
-            assertEquals(4, regularEmployeeVertexType.getInheritedProperties().size());
-
-            assertNotNull(regularEmployeeVertexType.getInheritedPropertyByName("id"));
-            assertEquals("id", regularEmployeeVertexType.getInheritedPropertyByName("id").getName());
-            assertEquals("VARCHAR", regularEmployeeVertexType.getInheritedPropertyByName("id").getOriginalType());
-            assertEquals(1, regularEmployeeVertexType.getInheritedPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, regularEmployeeVertexType.getInheritedPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(regularEmployeeVertexType.getInheritedPropertyByName("name"));
-            assertEquals("name", regularEmployeeVertexType.getInheritedPropertyByName("name").getName());
-            assertEquals("VARCHAR", regularEmployeeVertexType.getInheritedPropertyByName("name").getOriginalType());
-            assertEquals(2, regularEmployeeVertexType.getInheritedPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, regularEmployeeVertexType.getInheritedPropertyByName("name").isFromPrimaryKey());
-
-            assertNotNull(regularEmployeeVertexType.getInheritedPropertyByName("residence"));
-            assertEquals("residence", regularEmployeeVertexType.getInheritedPropertyByName("residence").getName());
-            assertEquals("VARCHAR", regularEmployeeVertexType.getInheritedPropertyByName("residence").getOriginalType());
-            assertEquals(3, regularEmployeeVertexType.getInheritedPropertyByName("residence").getOrdinalPosition());
-            assertEquals(false, regularEmployeeVertexType.getInheritedPropertyByName("residence").isFromPrimaryKey());
-
-            assertNotNull(regularEmployeeVertexType.getInheritedPropertyByName("manager"));
-            assertEquals("manager", regularEmployeeVertexType.getInheritedPropertyByName("manager").getName());
-            assertEquals("VARCHAR", regularEmployeeVertexType.getInheritedPropertyByName("manager").getOriginalType());
-            assertEquals(4, regularEmployeeVertexType.getInheritedPropertyByName("manager").getOrdinalPosition());
-            assertEquals(false, regularEmployeeVertexType.getInheritedPropertyByName("manager").isFromPrimaryKey());
-
-            assertEquals(4, contractEmployeeVertexType.getInheritedProperties().size());
-
-            assertNotNull(contractEmployeeVertexType.getInheritedPropertyByName("id"));
-            assertEquals("id", contractEmployeeVertexType.getInheritedPropertyByName("id").getName());
-            assertEquals("VARCHAR", contractEmployeeVertexType.getInheritedPropertyByName("id").getOriginalType());
-            assertEquals(1, contractEmployeeVertexType.getInheritedPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, contractEmployeeVertexType.getInheritedPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(contractEmployeeVertexType.getInheritedPropertyByName("name"));
-            assertEquals("name", contractEmployeeVertexType.getInheritedPropertyByName("name").getName());
-            assertEquals("VARCHAR", contractEmployeeVertexType.getInheritedPropertyByName("name").getOriginalType());
-            assertEquals(2, contractEmployeeVertexType.getInheritedPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, contractEmployeeVertexType.getInheritedPropertyByName("name").isFromPrimaryKey());
-
-            assertNotNull(contractEmployeeVertexType.getInheritedPropertyByName("residence"));
-            assertEquals("residence", contractEmployeeVertexType.getInheritedPropertyByName("residence").getName());
-            assertEquals("VARCHAR", contractEmployeeVertexType.getInheritedPropertyByName("residence").getOriginalType());
-            assertEquals(3, contractEmployeeVertexType.getInheritedPropertyByName("residence").getOrdinalPosition());
-            assertEquals(false, contractEmployeeVertexType.getInheritedPropertyByName("residence").isFromPrimaryKey());
-
-            assertNotNull(contractEmployeeVertexType.getInheritedPropertyByName("manager"));
-            assertEquals("manager", contractEmployeeVertexType.getInheritedPropertyByName("manager").getName());
-            assertEquals("VARCHAR", contractEmployeeVertexType.getInheritedPropertyByName("manager").getOriginalType());
-            assertEquals(4, contractEmployeeVertexType.getInheritedPropertyByName("manager").getOrdinalPosition());
-            assertEquals(false, contractEmployeeVertexType.getInheritedPropertyByName("manager").isFromPrimaryKey());
-
-            assertEquals(2, projectManagerVertexType.getInheritedProperties().size());
-
-            assertNotNull(projectManagerVertexType.getInheritedPropertyByName("id"));
-            assertEquals("id", projectManagerVertexType.getInheritedPropertyByName("id").getName());
-            assertEquals("VARCHAR", projectManagerVertexType.getInheritedPropertyByName("id").getOriginalType());
-            assertEquals(1, projectManagerVertexType.getInheritedPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, projectManagerVertexType.getInheritedPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(projectManagerVertexType.getInheritedPropertyByName("name"));
-            assertEquals("name", projectManagerVertexType.getInheritedPropertyByName("name").getName());
-            assertEquals("VARCHAR", projectManagerVertexType.getInheritedPropertyByName("name").getOriginalType());
-            assertEquals(2, projectManagerVertexType.getInheritedPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, projectManagerVertexType.getInheritedPropertyByName("name").isFromPrimaryKey());
-
-            assertEquals(0, countryVertexType.getInheritedProperties().size());
-            assertEquals(0, managerVertexType.getInheritedProperties().size());
-
-            // edges check
-
-            assertEquals(1, mapper.getRelationship2edgeType().size());
-
-            assertEquals(1, mapper.getGraphModel().getEdgesType().size());
-            assertEquals("HasManager", mapper.getGraphModel().getEdgesType().get(0).getName());
-
-            assertEquals(1, employeeVertexType.getOutEdgesType().size());
-            assertEquals("HasManager", employeeVertexType.getOutEdgesType().get(0).getName());
-
-            assertEquals(1, regularEmployeeVertexType.getOutEdgesType().size());
-            assertEquals("HasManager", regularEmployeeVertexType.getOutEdgesType().get(0).getName());
-
-            assertEquals(1, contractEmployeeVertexType.getOutEdgesType().size());
-            assertEquals("HasManager", contractEmployeeVertexType.getOutEdgesType().get(0).getName());
-
-            /*
-             * Rules check
-             */
-
-            // Classes Mapping
-
-            assertEquals(6, mapper.getVertexType2EVClassMappers().size());
-            assertEquals(6, mapper.getEntity2EVClassMappers().size());
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(employeeVertexType).size());
-            EVClassMapper employeeClassMapper = mapper.getEVClassMappersByVertex(employeeVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(employeeEntity).size());
-            assertEquals(employeeClassMapper, mapper.getEVClassMappersByEntity(employeeEntity).get(0));
-            assertEquals(employeeClassMapper.getEntity(), employeeEntity);
-            assertEquals(employeeClassMapper.getVertexType(), employeeVertexType);
-
-            assertEquals(4, employeeClassMapper.getAttribute2property().size());
-            assertEquals(4, employeeClassMapper.getProperty2attribute().size());
-            assertEquals("id", employeeClassMapper.getAttribute2property().get("ID"));
-            assertEquals("name", employeeClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("residence", employeeClassMapper.getAttribute2property().get("RESIDENCE"));
-            assertEquals("manager", employeeClassMapper.getAttribute2property().get("MANAGER"));
-            assertEquals("ID", employeeClassMapper.getProperty2attribute().get("id"));
-            assertEquals("NAME", employeeClassMapper.getProperty2attribute().get("name"));
-            assertEquals("RESIDENCE", employeeClassMapper.getProperty2attribute().get("residence"));
-            assertEquals("MANAGER", employeeClassMapper.getProperty2attribute().get("manager"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(regularEmployeeVertexType).size());
-            EVClassMapper regularEmployeeClassMapper = mapper.getEVClassMappersByVertex(regularEmployeeVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(regularEmployeeEntity).size());
-            assertEquals(regularEmployeeClassMapper, mapper.getEVClassMappersByEntity(regularEmployeeEntity).get(0));
-            assertEquals(regularEmployeeClassMapper.getEntity(), regularEmployeeEntity);
-            assertEquals(regularEmployeeClassMapper.getVertexType(), regularEmployeeVertexType);
-
-            assertEquals(2, regularEmployeeClassMapper.getAttribute2property().size());
-            assertEquals(2, regularEmployeeClassMapper.getProperty2attribute().size());
-            assertEquals("salary", regularEmployeeClassMapper.getAttribute2property().get("SALARY"));
-            assertEquals("bonus", regularEmployeeClassMapper.getAttribute2property().get("BONUS"));
-            assertEquals("SALARY", regularEmployeeClassMapper.getProperty2attribute().get("salary"));
-            assertEquals("BONUS", regularEmployeeClassMapper.getProperty2attribute().get("bonus"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(contractEmployeeVertexType).size());
-            EVClassMapper contractEmployeeClassMapper = mapper.getEVClassMappersByVertex(contractEmployeeVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(contractEmployeeEntity).size());
-            assertEquals(contractEmployeeClassMapper, mapper.getEVClassMappersByEntity(contractEmployeeEntity).get(0));
-            assertEquals(contractEmployeeClassMapper.getEntity(), contractEmployeeEntity);
-            assertEquals(contractEmployeeClassMapper.getVertexType(), contractEmployeeVertexType);
-
-            assertEquals(2, contractEmployeeClassMapper.getAttribute2property().size());
-            assertEquals(2, contractEmployeeClassMapper.getProperty2attribute().size());
-            assertEquals("payPerHour", contractEmployeeClassMapper.getAttribute2property().get("PAY_PER_HOUR"));
-            assertEquals("contractDuration", contractEmployeeClassMapper.getAttribute2property().get("CONTRACT_DURATION"));
-            assertEquals("PAY_PER_HOUR", contractEmployeeClassMapper.getProperty2attribute().get("payPerHour"));
-            assertEquals("CONTRACT_DURATION", contractEmployeeClassMapper.getProperty2attribute().get("contractDuration"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(countryVertexType).size());
-            EVClassMapper countryClassMapper = mapper.getEVClassMappersByVertex(countryVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(countryEntity).size());
-            assertEquals(countryClassMapper, mapper.getEVClassMappersByEntity(countryEntity).get(0));
-            assertEquals(countryClassMapper.getEntity(), countryEntity);
-            assertEquals(countryClassMapper.getVertexType(), countryVertexType);
-
-            assertEquals(3, countryClassMapper.getAttribute2property().size());
-            assertEquals(3, countryClassMapper.getProperty2attribute().size());
-            assertEquals("id", countryClassMapper.getAttribute2property().get("ID"));
-            assertEquals("name", countryClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("continent", countryClassMapper.getAttribute2property().get("CONTINENT"));
-            assertEquals("ID", countryClassMapper.getProperty2attribute().get("id"));
-            assertEquals("NAME", countryClassMapper.getProperty2attribute().get("name"));
-            assertEquals("CONTINENT", countryClassMapper.getProperty2attribute().get("continent"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(managerVertexType).size());
-            EVClassMapper managerClassMapper = mapper.getEVClassMappersByVertex(managerVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(managerEntity).size());
-            assertEquals(managerClassMapper, mapper.getEVClassMappersByEntity(managerEntity).get(0));
-            assertEquals(managerClassMapper.getEntity(), managerEntity);
-            assertEquals(managerClassMapper.getVertexType(), managerVertexType);
-
-            assertEquals(2, managerClassMapper.getAttribute2property().size());
-            assertEquals(2, managerClassMapper.getProperty2attribute().size());
-            assertEquals("id", managerClassMapper.getAttribute2property().get("ID"));
-            assertEquals("name", managerClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("ID", managerClassMapper.getProperty2attribute().get("id"));
-            assertEquals("NAME", managerClassMapper.getProperty2attribute().get("name"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(projectManagerVertexType).size());
-            EVClassMapper projectManagerClassMapper = mapper.getEVClassMappersByVertex(projectManagerVertexType).get(0);
-
-            assertEquals(projectManagerClassMapper, mapper.getEVClassMappersByEntity(projectManagerEntity).get(0));
-            assertEquals(projectManagerClassMapper.getEntity(), projectManagerEntity);
-            assertEquals(projectManagerClassMapper.getVertexType(), projectManagerVertexType);
-
-            assertEquals(1, projectManagerClassMapper.getAttribute2property().size());
-            assertEquals(1, projectManagerClassMapper.getProperty2attribute().size());
-            assertEquals("project", projectManagerClassMapper.getAttribute2property().get("PROJECT"));
-            assertEquals("PROJECT", projectManagerClassMapper.getProperty2attribute().get("project"));
-
-            // Relationships-Edges Mapping
-
-            Iterator<CanonicalRelationship> itRelationships = employeeEntity.getOutCanonicalRelationships().iterator();
-            CanonicalRelationship hasManagerRelationship = itRelationships.next();
-            assertFalse(itRelationships.hasNext());
-
-            EdgeType hasManagerEdgeType = mapper.getGraphModel().getEdgeTypeByName("HasManager");
-
-            assertEquals(1, mapper.getRelationship2edgeType().size());
-            assertEquals(hasManagerEdgeType, mapper.getRelationship2edgeType().get(hasManagerRelationship));
-
-            assertEquals(1, mapper.getEdgeType2relationships().size());
-            assertEquals(1, mapper.getEdgeType2relationships().get(hasManagerEdgeType).size());
-            assertTrue(mapper.getEdgeType2relationships().get(hasManagerEdgeType).contains(hasManagerRelationship));
-
-            // JoinVertexes-AggregatorEdges Mapping
-
-            assertEquals(0, mapper.getJoinVertex2aggregatorEdges().size());
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail();
-        } finally {
-            try {
-                // Dropping Source DB Schema and OrientGraph
-                String dbDropping = "drop schema public cascade";
-                st.execute(dbDropping);
-                connection.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-                fail();
-            }
-        }
+  }
+
+  /*
+   * Filtering out a table through include-tables (with Table per Type inheritance).
+   */ @Test
+  void filterOutThroughIncludeWithTablePerTypeInheritance() {
+    Connection connection = null;
+    Statement st = null;
+
+    try {
+      Class.forName(this.driver);
+      connection = DriverManager.getConnection(this.jurl, this.username, this.password);
+
+      String countryTableBuilding =
+          "create memory table COUNTRY(ID varchar(256) not null, NAME varchar(256), CONTINENT"
+              + " varchar(256), primary key (ID))";
+      st = connection.createStatement();
+      st.execute(countryTableBuilding);
+
+      String residenceTableBuilding =
+          "create memory table RESIDENCE(ID varchar(256) not null, CITY varchar(256), COUNTRY"
+              + " varchar(256), primary key (ID))";
+      st = connection.createStatement();
+      st.execute(residenceTableBuilding);
+
+      String managerTableBuilding =
+          "create memory table MANAGER(ID varchar(256) not null, NAME varchar(256), primary key"
+              + " (ID))";
+      st.execute(managerTableBuilding);
+
+      String projectManagerTableBuilding =
+          "create memory table PROJECT_MANAGER(EID varchar(256) not null, PROJECT varchar(256),"
+              + " primary key (EID), foreign key (EID) references MANAGER(ID))";
+      st.execute(projectManagerTableBuilding);
+
+      String employeeTableBuilding =
+          "create memory table EMPLOYEE (ID varchar(256) not null, NAME varchar(256), RESIDENCE"
+              + " varchar(256), MANAGER varchar(256), primary key (ID), foreign key (RESIDENCE)"
+              + " references RESIDENCE(ID), foreign key (MANAGER) references MANAGER(ID))";
+      st.execute(employeeTableBuilding);
+
+      String regularEmployeeTableBuilding =
+          "create memory table REGULAR_EMPLOYEE (EID varchar(256) not null, SALARY decimal(10,2),"
+              + " BONUS decimal(10,0), primary key (EID), foreign key (EID) references"
+              + " EMPLOYEE(ID))";
+      st.execute(regularEmployeeTableBuilding);
+
+      String contractEmployeeTableBuilding =
+          "create memory table CONTRACT_EMPLOYEE (EID varchar(256) not null, PAY_PER_HOUR"
+              + " decimal(10,2), CONTRACT_DURATION varchar(256), primary key (EID), foreign key"
+              + " (EID) references EMPLOYEE(ID))";
+      st.execute(contractEmployeeTableBuilding);
+
+      // Records Inserting
+
+      String countryFilling =
+          "insert into COUNTRY (ID,NAME,CONTINENT) values (" + "('C001','Italy','Europe'))";
+      st.execute(countryFilling);
+
+      String residenceFilling =
+          "insert into RESIDENCE (ID,CITY,COUNTRY) values ("
+              + "('R001','Rome','C001'),"
+              + "('R002','Milan','C001'))";
+      st.execute(residenceFilling);
+
+      String managerFilling = "insert into MANAGER (ID,NAME) values (" + "('M001','Bill Right'))";
+      st.execute(managerFilling);
+
+      String projectManagerFilling =
+          "insert into PROJECT_MANAGER (EID,PROJECT) values (" + "('M001','New World'))";
+      st.execute(projectManagerFilling);
+
+      String employeeFilling =
+          "insert into EMPLOYEE (ID,NAME,RESIDENCE,MANAGER) values ("
+              + "('E001','John Black','R001',null),"
+              + "('E002','Andrew Brown','R001','M001'),"
+              + "('E003','Jack Johnson','R002',null))";
+      st.execute(employeeFilling);
+
+      String regularEmployeeFilling =
+          "insert into REGULAR_EMPLOYEE (EID,SALARY,BONUS) values (" + "('E002','1000.00','10'))";
+      st.execute(regularEmployeeFilling);
+
+      String contractEmployeeFilling =
+          "insert into CONTRACT_EMPLOYEE (EID,PAY_PER_HOUR,CONTRACT_DURATION) values ("
+              + "('E003','50.00','6'))";
+      st.execute(contractEmployeeFilling);
+
+      List<String> includedTables = new ArrayList<String>();
+      includedTables.add("COUNTRY");
+      includedTables.add("MANAGER");
+      includedTables.add("PROJECT_MANAGER");
+      includedTables.add("EMPLOYEE");
+      includedTables.add("REGULAR_EMPLOYEE");
+      includedTables.add("CONTRACT_EMPLOYEE");
+
+      this.mapper =
+          new Hibernate2GraphMapper(
+              dataSource,
+              FilterTableMappingTest.XML_TABLE_PER_SUBCLASS1,
+              includedTables,
+              null,
+              dbQueryEngine,
+              dataTypeHandler,
+              executionStrategy,
+              nameResolver,
+              statistics);
+      mapper.buildSourceDatabaseSchema();
+      mapper.buildGraphModel(new JavaConventionNameResolver());
+
+      /*
+       *  Testing context information
+       */
+
+      assertThat(statistics.totalNumberOfEntities).isEqualTo(6);
+      assertThat(statistics.builtEntities).isEqualTo(6);
+      assertThat(statistics.totalNumberOfRelationships).isEqualTo(4);
+      assertThat(statistics.builtRelationships)
+          .isEqualTo(4); // 3 of these are hierarchical relationships
+
+      assertThat(statistics.totalNumberOfModelVertices).isEqualTo(6);
+      assertThat(statistics.builtModelVertexTypes).isEqualTo(6);
+      assertThat(statistics.totalNumberOfModelEdges).isEqualTo(1);
+      assertThat(statistics.builtModelEdgeTypes).isEqualTo(1);
+
+      /*
+       *  Testing built source db schema
+       */
+
+      Entity employeeEntity = mapper.getDataBaseSchema().getEntityByName("EMPLOYEE");
+      Entity regularEmployeeEntity =
+          mapper.getDataBaseSchema().getEntityByNameIgnoreCase("REGULAR_EMPLOYEE");
+      Entity contractEmployeeEntity =
+          mapper.getDataBaseSchema().getEntityByNameIgnoreCase("CONTRACT_EMPLOYEE");
+      Entity countryEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("COUNTRY");
+      Entity managerEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("MANAGER");
+      Entity projectManagerEntity =
+          mapper.getDataBaseSchema().getEntityByNameIgnoreCase("PROJECT_MANAGER");
+      Entity residenceEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("RESIDENCE");
+
+      // entities check
+      assertThat(mapper.getDataBaseSchema().getEntities().size()).isEqualTo(6);
+      assertThat(mapper.getDataBaseSchema().getCanonicalRelationships().size()).isEqualTo(4);
+      assertThat(employeeEntity).isNotNull();
+      assertThat(regularEmployeeEntity).isNotNull();
+      assertThat(contractEmployeeEntity).isNotNull();
+      assertThat(countryEntity).isNotNull();
+      assertThat(managerEntity).isNotNull();
+      assertThat(residenceEntity).isNull();
+
+      // attributes check
+      assertThat(employeeEntity.getAttributes().size()).isEqualTo(4);
+
+      assertThat(employeeEntity.getAttributeByName("ID")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(employeeEntity.getAttributeByName("ID").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("ID").getOrdinalPosition()).isEqualTo(1);
+      assertThat(employeeEntity.getAttributeByName("ID").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(employeeEntity.getAttributeByName("NAME")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("NAME").getName()).isEqualTo("NAME");
+      assertThat(employeeEntity.getAttributeByName("NAME").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("NAME").getOrdinalPosition()).isEqualTo(2);
+      assertThat(employeeEntity.getAttributeByName("NAME").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getName()).isEqualTo("RESIDENCE");
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getOrdinalPosition()).isEqualTo(3);
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(employeeEntity.getAttributeByName("MANAGER")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getName()).isEqualTo("MANAGER");
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getOrdinalPosition()).isEqualTo(4);
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(regularEmployeeEntity.getAttributes().size()).isEqualTo(2);
+
+      assertThat(regularEmployeeEntity.getAttributeByName("SALARY")).isNotNull();
+      assertThat(regularEmployeeEntity.getAttributeByName("SALARY").getName()).isEqualTo("SALARY");
+      assertThat(regularEmployeeEntity.getAttributeByName("SALARY").getDataType())
+          .isEqualTo("DECIMAL");
+      assertThat(regularEmployeeEntity.getAttributeByName("SALARY").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(regularEmployeeEntity.getAttributeByName("SALARY").getBelongingEntity().getName())
+          .isEqualTo("REGULAR_EMPLOYEE");
+
+      assertThat(regularEmployeeEntity.getAttributeByName("BONUS")).isNotNull();
+      assertThat(regularEmployeeEntity.getAttributeByName("BONUS").getName()).isEqualTo("BONUS");
+      assertThat(regularEmployeeEntity.getAttributeByName("BONUS").getDataType())
+          .isEqualTo("DECIMAL");
+      assertThat(regularEmployeeEntity.getAttributeByName("BONUS").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(regularEmployeeEntity.getAttributeByName("BONUS").getBelongingEntity().getName())
+          .isEqualTo("REGULAR_EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getAttributes().size()).isEqualTo(2);
+
+      assertThat(contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR")).isNotNull();
+      assertThat(contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getName())
+          .isEqualTo("PAY_PER_HOUR");
+      assertThat(contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getDataType())
+          .isEqualTo("DECIMAL");
+      assertThat(contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(
+              contractEmployeeEntity
+                  .getAttributeByName("PAY_PER_HOUR")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("CONTRACT_EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION")).isNotNull();
+      assertThat(contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getName())
+          .isEqualTo("CONTRACT_DURATION");
+      assertThat(contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(
+              contractEmployeeEntity
+                  .getAttributeByName("CONTRACT_DURATION")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("CONTRACT_EMPLOYEE");
+
+      assertThat(countryEntity.getAttributes().size()).isEqualTo(3);
+
+      assertThat(countryEntity.getAttributeByName("ID")).isNotNull();
+      assertThat(countryEntity.getAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(countryEntity.getAttributeByName("ID").getDataType()).isEqualTo("VARCHAR");
+      assertThat(countryEntity.getAttributeByName("ID").getOrdinalPosition()).isEqualTo(1);
+      assertThat(countryEntity.getAttributeByName("ID").getBelongingEntity().getName())
+          .isEqualTo("COUNTRY");
+
+      assertThat(countryEntity.getAttributeByName("NAME")).isNotNull();
+      assertThat(countryEntity.getAttributeByName("NAME").getName()).isEqualTo("NAME");
+      assertThat(countryEntity.getAttributeByName("NAME").getDataType()).isEqualTo("VARCHAR");
+      assertThat(countryEntity.getAttributeByName("NAME").getOrdinalPosition()).isEqualTo(2);
+      assertThat(countryEntity.getAttributeByName("NAME").getBelongingEntity().getName())
+          .isEqualTo("COUNTRY");
+
+      assertThat(countryEntity.getAttributeByName("CONTINENT")).isNotNull();
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getName()).isEqualTo("CONTINENT");
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getDataType()).isEqualTo("VARCHAR");
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getOrdinalPosition()).isEqualTo(3);
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getBelongingEntity().getName())
+          .isEqualTo("COUNTRY");
+
+      assertThat(managerEntity.getAttributes().size()).isEqualTo(2);
+
+      assertThat(managerEntity.getAttributeByName("ID")).isNotNull();
+      assertThat(managerEntity.getAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(managerEntity.getAttributeByName("ID").getDataType()).isEqualTo("VARCHAR");
+      assertThat(managerEntity.getAttributeByName("ID").getOrdinalPosition()).isEqualTo(1);
+      assertThat(managerEntity.getAttributeByName("ID").getBelongingEntity().getName())
+          .isEqualTo("MANAGER");
+
+      assertThat(managerEntity.getAttributeByName("NAME")).isNotNull();
+      assertThat(managerEntity.getAttributeByName("NAME").getName()).isEqualTo("NAME");
+      assertThat(managerEntity.getAttributeByName("NAME").getDataType()).isEqualTo("VARCHAR");
+      assertThat(managerEntity.getAttributeByName("NAME").getOrdinalPosition()).isEqualTo(2);
+      assertThat(managerEntity.getAttributeByName("NAME").getBelongingEntity().getName())
+          .isEqualTo("MANAGER");
+
+      assertThat(projectManagerEntity.getAttributes().size()).isEqualTo(1);
+
+      assertThat(projectManagerEntity.getAttributeByName("PROJECT")).isNotNull();
+      assertThat(projectManagerEntity.getAttributeByName("PROJECT").getName()).isEqualTo("PROJECT");
+      assertThat(projectManagerEntity.getAttributeByName("PROJECT").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerEntity.getAttributeByName("PROJECT").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(projectManagerEntity.getAttributeByName("PROJECT").getBelongingEntity().getName())
+          .isEqualTo("PROJECT_MANAGER");
+
+      // inherited attributes check
+      assertThat(employeeEntity.getInheritedAttributes().size()).isEqualTo(0);
+
+      assertThat(regularEmployeeEntity.getInheritedAttributes().size()).isEqualTo(4);
+
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("ID")).isNotNull();
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("ID").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("ID").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(
+              regularEmployeeEntity
+                  .getInheritedAttributeByName("ID")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("NAME")).isNotNull();
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("NAME").getName())
+          .isEqualTo("NAME");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("NAME").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("NAME").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(
+              regularEmployeeEntity
+                  .getInheritedAttributeByName("NAME")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE")).isNotNull();
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getName())
+          .isEqualTo("RESIDENCE");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(
+              regularEmployeeEntity
+                  .getInheritedAttributeByName("RESIDENCE")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("MANAGER")).isNotNull();
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getName())
+          .isEqualTo("MANAGER");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getOrdinalPosition())
+          .isEqualTo(4);
+      assertThat(
+              regularEmployeeEntity
+                  .getInheritedAttributeByName("MANAGER")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getInheritedAttributes().size()).isEqualTo(4);
+
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("ID")).isNotNull();
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("ID").getName())
+          .isEqualTo("ID");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("ID").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("ID").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(
+              contractEmployeeEntity
+                  .getInheritedAttributeByName("ID")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("NAME")).isNotNull();
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("NAME").getName())
+          .isEqualTo("NAME");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("NAME").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("NAME").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(
+              contractEmployeeEntity
+                  .getInheritedAttributeByName("NAME")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE")).isNotNull();
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getName())
+          .isEqualTo("RESIDENCE");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(
+              contractEmployeeEntity
+                  .getInheritedAttributeByName("RESIDENCE")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("MANAGER")).isNotNull();
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getName())
+          .isEqualTo("MANAGER");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getOrdinalPosition())
+          .isEqualTo(4);
+      assertThat(
+              contractEmployeeEntity
+                  .getInheritedAttributeByName("MANAGER")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(projectManagerEntity.getInheritedAttributes().size()).isEqualTo(2);
+
+      assertThat(projectManagerEntity.getInheritedAttributeByName("ID")).isNotNull();
+      assertThat(projectManagerEntity.getInheritedAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(projectManagerEntity.getInheritedAttributeByName("ID").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerEntity.getInheritedAttributeByName("ID").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(
+              projectManagerEntity.getInheritedAttributeByName("ID").getBelongingEntity().getName())
+          .isEqualTo("MANAGER");
+
+      assertThat(projectManagerEntity.getInheritedAttributeByName("NAME")).isNotNull();
+      assertThat(projectManagerEntity.getInheritedAttributeByName("NAME").getName())
+          .isEqualTo("NAME");
+      assertThat(projectManagerEntity.getInheritedAttributeByName("NAME").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerEntity.getInheritedAttributeByName("NAME").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(
+              projectManagerEntity
+                  .getInheritedAttributeByName("NAME")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("MANAGER");
+
+      assertThat(countryEntity.getInheritedAttributes().size()).isEqualTo(0);
+      assertThat(managerEntity.getInheritedAttributes().size()).isEqualTo(0);
+
+      // primary key check
+      assertThat(regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().size()).isEqualTo(1);
+      assertThat(regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName())
+          .isEqualTo("EID");
+      assertThat(regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              regularEmployeeEntity
+                  .getPrimaryKey()
+                  .getInvolvedAttributes()
+                  .get(0)
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("REGULAR_EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().size())
+          .isEqualTo(1);
+      assertThat(contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName())
+          .isEqualTo("EID");
+      assertThat(
+              contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeEntity
+                  .getPrimaryKey()
+                  .getInvolvedAttributes()
+                  .get(0)
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("CONTRACT_EMPLOYEE");
+
+      assertThat(projectManagerEntity.getPrimaryKey().getInvolvedAttributes().size()).isEqualTo(1);
+      assertThat(projectManagerEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName())
+          .isEqualTo("EID");
+      assertThat(projectManagerEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              projectManagerEntity
+                  .getPrimaryKey()
+                  .getInvolvedAttributes()
+                  .get(0)
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("PROJECT_MANAGER");
+
+      // relationship, primary and foreign key check
+      assertThat(regularEmployeeEntity.getOutCanonicalRelationships().size()).isEqualTo(1);
+      assertThat(contractEmployeeEntity.getOutCanonicalRelationships().size()).isEqualTo(1);
+      assertThat(employeeEntity.getOutCanonicalRelationships().size()).isEqualTo(1);
+      assertThat(projectManagerEntity.getOutCanonicalRelationships().size()).isEqualTo(1);
+      assertThat(managerEntity.getOutCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(countryEntity.getOutCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(regularEmployeeEntity.getInCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(contractEmployeeEntity.getInCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(employeeEntity.getInCanonicalRelationships().size()).isEqualTo(2);
+      assertThat(projectManagerEntity.getInCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(managerEntity.getInCanonicalRelationships().size()).isEqualTo(2);
+      assertThat(countryEntity.getInCanonicalRelationships().size()).isEqualTo(0);
+
+      assertThat(regularEmployeeEntity.getForeignKeys().size()).isEqualTo(1);
+      assertThat(contractEmployeeEntity.getForeignKeys().size()).isEqualTo(1);
+      assertThat(employeeEntity.getForeignKeys().size()).isEqualTo(1);
+      assertThat(projectManagerEntity.getForeignKeys().size()).isEqualTo(1);
+      assertThat(managerEntity.getForeignKeys().size()).isEqualTo(0);
+      assertThat(countryEntity.getForeignKeys().size()).isEqualTo(0);
+
+      Iterator<CanonicalRelationship> itEmp =
+          employeeEntity.getOutCanonicalRelationships().iterator();
+      CanonicalRelationship currentEmpRel = itEmp.next();
+      assertThat(currentEmpRel.getParentEntity().getName()).isEqualTo("MANAGER");
+      assertThat(currentEmpRel.getForeignEntity().getName()).isEqualTo("EMPLOYEE");
+      assertThat(currentEmpRel.getPrimaryKey()).isEqualTo(managerEntity.getPrimaryKey());
+      assertThat(currentEmpRel.getForeignKey()).isEqualTo(employeeEntity.getForeignKeys().get(0));
+      assertThat(itEmp.hasNext()).isFalse();
+
+      Iterator<CanonicalRelationship> itManager =
+          managerEntity.getInCanonicalRelationships().iterator();
+      CanonicalRelationship currentManRel = itManager.next();
+      assertThat(currentManRel).isEqualTo(currentEmpRel);
+
+      Iterator<CanonicalRelationship> itContEmp =
+          contractEmployeeEntity.getOutCanonicalRelationships().iterator();
+      CanonicalRelationship currentContEmpRel = itContEmp.next();
+      itEmp = employeeEntity.getInCanonicalRelationships().iterator();
+      currentEmpRel = itEmp.next();
+      assertThat(currentEmpRel).isEqualTo(currentContEmpRel);
+
+      Iterator<CanonicalRelationship> itRegEmp =
+          regularEmployeeEntity.getOutCanonicalRelationships().iterator();
+      CanonicalRelationship currentRegEmpRel = itRegEmp.next();
+      currentEmpRel = itEmp.next();
+      assertThat(currentEmpRel).isEqualTo(currentRegEmpRel);
+
+      // inherited relationships check
+      assertThat(regularEmployeeEntity.getInheritedOutCanonicalRelationships().size()).isEqualTo(1);
+      assertThat(contractEmployeeEntity.getInheritedOutCanonicalRelationships().size())
+          .isEqualTo(1);
+      assertThat(employeeEntity.getInheritedOutCanonicalRelationships().size()).isEqualTo(0);
+
+      itRegEmp = regularEmployeeEntity.getInheritedOutCanonicalRelationships().iterator();
+      itContEmp = contractEmployeeEntity.getInheritedOutCanonicalRelationships().iterator();
+      currentRegEmpRel = itRegEmp.next();
+      currentContEmpRel = itContEmp.next();
+      assertThat(currentRegEmpRel.getParentEntity().getName()).isEqualTo("MANAGER");
+      assertThat(currentRegEmpRel.getForeignEntity().getName()).isEqualTo("EMPLOYEE");
+      assertThat(currentContEmpRel.getParentEntity().getName()).isEqualTo("MANAGER");
+      assertThat(currentContEmpRel.getForeignEntity().getName()).isEqualTo("EMPLOYEE");
+      assertThat(currentRegEmpRel.getPrimaryKey()).isEqualTo(managerEntity.getPrimaryKey());
+      assertThat(currentRegEmpRel.getFromColumns().size()).isEqualTo(1);
+      assertThat(currentRegEmpRel.getFromColumns().get(0).getName()).isEqualTo("MANAGER");
+      assertThat(currentContEmpRel.getPrimaryKey()).isEqualTo(managerEntity.getPrimaryKey());
+      assertThat(currentContEmpRel.getFromColumns().size()).isEqualTo(1);
+      assertThat(currentContEmpRel.getFromColumns().get(0).getName()).isEqualTo("MANAGER");
+      assertThat(itRegEmp.hasNext()).isFalse();
+      assertThat(itContEmp.hasNext()).isFalse();
+
+      // inheritance check
+      assertThat(regularEmployeeEntity.getParentEntity()).isEqualTo(employeeEntity);
+      assertThat(contractEmployeeEntity.getParentEntity()).isEqualTo(employeeEntity);
+      assertThat(employeeEntity.getParentEntity()).isNull();
+
+      assertThat(regularEmployeeEntity.getInheritanceLevel()).isEqualTo(1);
+      assertThat(contractEmployeeEntity.getInheritanceLevel()).isEqualTo(1);
+      assertThat(employeeEntity.getInheritanceLevel()).isEqualTo(0);
+
+      // Hierarchical Bag check
+      assertThat(mapper.getDataBaseSchema().getHierarchicalBags().size()).isEqualTo(2);
+
+      HierarchicalBag hierarchicalBag1 = mapper.getDataBaseSchema().getHierarchicalBags().get(0);
+      HierarchicalBag hierarchicalBag2 = mapper.getDataBaseSchema().getHierarchicalBags().get(1);
+      assertThat(hierarchicalBag1.getInheritancePattern()).isEqualTo("table-per-type");
+      assertThat(hierarchicalBag2.getInheritancePattern()).isEqualTo("table-per-type");
+
+      assertThat(hierarchicalBag1.getDepth2entities().size()).isEqualTo(2);
+
+      assertThat(hierarchicalBag1.getDepth2entities().get(0).size()).isEqualTo(1);
+      Iterator<Entity> it = hierarchicalBag1.getDepth2entities().get(0).iterator();
+      assertThat(it.next().getName()).isEqualTo("EMPLOYEE");
+      assertThat(it.hasNext()).isFalse();
+
+      assertThat(hierarchicalBag1.getDepth2entities().get(1).size()).isEqualTo(2);
+      it = hierarchicalBag1.getDepth2entities().get(1).iterator();
+      assertThat(it.next().getName()).isEqualTo("REGULAR_EMPLOYEE");
+      assertThat(it.next().getName()).isEqualTo("CONTRACT_EMPLOYEE");
+      assertThat(it.hasNext()).isFalse();
+
+      assertThat(employeeEntity.getHierarchicalBag()).isEqualTo(hierarchicalBag1);
+      assertThat(regularEmployeeEntity.getHierarchicalBag()).isEqualTo(hierarchicalBag1);
+      assertThat(contractEmployeeEntity.getHierarchicalBag()).isEqualTo(hierarchicalBag1);
+
+      assertThat(hierarchicalBag1.getDiscriminatorColumn()).isNull();
+
+      assertThat(hierarchicalBag2.getDepth2entities().size()).isEqualTo(2);
+
+      assertThat(hierarchicalBag2.getDepth2entities().get(0).size()).isEqualTo(1);
+      it = hierarchicalBag2.getDepth2entities().get(0).iterator();
+      assertThat(it.next().getName()).isEqualTo("MANAGER");
+      assertThat(it.hasNext()).isFalse();
+
+      assertThat(hierarchicalBag2.getDepth2entities().get(1).size()).isEqualTo(1);
+      it = hierarchicalBag2.getDepth2entities().get(1).iterator();
+      assertThat(it.next().getName()).isEqualTo("PROJECT_MANAGER");
+      assertThat(it.hasNext()).isFalse();
+
+      assertThat(managerEntity.getHierarchicalBag()).isEqualTo(hierarchicalBag2);
+      assertThat(projectManagerEntity.getHierarchicalBag()).isEqualTo(hierarchicalBag2);
+
+      assertThat(hierarchicalBag2.getDiscriminatorColumn()).isNull();
+
+      /*
+       *  Testing built graph model
+       */
+
+      VertexType employeeVertexType = mapper.getGraphModel().getVertexTypeByName("Employee");
+      VertexType regularEmployeeVertexType =
+          mapper.getGraphModel().getVertexTypeByName("RegularEmployee");
+      VertexType contractEmployeeVertexType =
+          mapper.getGraphModel().getVertexTypeByName("ContractEmployee");
+      VertexType countryVertexType = mapper.getGraphModel().getVertexTypeByName("Country");
+      VertexType managerVertexType = mapper.getGraphModel().getVertexTypeByName("Manager");
+      VertexType projectManagerVertexType =
+          mapper.getGraphModel().getVertexTypeByName("ProjectManager");
+      VertexType residenceVertexType = mapper.getGraphModel().getVertexTypeByName("Residence");
+
+      // vertices check
+      assertThat(mapper.getGraphModel().getVerticesType().size()).isEqualTo(6);
+      assertThat(employeeVertexType).isNotNull();
+      assertThat(regularEmployeeVertexType).isNotNull();
+      assertThat(contractEmployeeVertexType).isNotNull();
+      assertThat(countryVertexType).isNotNull();
+      assertThat(managerVertexType).isNotNull();
+      assertThat(projectManagerVertexType).isNotNull();
+      assertThat(residenceVertexType).isNull();
+
+      // properties check
+      assertThat(employeeVertexType.getProperties().size()).isEqualTo(4);
+
+      assertThat(employeeVertexType.getPropertyByName("id")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+      assertThat(employeeVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+      assertThat(employeeVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
+
+      assertThat(employeeVertexType.getPropertyByName("name")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+      assertThat(employeeVertexType.getPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(2);
+      assertThat(employeeVertexType.getPropertyByName("name").isFromPrimaryKey()).isFalse();
+
+      assertThat(employeeVertexType.getPropertyByName("residence")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("residence").getName())
+          .isEqualTo("residence");
+      assertThat(employeeVertexType.getPropertyByName("residence").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("residence").getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(employeeVertexType.getPropertyByName("residence").isFromPrimaryKey()).isFalse();
+
+      assertThat(employeeVertexType.getPropertyByName("manager")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("manager").getName()).isEqualTo("manager");
+      assertThat(employeeVertexType.getPropertyByName("manager").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("manager").getOrdinalPosition()).isEqualTo(4);
+      assertThat(employeeVertexType.getPropertyByName("manager").isFromPrimaryKey()).isFalse();
+
+      assertThat(regularEmployeeVertexType.getProperties().size()).isEqualTo(2);
+
+      assertThat(regularEmployeeVertexType.getPropertyByName("salary")).isNotNull();
+      assertThat(regularEmployeeVertexType.getPropertyByName("salary").getName())
+          .isEqualTo("salary");
+      assertThat(regularEmployeeVertexType.getPropertyByName("salary").getOriginalType())
+          .isEqualTo("DECIMAL");
+      assertThat(regularEmployeeVertexType.getPropertyByName("salary").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(regularEmployeeVertexType.getPropertyByName("salary").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(regularEmployeeVertexType.getPropertyByName("bonus")).isNotNull();
+      assertThat(regularEmployeeVertexType.getPropertyByName("bonus").getName()).isEqualTo("bonus");
+      assertThat(regularEmployeeVertexType.getPropertyByName("bonus").getOriginalType())
+          .isEqualTo("DECIMAL");
+      assertThat(regularEmployeeVertexType.getPropertyByName("bonus").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(regularEmployeeVertexType.getPropertyByName("bonus").isFromPrimaryKey()).isFalse();
+
+      assertThat(contractEmployeeVertexType.getProperties().size()).isEqualTo(2);
+
+      assertThat(contractEmployeeVertexType.getPropertyByName("payPerHour")).isNotNull();
+      assertThat(contractEmployeeVertexType.getPropertyByName("payPerHour").getName())
+          .isEqualTo("payPerHour");
+      assertThat(contractEmployeeVertexType.getPropertyByName("payPerHour").getOriginalType())
+          .isEqualTo("DECIMAL");
+      assertThat(contractEmployeeVertexType.getPropertyByName("payPerHour").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(contractEmployeeVertexType.getPropertyByName("payPerHour").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(contractEmployeeVertexType.getPropertyByName("contractDuration")).isNotNull();
+      assertThat(contractEmployeeVertexType.getPropertyByName("contractDuration").getName())
+          .isEqualTo("contractDuration");
+      assertThat(contractEmployeeVertexType.getPropertyByName("contractDuration").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeVertexType.getPropertyByName("contractDuration").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(
+              contractEmployeeVertexType.getPropertyByName("contractDuration").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(countryVertexType.getProperties().size()).isEqualTo(3);
+
+      assertThat(countryVertexType.getPropertyByName("id")).isNotNull();
+      assertThat(countryVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+      assertThat(countryVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+      assertThat(countryVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+      assertThat(countryVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
+
+      assertThat(countryVertexType.getPropertyByName("name")).isNotNull();
+      assertThat(countryVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+      assertThat(countryVertexType.getPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(countryVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(2);
+      assertThat(countryVertexType.getPropertyByName("name").isFromPrimaryKey()).isFalse();
+
+      assertThat(countryVertexType.getPropertyByName("continent")).isNotNull();
+      assertThat(countryVertexType.getPropertyByName("continent").getName()).isEqualTo("continent");
+      assertThat(countryVertexType.getPropertyByName("continent").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(countryVertexType.getPropertyByName("continent").getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(countryVertexType.getPropertyByName("continent").isFromPrimaryKey()).isFalse();
+
+      assertThat(managerVertexType.getProperties().size()).isEqualTo(2);
+
+      assertThat(managerVertexType.getPropertyByName("id")).isNotNull();
+      assertThat(managerVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+      assertThat(managerVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+      assertThat(managerVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+      assertThat(managerVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
+
+      assertThat(managerVertexType.getPropertyByName("name")).isNotNull();
+      assertThat(managerVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+      assertThat(managerVertexType.getPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(managerVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(2);
+      assertThat(managerVertexType.getPropertyByName("name").isFromPrimaryKey()).isFalse();
+
+      assertThat(projectManagerVertexType.getProperties().size()).isEqualTo(1);
+
+      assertThat(projectManagerVertexType.getPropertyByName("project")).isNotNull();
+      assertThat(projectManagerVertexType.getPropertyByName("project").getName())
+          .isEqualTo("project");
+      assertThat(projectManagerVertexType.getPropertyByName("project").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerVertexType.getPropertyByName("project").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(projectManagerVertexType.getPropertyByName("project").isFromPrimaryKey())
+          .isFalse();
+
+      // inherited properties check
+      assertThat(employeeVertexType.getInheritedProperties().size()).isEqualTo(0);
+
+      assertThat(regularEmployeeVertexType.getInheritedProperties().size()).isEqualTo(4);
+
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("id")).isNotNull();
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("id").getName())
+          .isEqualTo("id");
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("id").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("id").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("id").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("name")).isNotNull();
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("name").getName())
+          .isEqualTo("name");
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("name").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("name").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("residence")).isNotNull();
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("residence").getName())
+          .isEqualTo("residence");
+      assertThat(
+              regularEmployeeVertexType.getInheritedPropertyByName("residence").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              regularEmployeeVertexType
+                  .getInheritedPropertyByName("residence")
+                  .getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(
+              regularEmployeeVertexType.getInheritedPropertyByName("residence").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("manager")).isNotNull();
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("manager").getName())
+          .isEqualTo("manager");
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("manager").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              regularEmployeeVertexType.getInheritedPropertyByName("manager").getOrdinalPosition())
+          .isEqualTo(4);
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("manager").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(contractEmployeeVertexType.getInheritedProperties().size()).isEqualTo(4);
+
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("id")).isNotNull();
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("id").getName())
+          .isEqualTo("id");
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("id").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("id").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("id").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("name")).isNotNull();
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("name").getName())
+          .isEqualTo("name");
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("name").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("name").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("residence")).isNotNull();
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("residence").getName())
+          .isEqualTo("residence");
+      assertThat(
+              contractEmployeeVertexType.getInheritedPropertyByName("residence").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeVertexType
+                  .getInheritedPropertyByName("residence")
+                  .getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(
+              contractEmployeeVertexType.getInheritedPropertyByName("residence").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("manager")).isNotNull();
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("manager").getName())
+          .isEqualTo("manager");
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("manager").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeVertexType.getInheritedPropertyByName("manager").getOrdinalPosition())
+          .isEqualTo(4);
+      assertThat(
+              contractEmployeeVertexType.getInheritedPropertyByName("manager").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(projectManagerVertexType.getInheritedProperties().size()).isEqualTo(2);
+
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("id")).isNotNull();
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("id").getName())
+          .isEqualTo("id");
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("id").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("id").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("id").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("name")).isNotNull();
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("name").getName())
+          .isEqualTo("name");
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("name").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("name").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(countryVertexType.getInheritedProperties().size()).isEqualTo(0);
+      assertThat(managerVertexType.getInheritedProperties().size()).isEqualTo(0);
+
+      // edges check
+
+      assertThat(mapper.getRelationship2edgeType().size()).isEqualTo(1);
+
+      assertThat(mapper.getGraphModel().getEdgesType().size()).isEqualTo(1);
+      assertThat(mapper.getGraphModel().getEdgesType().get(0).getName()).isEqualTo("HasManager");
+
+      assertThat(employeeVertexType.getOutEdgesType().size()).isEqualTo(1);
+      assertThat(employeeVertexType.getOutEdgesType().get(0).getName()).isEqualTo("HasManager");
+
+      assertThat(regularEmployeeVertexType.getOutEdgesType().size()).isEqualTo(1);
+      assertThat(regularEmployeeVertexType.getOutEdgesType().get(0).getName())
+          .isEqualTo("HasManager");
+
+      assertThat(contractEmployeeVertexType.getOutEdgesType().size()).isEqualTo(1);
+      assertThat(contractEmployeeVertexType.getOutEdgesType().get(0).getName())
+          .isEqualTo("HasManager");
+
+      /*
+       * Rules check
+       */
+
+      // Classes Mapping
+
+      assertThat(mapper.getVertexType2EVClassMappers().size()).isEqualTo(6);
+      assertThat(mapper.getEntity2EVClassMappers().size()).isEqualTo(6);
+
+      assertThat(mapper.getEVClassMappersByVertex(employeeVertexType).size()).isEqualTo(1);
+      EVClassMapper employeeClassMapper =
+          mapper.getEVClassMappersByVertex(employeeVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(employeeEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(employeeEntity).get(0))
+          .isEqualTo(employeeClassMapper);
+      assertThat(employeeEntity).isEqualTo(employeeClassMapper.getEntity());
+      assertThat(employeeVertexType).isEqualTo(employeeClassMapper.getVertexType());
+
+      assertThat(employeeClassMapper.getAttribute2property().size()).isEqualTo(4);
+      assertThat(employeeClassMapper.getProperty2attribute().size()).isEqualTo(4);
+      assertThat(employeeClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+      assertThat(employeeClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+      assertThat(employeeClassMapper.getAttribute2property().get("RESIDENCE"))
+          .isEqualTo("residence");
+      assertThat(employeeClassMapper.getAttribute2property().get("MANAGER")).isEqualTo("manager");
+      assertThat(employeeClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+      assertThat(employeeClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
+      assertThat(employeeClassMapper.getProperty2attribute().get("residence"))
+          .isEqualTo("RESIDENCE");
+      assertThat(employeeClassMapper.getProperty2attribute().get("manager")).isEqualTo("MANAGER");
+
+      assertThat(mapper.getEVClassMappersByVertex(regularEmployeeVertexType).size()).isEqualTo(1);
+      EVClassMapper regularEmployeeClassMapper =
+          mapper.getEVClassMappersByVertex(regularEmployeeVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(regularEmployeeEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(regularEmployeeEntity).get(0))
+          .isEqualTo(regularEmployeeClassMapper);
+      assertThat(regularEmployeeEntity).isEqualTo(regularEmployeeClassMapper.getEntity());
+      assertThat(regularEmployeeVertexType).isEqualTo(regularEmployeeClassMapper.getVertexType());
+
+      assertThat(regularEmployeeClassMapper.getAttribute2property().size()).isEqualTo(2);
+      assertThat(regularEmployeeClassMapper.getProperty2attribute().size()).isEqualTo(2);
+      assertThat(regularEmployeeClassMapper.getAttribute2property().get("SALARY"))
+          .isEqualTo("salary");
+      assertThat(regularEmployeeClassMapper.getAttribute2property().get("BONUS"))
+          .isEqualTo("bonus");
+      assertThat(regularEmployeeClassMapper.getProperty2attribute().get("salary"))
+          .isEqualTo("SALARY");
+      assertThat(regularEmployeeClassMapper.getProperty2attribute().get("bonus"))
+          .isEqualTo("BONUS");
+
+      assertThat(mapper.getEVClassMappersByVertex(contractEmployeeVertexType).size()).isEqualTo(1);
+      EVClassMapper contractEmployeeClassMapper =
+          mapper.getEVClassMappersByVertex(contractEmployeeVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(contractEmployeeEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(contractEmployeeEntity).get(0))
+          .isEqualTo(contractEmployeeClassMapper);
+      assertThat(contractEmployeeEntity).isEqualTo(contractEmployeeClassMapper.getEntity());
+      assertThat(contractEmployeeVertexType).isEqualTo(contractEmployeeClassMapper.getVertexType());
+
+      assertThat(contractEmployeeClassMapper.getAttribute2property().size()).isEqualTo(2);
+      assertThat(contractEmployeeClassMapper.getProperty2attribute().size()).isEqualTo(2);
+      assertThat(contractEmployeeClassMapper.getAttribute2property().get("PAY_PER_HOUR"))
+          .isEqualTo("payPerHour");
+      assertThat(contractEmployeeClassMapper.getAttribute2property().get("CONTRACT_DURATION"))
+          .isEqualTo("contractDuration");
+      assertThat(contractEmployeeClassMapper.getProperty2attribute().get("payPerHour"))
+          .isEqualTo("PAY_PER_HOUR");
+      assertThat(contractEmployeeClassMapper.getProperty2attribute().get("contractDuration"))
+          .isEqualTo("CONTRACT_DURATION");
+
+      assertThat(mapper.getEVClassMappersByVertex(countryVertexType).size()).isEqualTo(1);
+      EVClassMapper countryClassMapper = mapper.getEVClassMappersByVertex(countryVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(countryEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(countryEntity).get(0))
+          .isEqualTo(countryClassMapper);
+      assertThat(countryEntity).isEqualTo(countryClassMapper.getEntity());
+      assertThat(countryVertexType).isEqualTo(countryClassMapper.getVertexType());
+
+      assertThat(countryClassMapper.getAttribute2property().size()).isEqualTo(3);
+      assertThat(countryClassMapper.getProperty2attribute().size()).isEqualTo(3);
+      assertThat(countryClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+      assertThat(countryClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+      assertThat(countryClassMapper.getAttribute2property().get("CONTINENT"))
+          .isEqualTo("continent");
+      assertThat(countryClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+      assertThat(countryClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
+      assertThat(countryClassMapper.getProperty2attribute().get("continent"))
+          .isEqualTo("CONTINENT");
+
+      assertThat(mapper.getEVClassMappersByVertex(managerVertexType).size()).isEqualTo(1);
+      EVClassMapper managerClassMapper = mapper.getEVClassMappersByVertex(managerVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(managerEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(managerEntity).get(0))
+          .isEqualTo(managerClassMapper);
+      assertThat(managerEntity).isEqualTo(managerClassMapper.getEntity());
+      assertThat(managerVertexType).isEqualTo(managerClassMapper.getVertexType());
+
+      assertThat(managerClassMapper.getAttribute2property().size()).isEqualTo(2);
+      assertThat(managerClassMapper.getProperty2attribute().size()).isEqualTo(2);
+      assertThat(managerClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+      assertThat(managerClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+      assertThat(managerClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+      assertThat(managerClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
+
+      assertThat(mapper.getEVClassMappersByVertex(projectManagerVertexType).size()).isEqualTo(1);
+      EVClassMapper projectManagerClassMapper =
+          mapper.getEVClassMappersByVertex(projectManagerVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(projectManagerEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(projectManagerEntity).get(0))
+          .isEqualTo(projectManagerClassMapper);
+      assertThat(projectManagerEntity).isEqualTo(projectManagerClassMapper.getEntity());
+      assertThat(projectManagerVertexType).isEqualTo(projectManagerClassMapper.getVertexType());
+
+      assertThat(projectManagerClassMapper.getAttribute2property().size()).isEqualTo(1);
+      assertThat(projectManagerClassMapper.getProperty2attribute().size()).isEqualTo(1);
+      assertThat(projectManagerClassMapper.getAttribute2property().get("PROJECT"))
+          .isEqualTo("project");
+      assertThat(projectManagerClassMapper.getProperty2attribute().get("project"))
+          .isEqualTo("PROJECT");
+
+      // Relationships-Edges Mapping
+
+      Iterator<CanonicalRelationship> itRelationships =
+          employeeEntity.getOutCanonicalRelationships().iterator();
+      CanonicalRelationship hasManagerRelationship = itRelationships.next();
+      assertThat(itRelationships.hasNext()).isFalse();
+
+      EdgeType hasManagerEdgeType = mapper.getGraphModel().getEdgeTypeByName("HasManager");
+
+      assertThat(mapper.getRelationship2edgeType().size()).isEqualTo(1);
+      assertThat(mapper.getRelationship2edgeType().get(hasManagerRelationship))
+          .isEqualTo(hasManagerEdgeType);
+
+      assertThat(mapper.getEdgeType2relationships().size()).isEqualTo(1);
+      assertThat(mapper.getEdgeType2relationships().get(hasManagerEdgeType).size()).isEqualTo(1);
+      assertThat(
+              mapper
+                  .getEdgeType2relationships()
+                  .get(hasManagerEdgeType)
+                  .contains(hasManagerRelationship))
+          .isTrue();
+
+      // JoinVertexes-AggregatorEdges Mapping
+
+      assertThat(mapper.getJoinVertex2aggregatorEdges().size()).isEqualTo(0);
+    } catch (Exception e) {
+      e.printStackTrace();
+      fail("");
+    } finally {
+      try {
+        // Dropping Source DB Schema and OrientGraph
+        String dbDropping = "drop schema public cascade";
+        st.execute(dbDropping);
+        connection.close();
+      } catch (Exception e) {
+        e.printStackTrace();
+        fail("");
+      }
     }
-
-    @Test
-    /*
-     * Filtering out a table through include-tables (with Table per Type inheritance).
-     */public void filterOutThroughIncludeWithTablePerTypeInheritance() {
-        Connection connection = null;
-        Statement st = null;
-
-        try {
-            Class.forName(this.driver);
-            connection = DriverManager.getConnection(this.jurl, this.username, this.password);
-
-            String countryTableBuilding = "create memory table COUNTRY(ID varchar(256) not null, NAME varchar(256), CONTINENT varchar(256), primary key (ID))";
-            st = connection.createStatement();
-            st.execute(countryTableBuilding);
-
-            String residenceTableBuilding =
-                "create memory table RESIDENCE(ID varchar(256) not null, CITY varchar(256), COUNTRY varchar(256), primary key (ID))";
-            st = connection.createStatement();
-            st.execute(residenceTableBuilding);
-
-            String managerTableBuilding = "create memory table MANAGER(ID varchar(256) not null, NAME varchar(256), primary key (ID))";
-            st.execute(managerTableBuilding);
-
-            String projectManagerTableBuilding =
-                "create memory table PROJECT_MANAGER(EID varchar(256) not null, PROJECT varchar(256), primary key (EID), foreign key (EID) references MANAGER(ID))";
-            st.execute(projectManagerTableBuilding);
-
-            String employeeTableBuilding =
-                "create memory table EMPLOYEE (ID varchar(256) not null," +
-                " NAME varchar(256), RESIDENCE varchar(256), MANAGER varchar(256), primary key (ID), " +
-                "foreign key (RESIDENCE) references RESIDENCE(ID), foreign key (MANAGER) references MANAGER(ID))";
-            st.execute(employeeTableBuilding);
-
-            String regularEmployeeTableBuilding =
-                "create memory table REGULAR_EMPLOYEE (EID varchar(256) not null, " +
-                "SALARY decimal(10,2), BONUS decimal(10,0), primary key (EID), foreign key (EID) references EMPLOYEE(ID))";
-            st.execute(regularEmployeeTableBuilding);
-
-            String contractEmployeeTableBuilding =
-                "create memory table CONTRACT_EMPLOYEE (EID varchar(256) not null, " +
-                "PAY_PER_HOUR decimal(10,2), CONTRACT_DURATION varchar(256), primary key (EID), foreign key (EID) references EMPLOYEE(ID))";
-            st.execute(contractEmployeeTableBuilding);
-
-            // Records Inserting
-
-            String countryFilling = "insert into COUNTRY (ID,NAME,CONTINENT) values (" + "('C001','Italy','Europe'))";
-            st.execute(countryFilling);
-
-            String residenceFilling = "insert into RESIDENCE (ID,CITY,COUNTRY) values (" + "('R001','Rome','C001')," + "('R002','Milan','C001'))";
-            st.execute(residenceFilling);
-
-            String managerFilling = "insert into MANAGER (ID,NAME) values (" + "('M001','Bill Right'))";
-            st.execute(managerFilling);
-
-            String projectManagerFilling = "insert into PROJECT_MANAGER (EID,PROJECT) values (" + "('M001','New World'))";
-            st.execute(projectManagerFilling);
-
-            String employeeFilling =
-                "insert into EMPLOYEE (ID,NAME,RESIDENCE,MANAGER) values (" +
-                "('E001','John Black','R001',null)," +
-                "('E002','Andrew Brown','R001','M001')," +
-                "('E003','Jack Johnson','R002',null))";
-            st.execute(employeeFilling);
-
-            String regularEmployeeFilling = "insert into REGULAR_EMPLOYEE (EID,SALARY,BONUS) values (" + "('E002','1000.00','10'))";
-            st.execute(regularEmployeeFilling);
-
-            String contractEmployeeFilling = "insert into CONTRACT_EMPLOYEE (EID,PAY_PER_HOUR,CONTRACT_DURATION) values (" + "('E003','50.00','6'))";
-            st.execute(contractEmployeeFilling);
-
-            List<String> includedTables = new ArrayList<String>();
-            includedTables.add("COUNTRY");
-            includedTables.add("MANAGER");
-            includedTables.add("PROJECT_MANAGER");
-            includedTables.add("EMPLOYEE");
-            includedTables.add("REGULAR_EMPLOYEE");
-            includedTables.add("CONTRACT_EMPLOYEE");
-
-            this.mapper =
-                new Hibernate2GraphMapper(
-                    dataSource,
-                    FilterTableMappingTest.XML_TABLE_PER_SUBCLASS1,
-                    includedTables,
-                    null,
-                    dbQueryEngine,
-                    dataTypeHandler,
-                    executionStrategy,
-                    nameResolver,
-                    statistics
-                );
-            mapper.buildSourceDatabaseSchema();
-            mapper.buildGraphModel(new JavaConventionNameResolver());
-
-            /*
-             *  Testing context information
-             */
-
-            assertEquals(6, statistics.totalNumberOfEntities);
-            assertEquals(6, statistics.builtEntities);
-            assertEquals(4, statistics.totalNumberOfRelationships);
-            assertEquals(4, statistics.builtRelationships); // 3 of these are hierarchical relationships
-
-            assertEquals(6, statistics.totalNumberOfModelVertices);
-            assertEquals(6, statistics.builtModelVertexTypes);
-            assertEquals(1, statistics.totalNumberOfModelEdges);
-            assertEquals(1, statistics.builtModelEdgeTypes);
-
-            /*
-             *  Testing built source db schema
-             */
-
-            Entity employeeEntity = mapper.getDataBaseSchema().getEntityByName("EMPLOYEE");
-            Entity regularEmployeeEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("REGULAR_EMPLOYEE");
-            Entity contractEmployeeEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("CONTRACT_EMPLOYEE");
-            Entity countryEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("COUNTRY");
-            Entity managerEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("MANAGER");
-            Entity projectManagerEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("PROJECT_MANAGER");
-            Entity residenceEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("RESIDENCE");
-
-            // entities check
-            assertEquals(6, mapper.getDataBaseSchema().getEntities().size());
-            assertEquals(4, mapper.getDataBaseSchema().getCanonicalRelationships().size());
-            assertNotNull(employeeEntity);
-            assertNotNull(regularEmployeeEntity);
-            assertNotNull(contractEmployeeEntity);
-            assertNotNull(countryEntity);
-            assertNotNull(managerEntity);
-            assertNull(residenceEntity);
-
-            // attributes check
-            assertEquals(4, employeeEntity.getAttributes().size());
-
-            assertNotNull(employeeEntity.getAttributeByName("ID"));
-            assertEquals("ID", employeeEntity.getAttributeByName("ID").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("ID").getDataType());
-            assertEquals(1, employeeEntity.getAttributeByName("ID").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(employeeEntity.getAttributeByName("NAME"));
-            assertEquals("NAME", employeeEntity.getAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("NAME").getDataType());
-            assertEquals(2, employeeEntity.getAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertNotNull(employeeEntity.getAttributeByName("RESIDENCE"));
-            assertEquals("RESIDENCE", employeeEntity.getAttributeByName("RESIDENCE").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("RESIDENCE").getDataType());
-            assertEquals(3, employeeEntity.getAttributeByName("RESIDENCE").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("RESIDENCE").getBelongingEntity().getName());
-
-            assertNotNull(employeeEntity.getAttributeByName("MANAGER"));
-            assertEquals("MANAGER", employeeEntity.getAttributeByName("MANAGER").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("MANAGER").getDataType());
-            assertEquals(4, employeeEntity.getAttributeByName("MANAGER").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("MANAGER").getBelongingEntity().getName());
-
-            assertEquals(2, regularEmployeeEntity.getAttributes().size());
-
-            assertNotNull(regularEmployeeEntity.getAttributeByName("SALARY"));
-            assertEquals("SALARY", regularEmployeeEntity.getAttributeByName("SALARY").getName());
-            assertEquals("DECIMAL", regularEmployeeEntity.getAttributeByName("SALARY").getDataType());
-            assertEquals(1, regularEmployeeEntity.getAttributeByName("SALARY").getOrdinalPosition());
-            assertEquals("REGULAR_EMPLOYEE", regularEmployeeEntity.getAttributeByName("SALARY").getBelongingEntity().getName());
-
-            assertNotNull(regularEmployeeEntity.getAttributeByName("BONUS"));
-            assertEquals("BONUS", regularEmployeeEntity.getAttributeByName("BONUS").getName());
-            assertEquals("DECIMAL", regularEmployeeEntity.getAttributeByName("BONUS").getDataType());
-            assertEquals(2, regularEmployeeEntity.getAttributeByName("BONUS").getOrdinalPosition());
-            assertEquals("REGULAR_EMPLOYEE", regularEmployeeEntity.getAttributeByName("BONUS").getBelongingEntity().getName());
-
-            assertEquals(2, contractEmployeeEntity.getAttributes().size());
-
-            assertNotNull(contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR"));
-            assertEquals("PAY_PER_HOUR", contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getName());
-            assertEquals("DECIMAL", contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getDataType());
-            assertEquals(1, contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getOrdinalPosition());
-            assertEquals("CONTRACT_EMPLOYEE", contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getBelongingEntity().getName());
-
-            assertNotNull(contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION"));
-            assertEquals("CONTRACT_DURATION", contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getDataType());
-            assertEquals(2, contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getOrdinalPosition());
-            assertEquals("CONTRACT_EMPLOYEE", contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getBelongingEntity().getName());
-
-            assertEquals(3, countryEntity.getAttributes().size());
-
-            assertNotNull(countryEntity.getAttributeByName("ID"));
-            assertEquals("ID", countryEntity.getAttributeByName("ID").getName());
-            assertEquals("VARCHAR", countryEntity.getAttributeByName("ID").getDataType());
-            assertEquals(1, countryEntity.getAttributeByName("ID").getOrdinalPosition());
-            assertEquals("COUNTRY", countryEntity.getAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(countryEntity.getAttributeByName("NAME"));
-            assertEquals("NAME", countryEntity.getAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", countryEntity.getAttributeByName("NAME").getDataType());
-            assertEquals(2, countryEntity.getAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("COUNTRY", countryEntity.getAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertNotNull(countryEntity.getAttributeByName("CONTINENT"));
-            assertEquals("CONTINENT", countryEntity.getAttributeByName("CONTINENT").getName());
-            assertEquals("VARCHAR", countryEntity.getAttributeByName("CONTINENT").getDataType());
-            assertEquals(3, countryEntity.getAttributeByName("CONTINENT").getOrdinalPosition());
-            assertEquals("COUNTRY", countryEntity.getAttributeByName("CONTINENT").getBelongingEntity().getName());
-
-            assertEquals(2, managerEntity.getAttributes().size());
-
-            assertNotNull(managerEntity.getAttributeByName("ID"));
-            assertEquals("ID", managerEntity.getAttributeByName("ID").getName());
-            assertEquals("VARCHAR", managerEntity.getAttributeByName("ID").getDataType());
-            assertEquals(1, managerEntity.getAttributeByName("ID").getOrdinalPosition());
-            assertEquals("MANAGER", managerEntity.getAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(managerEntity.getAttributeByName("NAME"));
-            assertEquals("NAME", managerEntity.getAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", managerEntity.getAttributeByName("NAME").getDataType());
-            assertEquals(2, managerEntity.getAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("MANAGER", managerEntity.getAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertEquals(1, projectManagerEntity.getAttributes().size());
-
-            assertNotNull(projectManagerEntity.getAttributeByName("PROJECT"));
-            assertEquals("PROJECT", projectManagerEntity.getAttributeByName("PROJECT").getName());
-            assertEquals("VARCHAR", projectManagerEntity.getAttributeByName("PROJECT").getDataType());
-            assertEquals(1, projectManagerEntity.getAttributeByName("PROJECT").getOrdinalPosition());
-            assertEquals("PROJECT_MANAGER", projectManagerEntity.getAttributeByName("PROJECT").getBelongingEntity().getName());
-
-            // inherited attributes check
-            assertEquals(0, employeeEntity.getInheritedAttributes().size());
-
-            assertEquals(4, regularEmployeeEntity.getInheritedAttributes().size());
-
-            assertNotNull(regularEmployeeEntity.getInheritedAttributeByName("ID"));
-            assertEquals("ID", regularEmployeeEntity.getInheritedAttributeByName("ID").getName());
-            assertEquals("VARCHAR", regularEmployeeEntity.getInheritedAttributeByName("ID").getDataType());
-            assertEquals(1, regularEmployeeEntity.getInheritedAttributeByName("ID").getOrdinalPosition());
-            assertEquals("EMPLOYEE", regularEmployeeEntity.getInheritedAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(regularEmployeeEntity.getInheritedAttributeByName("NAME"));
-            assertEquals("NAME", regularEmployeeEntity.getInheritedAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", regularEmployeeEntity.getInheritedAttributeByName("NAME").getDataType());
-            assertEquals(2, regularEmployeeEntity.getInheritedAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("EMPLOYEE", regularEmployeeEntity.getInheritedAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertNotNull(regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE"));
-            assertEquals("RESIDENCE", regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getName());
-            assertEquals("VARCHAR", regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getDataType());
-            assertEquals(3, regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getOrdinalPosition());
-            assertEquals("EMPLOYEE", regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getBelongingEntity().getName());
-
-            assertNotNull(regularEmployeeEntity.getInheritedAttributeByName("MANAGER"));
-            assertEquals("MANAGER", regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getName());
-            assertEquals("VARCHAR", regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getDataType());
-            assertEquals(4, regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getOrdinalPosition());
-            assertEquals("EMPLOYEE", regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getBelongingEntity().getName());
-
-            assertEquals(4, contractEmployeeEntity.getInheritedAttributes().size());
-
-            assertNotNull(contractEmployeeEntity.getInheritedAttributeByName("ID"));
-            assertEquals("ID", contractEmployeeEntity.getInheritedAttributeByName("ID").getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getInheritedAttributeByName("ID").getDataType());
-            assertEquals(1, contractEmployeeEntity.getInheritedAttributeByName("ID").getOrdinalPosition());
-            assertEquals("EMPLOYEE", contractEmployeeEntity.getInheritedAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(contractEmployeeEntity.getInheritedAttributeByName("NAME"));
-            assertEquals("NAME", contractEmployeeEntity.getInheritedAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getInheritedAttributeByName("NAME").getDataType());
-            assertEquals(2, contractEmployeeEntity.getInheritedAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("EMPLOYEE", contractEmployeeEntity.getInheritedAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertNotNull(contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE"));
-            assertEquals("RESIDENCE", contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getDataType());
-            assertEquals(3, contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getOrdinalPosition());
-            assertEquals("EMPLOYEE", contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getBelongingEntity().getName());
-
-            assertNotNull(contractEmployeeEntity.getInheritedAttributeByName("MANAGER"));
-            assertEquals("MANAGER", contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getDataType());
-            assertEquals(4, contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getOrdinalPosition());
-            assertEquals("EMPLOYEE", contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getBelongingEntity().getName());
-
-            assertEquals(2, projectManagerEntity.getInheritedAttributes().size());
-
-            assertNotNull(projectManagerEntity.getInheritedAttributeByName("ID"));
-            assertEquals("ID", projectManagerEntity.getInheritedAttributeByName("ID").getName());
-            assertEquals("VARCHAR", projectManagerEntity.getInheritedAttributeByName("ID").getDataType());
-            assertEquals(1, projectManagerEntity.getInheritedAttributeByName("ID").getOrdinalPosition());
-            assertEquals("MANAGER", projectManagerEntity.getInheritedAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(projectManagerEntity.getInheritedAttributeByName("NAME"));
-            assertEquals("NAME", projectManagerEntity.getInheritedAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", projectManagerEntity.getInheritedAttributeByName("NAME").getDataType());
-            assertEquals(2, projectManagerEntity.getInheritedAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("MANAGER", projectManagerEntity.getInheritedAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertEquals(0, countryEntity.getInheritedAttributes().size());
-            assertEquals(0, managerEntity.getInheritedAttributes().size());
-
-            // primary key check
-            assertEquals(1, regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().size());
-            assertEquals("EID", regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName());
-            assertEquals("VARCHAR", regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType());
-            assertEquals("REGULAR_EMPLOYEE", regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getBelongingEntity().getName());
-
-            assertEquals(1, contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().size());
-            assertEquals("EID", contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType());
-            assertEquals("CONTRACT_EMPLOYEE", contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getBelongingEntity().getName());
-
-            assertEquals(1, projectManagerEntity.getPrimaryKey().getInvolvedAttributes().size());
-            assertEquals("EID", projectManagerEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName());
-            assertEquals("VARCHAR", projectManagerEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType());
-            assertEquals("PROJECT_MANAGER", projectManagerEntity.getPrimaryKey().getInvolvedAttributes().get(0).getBelongingEntity().getName());
-
-            // relationship, primary and foreign key check
-            assertEquals(1, regularEmployeeEntity.getOutCanonicalRelationships().size());
-            assertEquals(1, contractEmployeeEntity.getOutCanonicalRelationships().size());
-            assertEquals(1, employeeEntity.getOutCanonicalRelationships().size());
-            assertEquals(1, projectManagerEntity.getOutCanonicalRelationships().size());
-            assertEquals(0, managerEntity.getOutCanonicalRelationships().size());
-            assertEquals(0, countryEntity.getOutCanonicalRelationships().size());
-            assertEquals(0, regularEmployeeEntity.getInCanonicalRelationships().size());
-            assertEquals(0, contractEmployeeEntity.getInCanonicalRelationships().size());
-            assertEquals(2, employeeEntity.getInCanonicalRelationships().size());
-            assertEquals(0, projectManagerEntity.getInCanonicalRelationships().size());
-            assertEquals(2, managerEntity.getInCanonicalRelationships().size());
-            assertEquals(0, countryEntity.getInCanonicalRelationships().size());
-
-            assertEquals(1, regularEmployeeEntity.getForeignKeys().size());
-            assertEquals(1, contractEmployeeEntity.getForeignKeys().size());
-            assertEquals(1, employeeEntity.getForeignKeys().size());
-            assertEquals(1, projectManagerEntity.getForeignKeys().size());
-            assertEquals(0, managerEntity.getForeignKeys().size());
-            assertEquals(0, countryEntity.getForeignKeys().size());
-
-            Iterator<CanonicalRelationship> itEmp = employeeEntity.getOutCanonicalRelationships().iterator();
-            CanonicalRelationship currentEmpRel = itEmp.next();
-            assertEquals("MANAGER", currentEmpRel.getParentEntity().getName());
-            assertEquals("EMPLOYEE", currentEmpRel.getForeignEntity().getName());
-            assertEquals(managerEntity.getPrimaryKey(), currentEmpRel.getPrimaryKey());
-            assertEquals(employeeEntity.getForeignKeys().get(0), currentEmpRel.getForeignKey());
-            assertFalse(itEmp.hasNext());
-
-            Iterator<CanonicalRelationship> itManager = managerEntity.getInCanonicalRelationships().iterator();
-            CanonicalRelationship currentManRel = itManager.next();
-            assertEquals(currentEmpRel, currentManRel);
-
-            Iterator<CanonicalRelationship> itContEmp = contractEmployeeEntity.getOutCanonicalRelationships().iterator();
-            CanonicalRelationship currentContEmpRel = itContEmp.next();
-            itEmp = employeeEntity.getInCanonicalRelationships().iterator();
-            currentEmpRel = itEmp.next();
-            assertEquals(currentContEmpRel, currentEmpRel);
-
-            Iterator<CanonicalRelationship> itRegEmp = regularEmployeeEntity.getOutCanonicalRelationships().iterator();
-            CanonicalRelationship currentRegEmpRel = itRegEmp.next();
-            currentEmpRel = itEmp.next();
-            assertEquals(currentRegEmpRel, currentEmpRel);
-
-            // inherited relationships check
-            assertEquals(1, regularEmployeeEntity.getInheritedOutCanonicalRelationships().size());
-            assertEquals(1, contractEmployeeEntity.getInheritedOutCanonicalRelationships().size());
-            assertEquals(0, employeeEntity.getInheritedOutCanonicalRelationships().size());
-
-            itRegEmp = regularEmployeeEntity.getInheritedOutCanonicalRelationships().iterator();
-            itContEmp = contractEmployeeEntity.getInheritedOutCanonicalRelationships().iterator();
-            currentRegEmpRel = itRegEmp.next();
-            currentContEmpRel = itContEmp.next();
-            assertEquals("MANAGER", currentRegEmpRel.getParentEntity().getName());
-            assertEquals("EMPLOYEE", currentRegEmpRel.getForeignEntity().getName());
-            assertEquals("MANAGER", currentContEmpRel.getParentEntity().getName());
-            assertEquals("EMPLOYEE", currentContEmpRel.getForeignEntity().getName());
-            assertEquals(managerEntity.getPrimaryKey(), currentRegEmpRel.getPrimaryKey());
-            assertEquals(1, currentRegEmpRel.getFromColumns().size());
-            assertEquals("MANAGER", currentRegEmpRel.getFromColumns().get(0).getName());
-            assertEquals(managerEntity.getPrimaryKey(), currentContEmpRel.getPrimaryKey());
-            assertEquals(1, currentContEmpRel.getFromColumns().size());
-            assertEquals("MANAGER", currentContEmpRel.getFromColumns().get(0).getName());
-            assertFalse(itRegEmp.hasNext());
-            assertFalse(itContEmp.hasNext());
-
-            // inheritance check
-            assertEquals(employeeEntity, regularEmployeeEntity.getParentEntity());
-            assertEquals(employeeEntity, contractEmployeeEntity.getParentEntity());
-            assertNull(employeeEntity.getParentEntity());
-
-            assertEquals(1, regularEmployeeEntity.getInheritanceLevel());
-            assertEquals(1, contractEmployeeEntity.getInheritanceLevel());
-            assertEquals(0, employeeEntity.getInheritanceLevel());
-
-            // Hierarchical Bag check
-            assertEquals(2, mapper.getDataBaseSchema().getHierarchicalBags().size());
-
-            HierarchicalBag hierarchicalBag1 = mapper.getDataBaseSchema().getHierarchicalBags().get(0);
-            HierarchicalBag hierarchicalBag2 = mapper.getDataBaseSchema().getHierarchicalBags().get(1);
-            assertEquals("table-per-type", hierarchicalBag1.getInheritancePattern());
-            assertEquals("table-per-type", hierarchicalBag2.getInheritancePattern());
-
-            assertEquals(2, hierarchicalBag1.getDepth2entities().size());
-
-            assertEquals(1, hierarchicalBag1.getDepth2entities().get(0).size());
-            Iterator<Entity> it = hierarchicalBag1.getDepth2entities().get(0).iterator();
-            assertEquals("EMPLOYEE", it.next().getName());
-            assertTrue(!it.hasNext());
-
-            assertEquals(2, hierarchicalBag1.getDepth2entities().get(1).size());
-            it = hierarchicalBag1.getDepth2entities().get(1).iterator();
-            assertEquals("REGULAR_EMPLOYEE", it.next().getName());
-            assertEquals("CONTRACT_EMPLOYEE", it.next().getName());
-            assertTrue(!it.hasNext());
-
-            assertEquals(hierarchicalBag1, employeeEntity.getHierarchicalBag());
-            assertEquals(hierarchicalBag1, regularEmployeeEntity.getHierarchicalBag());
-            assertEquals(hierarchicalBag1, contractEmployeeEntity.getHierarchicalBag());
-
-            assertNull(hierarchicalBag1.getDiscriminatorColumn());
-
-            assertEquals(2, hierarchicalBag2.getDepth2entities().size());
-
-            assertEquals(1, hierarchicalBag2.getDepth2entities().get(0).size());
-            it = hierarchicalBag2.getDepth2entities().get(0).iterator();
-            assertEquals("MANAGER", it.next().getName());
-            assertTrue(!it.hasNext());
-
-            assertEquals(1, hierarchicalBag2.getDepth2entities().get(1).size());
-            it = hierarchicalBag2.getDepth2entities().get(1).iterator();
-            assertEquals("PROJECT_MANAGER", it.next().getName());
-            assertTrue(!it.hasNext());
-
-            assertEquals(hierarchicalBag2, managerEntity.getHierarchicalBag());
-            assertEquals(hierarchicalBag2, projectManagerEntity.getHierarchicalBag());
-
-            assertNull(hierarchicalBag2.getDiscriminatorColumn());
-
-            /*
-             *  Testing built graph model
-             */
-
-            VertexType employeeVertexType = mapper.getGraphModel().getVertexTypeByName("Employee");
-            VertexType regularEmployeeVertexType = mapper.getGraphModel().getVertexTypeByName("RegularEmployee");
-            VertexType contractEmployeeVertexType = mapper.getGraphModel().getVertexTypeByName("ContractEmployee");
-            VertexType countryVertexType = mapper.getGraphModel().getVertexTypeByName("Country");
-            VertexType managerVertexType = mapper.getGraphModel().getVertexTypeByName("Manager");
-            VertexType projectManagerVertexType = mapper.getGraphModel().getVertexTypeByName("ProjectManager");
-            VertexType residenceVertexType = mapper.getGraphModel().getVertexTypeByName("Residence");
-
-            // vertices check
-            assertEquals(6, mapper.getGraphModel().getVerticesType().size());
-            assertNotNull(employeeVertexType);
-            assertNotNull(regularEmployeeVertexType);
-            assertNotNull(contractEmployeeVertexType);
-            assertNotNull(countryVertexType);
-            assertNotNull(managerVertexType);
-            assertNotNull(projectManagerVertexType);
-            assertNull(residenceVertexType);
-
-            // properties check
-            assertEquals(4, employeeVertexType.getProperties().size());
-
-            assertNotNull(employeeVertexType.getPropertyByName("id"));
-            assertEquals("id", employeeVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, employeeVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, employeeVertexType.getPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(employeeVertexType.getPropertyByName("name"));
-            assertEquals("name", employeeVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(2, employeeVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, employeeVertexType.getPropertyByName("name").isFromPrimaryKey());
-
-            assertNotNull(employeeVertexType.getPropertyByName("residence"));
-            assertEquals("residence", employeeVertexType.getPropertyByName("residence").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("residence").getOriginalType());
-            assertEquals(3, employeeVertexType.getPropertyByName("residence").getOrdinalPosition());
-            assertEquals(false, employeeVertexType.getPropertyByName("residence").isFromPrimaryKey());
-
-            assertNotNull(employeeVertexType.getPropertyByName("manager"));
-            assertEquals("manager", employeeVertexType.getPropertyByName("manager").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("manager").getOriginalType());
-            assertEquals(4, employeeVertexType.getPropertyByName("manager").getOrdinalPosition());
-            assertEquals(false, employeeVertexType.getPropertyByName("manager").isFromPrimaryKey());
-
-            assertEquals(2, regularEmployeeVertexType.getProperties().size());
-
-            assertNotNull(regularEmployeeVertexType.getPropertyByName("salary"));
-            assertEquals("salary", regularEmployeeVertexType.getPropertyByName("salary").getName());
-            assertEquals("DECIMAL", regularEmployeeVertexType.getPropertyByName("salary").getOriginalType());
-            assertEquals(1, regularEmployeeVertexType.getPropertyByName("salary").getOrdinalPosition());
-            assertEquals(false, regularEmployeeVertexType.getPropertyByName("salary").isFromPrimaryKey());
-
-            assertNotNull(regularEmployeeVertexType.getPropertyByName("bonus"));
-            assertEquals("bonus", regularEmployeeVertexType.getPropertyByName("bonus").getName());
-            assertEquals("DECIMAL", regularEmployeeVertexType.getPropertyByName("bonus").getOriginalType());
-            assertEquals(2, regularEmployeeVertexType.getPropertyByName("bonus").getOrdinalPosition());
-            assertEquals(false, regularEmployeeVertexType.getPropertyByName("bonus").isFromPrimaryKey());
-
-            assertEquals(2, contractEmployeeVertexType.getProperties().size());
-
-            assertNotNull(contractEmployeeVertexType.getPropertyByName("payPerHour"));
-            assertEquals("payPerHour", contractEmployeeVertexType.getPropertyByName("payPerHour").getName());
-            assertEquals("DECIMAL", contractEmployeeVertexType.getPropertyByName("payPerHour").getOriginalType());
-            assertEquals(1, contractEmployeeVertexType.getPropertyByName("payPerHour").getOrdinalPosition());
-            assertEquals(false, contractEmployeeVertexType.getPropertyByName("payPerHour").isFromPrimaryKey());
-
-            assertNotNull(contractEmployeeVertexType.getPropertyByName("contractDuration"));
-            assertEquals("contractDuration", contractEmployeeVertexType.getPropertyByName("contractDuration").getName());
-            assertEquals("VARCHAR", contractEmployeeVertexType.getPropertyByName("contractDuration").getOriginalType());
-            assertEquals(2, contractEmployeeVertexType.getPropertyByName("contractDuration").getOrdinalPosition());
-            assertEquals(false, contractEmployeeVertexType.getPropertyByName("contractDuration").isFromPrimaryKey());
-
-            assertEquals(3, countryVertexType.getProperties().size());
-
-            assertNotNull(countryVertexType.getPropertyByName("id"));
-            assertEquals("id", countryVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", countryVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, countryVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, countryVertexType.getPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(countryVertexType.getPropertyByName("name"));
-            assertEquals("name", countryVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", countryVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(2, countryVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, countryVertexType.getPropertyByName("name").isFromPrimaryKey());
-
-            assertNotNull(countryVertexType.getPropertyByName("continent"));
-            assertEquals("continent", countryVertexType.getPropertyByName("continent").getName());
-            assertEquals("VARCHAR", countryVertexType.getPropertyByName("continent").getOriginalType());
-            assertEquals(3, countryVertexType.getPropertyByName("continent").getOrdinalPosition());
-            assertEquals(false, countryVertexType.getPropertyByName("continent").isFromPrimaryKey());
-
-            assertEquals(2, managerVertexType.getProperties().size());
-
-            assertNotNull(managerVertexType.getPropertyByName("id"));
-            assertEquals("id", managerVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", managerVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, managerVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, managerVertexType.getPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(managerVertexType.getPropertyByName("name"));
-            assertEquals("name", managerVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", managerVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(2, managerVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, managerVertexType.getPropertyByName("name").isFromPrimaryKey());
-
-            assertEquals(1, projectManagerVertexType.getProperties().size());
-
-            assertNotNull(projectManagerVertexType.getPropertyByName("project"));
-            assertEquals("project", projectManagerVertexType.getPropertyByName("project").getName());
-            assertEquals("VARCHAR", projectManagerVertexType.getPropertyByName("project").getOriginalType());
-            assertEquals(1, projectManagerVertexType.getPropertyByName("project").getOrdinalPosition());
-            assertEquals(false, projectManagerVertexType.getPropertyByName("project").isFromPrimaryKey());
-
-            // inherited properties check
-            assertEquals(0, employeeVertexType.getInheritedProperties().size());
-
-            assertEquals(4, regularEmployeeVertexType.getInheritedProperties().size());
-
-            assertNotNull(regularEmployeeVertexType.getInheritedPropertyByName("id"));
-            assertEquals("id", regularEmployeeVertexType.getInheritedPropertyByName("id").getName());
-            assertEquals("VARCHAR", regularEmployeeVertexType.getInheritedPropertyByName("id").getOriginalType());
-            assertEquals(1, regularEmployeeVertexType.getInheritedPropertyByName("id").getOrdinalPosition());
-            assertEquals(false, regularEmployeeVertexType.getInheritedPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(regularEmployeeVertexType.getInheritedPropertyByName("name"));
-            assertEquals("name", regularEmployeeVertexType.getInheritedPropertyByName("name").getName());
-            assertEquals("VARCHAR", regularEmployeeVertexType.getInheritedPropertyByName("name").getOriginalType());
-            assertEquals(2, regularEmployeeVertexType.getInheritedPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, regularEmployeeVertexType.getInheritedPropertyByName("name").isFromPrimaryKey());
-
-            assertNotNull(regularEmployeeVertexType.getInheritedPropertyByName("residence"));
-            assertEquals("residence", regularEmployeeVertexType.getInheritedPropertyByName("residence").getName());
-            assertEquals("VARCHAR", regularEmployeeVertexType.getInheritedPropertyByName("residence").getOriginalType());
-            assertEquals(3, regularEmployeeVertexType.getInheritedPropertyByName("residence").getOrdinalPosition());
-            assertEquals(false, regularEmployeeVertexType.getInheritedPropertyByName("residence").isFromPrimaryKey());
-
-            assertNotNull(regularEmployeeVertexType.getInheritedPropertyByName("manager"));
-            assertEquals("manager", regularEmployeeVertexType.getInheritedPropertyByName("manager").getName());
-            assertEquals("VARCHAR", regularEmployeeVertexType.getInheritedPropertyByName("manager").getOriginalType());
-            assertEquals(4, regularEmployeeVertexType.getInheritedPropertyByName("manager").getOrdinalPosition());
-            assertEquals(false, regularEmployeeVertexType.getInheritedPropertyByName("manager").isFromPrimaryKey());
-
-            assertEquals(4, contractEmployeeVertexType.getInheritedProperties().size());
-
-            assertNotNull(contractEmployeeVertexType.getInheritedPropertyByName("id"));
-            assertEquals("id", contractEmployeeVertexType.getInheritedPropertyByName("id").getName());
-            assertEquals("VARCHAR", contractEmployeeVertexType.getInheritedPropertyByName("id").getOriginalType());
-            assertEquals(1, contractEmployeeVertexType.getInheritedPropertyByName("id").getOrdinalPosition());
-            assertEquals(false, contractEmployeeVertexType.getInheritedPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(contractEmployeeVertexType.getInheritedPropertyByName("name"));
-            assertEquals("name", contractEmployeeVertexType.getInheritedPropertyByName("name").getName());
-            assertEquals("VARCHAR", contractEmployeeVertexType.getInheritedPropertyByName("name").getOriginalType());
-            assertEquals(2, contractEmployeeVertexType.getInheritedPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, contractEmployeeVertexType.getInheritedPropertyByName("name").isFromPrimaryKey());
-
-            assertNotNull(contractEmployeeVertexType.getInheritedPropertyByName("residence"));
-            assertEquals("residence", contractEmployeeVertexType.getInheritedPropertyByName("residence").getName());
-            assertEquals("VARCHAR", contractEmployeeVertexType.getInheritedPropertyByName("residence").getOriginalType());
-            assertEquals(3, contractEmployeeVertexType.getInheritedPropertyByName("residence").getOrdinalPosition());
-            assertEquals(false, contractEmployeeVertexType.getInheritedPropertyByName("residence").isFromPrimaryKey());
-
-            assertNotNull(contractEmployeeVertexType.getInheritedPropertyByName("manager"));
-            assertEquals("manager", contractEmployeeVertexType.getInheritedPropertyByName("manager").getName());
-            assertEquals("VARCHAR", contractEmployeeVertexType.getInheritedPropertyByName("manager").getOriginalType());
-            assertEquals(4, contractEmployeeVertexType.getInheritedPropertyByName("manager").getOrdinalPosition());
-            assertEquals(false, contractEmployeeVertexType.getInheritedPropertyByName("manager").isFromPrimaryKey());
-
-            assertEquals(2, projectManagerVertexType.getInheritedProperties().size());
-
-            assertNotNull(projectManagerVertexType.getInheritedPropertyByName("id"));
-            assertEquals("id", projectManagerVertexType.getInheritedPropertyByName("id").getName());
-            assertEquals("VARCHAR", projectManagerVertexType.getInheritedPropertyByName("id").getOriginalType());
-            assertEquals(1, projectManagerVertexType.getInheritedPropertyByName("id").getOrdinalPosition());
-            assertEquals(false, projectManagerVertexType.getInheritedPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(projectManagerVertexType.getInheritedPropertyByName("name"));
-            assertEquals("name", projectManagerVertexType.getInheritedPropertyByName("name").getName());
-            assertEquals("VARCHAR", projectManagerVertexType.getInheritedPropertyByName("name").getOriginalType());
-            assertEquals(2, projectManagerVertexType.getInheritedPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, projectManagerVertexType.getInheritedPropertyByName("name").isFromPrimaryKey());
-
-            assertEquals(0, countryVertexType.getInheritedProperties().size());
-            assertEquals(0, managerVertexType.getInheritedProperties().size());
-
-            // edges check
-
-            assertEquals(1, mapper.getRelationship2edgeType().size());
-
-            assertEquals(1, mapper.getGraphModel().getEdgesType().size());
-            assertEquals("HasManager", mapper.getGraphModel().getEdgesType().get(0).getName());
-
-            assertEquals(1, employeeVertexType.getOutEdgesType().size());
-            assertEquals("HasManager", employeeVertexType.getOutEdgesType().get(0).getName());
-
-            assertEquals(1, regularEmployeeVertexType.getOutEdgesType().size());
-            assertEquals("HasManager", regularEmployeeVertexType.getOutEdgesType().get(0).getName());
-
-            assertEquals(1, contractEmployeeVertexType.getOutEdgesType().size());
-            assertEquals("HasManager", contractEmployeeVertexType.getOutEdgesType().get(0).getName());
-
-            /*
-             * Rules check
-             */
-
-            // Classes Mapping
-
-            assertEquals(6, mapper.getVertexType2EVClassMappers().size());
-            assertEquals(6, mapper.getEntity2EVClassMappers().size());
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(employeeVertexType).size());
-            EVClassMapper employeeClassMapper = mapper.getEVClassMappersByVertex(employeeVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(employeeEntity).size());
-            assertEquals(employeeClassMapper, mapper.getEVClassMappersByEntity(employeeEntity).get(0));
-            assertEquals(employeeClassMapper.getEntity(), employeeEntity);
-            assertEquals(employeeClassMapper.getVertexType(), employeeVertexType);
-
-            assertEquals(4, employeeClassMapper.getAttribute2property().size());
-            assertEquals(4, employeeClassMapper.getProperty2attribute().size());
-            assertEquals("id", employeeClassMapper.getAttribute2property().get("ID"));
-            assertEquals("name", employeeClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("residence", employeeClassMapper.getAttribute2property().get("RESIDENCE"));
-            assertEquals("manager", employeeClassMapper.getAttribute2property().get("MANAGER"));
-            assertEquals("ID", employeeClassMapper.getProperty2attribute().get("id"));
-            assertEquals("NAME", employeeClassMapper.getProperty2attribute().get("name"));
-            assertEquals("RESIDENCE", employeeClassMapper.getProperty2attribute().get("residence"));
-            assertEquals("MANAGER", employeeClassMapper.getProperty2attribute().get("manager"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(regularEmployeeVertexType).size());
-            EVClassMapper regularEmployeeClassMapper = mapper.getEVClassMappersByVertex(regularEmployeeVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(regularEmployeeEntity).size());
-            assertEquals(regularEmployeeClassMapper, mapper.getEVClassMappersByEntity(regularEmployeeEntity).get(0));
-            assertEquals(regularEmployeeClassMapper.getEntity(), regularEmployeeEntity);
-            assertEquals(regularEmployeeClassMapper.getVertexType(), regularEmployeeVertexType);
-
-            assertEquals(2, regularEmployeeClassMapper.getAttribute2property().size());
-            assertEquals(2, regularEmployeeClassMapper.getProperty2attribute().size());
-            assertEquals("salary", regularEmployeeClassMapper.getAttribute2property().get("SALARY"));
-            assertEquals("bonus", regularEmployeeClassMapper.getAttribute2property().get("BONUS"));
-            assertEquals("SALARY", regularEmployeeClassMapper.getProperty2attribute().get("salary"));
-            assertEquals("BONUS", regularEmployeeClassMapper.getProperty2attribute().get("bonus"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(contractEmployeeVertexType).size());
-            EVClassMapper contractEmployeeClassMapper = mapper.getEVClassMappersByVertex(contractEmployeeVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(contractEmployeeEntity).size());
-            assertEquals(contractEmployeeClassMapper, mapper.getEVClassMappersByEntity(contractEmployeeEntity).get(0));
-            assertEquals(contractEmployeeClassMapper.getEntity(), contractEmployeeEntity);
-            assertEquals(contractEmployeeClassMapper.getVertexType(), contractEmployeeVertexType);
-
-            assertEquals(2, contractEmployeeClassMapper.getAttribute2property().size());
-            assertEquals(2, contractEmployeeClassMapper.getProperty2attribute().size());
-            assertEquals("payPerHour", contractEmployeeClassMapper.getAttribute2property().get("PAY_PER_HOUR"));
-            assertEquals("contractDuration", contractEmployeeClassMapper.getAttribute2property().get("CONTRACT_DURATION"));
-            assertEquals("PAY_PER_HOUR", contractEmployeeClassMapper.getProperty2attribute().get("payPerHour"));
-            assertEquals("CONTRACT_DURATION", contractEmployeeClassMapper.getProperty2attribute().get("contractDuration"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(countryVertexType).size());
-            EVClassMapper countryClassMapper = mapper.getEVClassMappersByVertex(countryVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(countryEntity).size());
-            assertEquals(countryClassMapper, mapper.getEVClassMappersByEntity(countryEntity).get(0));
-            assertEquals(countryClassMapper.getEntity(), countryEntity);
-            assertEquals(countryClassMapper.getVertexType(), countryVertexType);
-
-            assertEquals(3, countryClassMapper.getAttribute2property().size());
-            assertEquals(3, countryClassMapper.getProperty2attribute().size());
-            assertEquals("id", countryClassMapper.getAttribute2property().get("ID"));
-            assertEquals("name", countryClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("continent", countryClassMapper.getAttribute2property().get("CONTINENT"));
-            assertEquals("ID", countryClassMapper.getProperty2attribute().get("id"));
-            assertEquals("NAME", countryClassMapper.getProperty2attribute().get("name"));
-            assertEquals("CONTINENT", countryClassMapper.getProperty2attribute().get("continent"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(managerVertexType).size());
-            EVClassMapper managerClassMapper = mapper.getEVClassMappersByVertex(managerVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(managerEntity).size());
-            assertEquals(managerClassMapper, mapper.getEVClassMappersByEntity(managerEntity).get(0));
-            assertEquals(managerClassMapper.getEntity(), managerEntity);
-            assertEquals(managerClassMapper.getVertexType(), managerVertexType);
-
-            assertEquals(2, managerClassMapper.getAttribute2property().size());
-            assertEquals(2, managerClassMapper.getProperty2attribute().size());
-            assertEquals("id", managerClassMapper.getAttribute2property().get("ID"));
-            assertEquals("name", managerClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("ID", managerClassMapper.getProperty2attribute().get("id"));
-            assertEquals("NAME", managerClassMapper.getProperty2attribute().get("name"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(projectManagerVertexType).size());
-            EVClassMapper projectManagerClassMapper = mapper.getEVClassMappersByVertex(projectManagerVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(projectManagerEntity).size());
-            assertEquals(projectManagerClassMapper, mapper.getEVClassMappersByEntity(projectManagerEntity).get(0));
-            assertEquals(projectManagerClassMapper.getEntity(), projectManagerEntity);
-            assertEquals(projectManagerClassMapper.getVertexType(), projectManagerVertexType);
-
-            assertEquals(1, projectManagerClassMapper.getAttribute2property().size());
-            assertEquals(1, projectManagerClassMapper.getProperty2attribute().size());
-            assertEquals("project", projectManagerClassMapper.getAttribute2property().get("PROJECT"));
-            assertEquals("PROJECT", projectManagerClassMapper.getProperty2attribute().get("project"));
-
-            // Relationships-Edges Mapping
-
-            Iterator<CanonicalRelationship> itRelationships = employeeEntity.getOutCanonicalRelationships().iterator();
-            CanonicalRelationship hasManagerRelationship = itRelationships.next();
-            assertFalse(itRelationships.hasNext());
-
-            EdgeType hasManagerEdgeType = mapper.getGraphModel().getEdgeTypeByName("HasManager");
-
-            assertEquals(1, mapper.getRelationship2edgeType().size());
-            assertEquals(hasManagerEdgeType, mapper.getRelationship2edgeType().get(hasManagerRelationship));
-
-            assertEquals(1, mapper.getEdgeType2relationships().size());
-            assertEquals(1, mapper.getEdgeType2relationships().get(hasManagerEdgeType).size());
-            assertTrue(mapper.getEdgeType2relationships().get(hasManagerEdgeType).contains(hasManagerRelationship));
-
-            // JoinVertexes-AggregatorEdges Mapping
-
-            assertEquals(0, mapper.getJoinVertex2aggregatorEdges().size());
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail();
-        } finally {
-            try {
-                // Dropping Source DB Schema and OrientGraph
-                String dbDropping = "drop schema public cascade";
-                st.execute(dbDropping);
-                connection.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-                fail();
-            }
-        }
+  }
+
+  /*
+   * Filtering out a table through exclude-tables (with Table per Type inheritance).
+   */ @Test
+  void filterOutThroughExcludeWithTablePerTypeInheritance() {
+    Connection connection = null;
+    Statement st = null;
+
+    try {
+      Class.forName(this.driver);
+      connection = DriverManager.getConnection(this.jurl, this.username, this.password);
+
+      String countryTableBuilding =
+          "create memory table COUNTRY(ID varchar(256) not null, NAME varchar(256), CONTINENT"
+              + " varchar(256), primary key (ID))";
+      st = connection.createStatement();
+      st.execute(countryTableBuilding);
+
+      String residenceTableBuilding =
+          "create memory table RESIDENCE(ID varchar(256) not null, CITY varchar(256), COUNTRY"
+              + " varchar(256), primary key (ID))";
+      st = connection.createStatement();
+      st.execute(residenceTableBuilding);
+
+      String managerTableBuilding =
+          "create memory table MANAGER(ID varchar(256) not null, NAME varchar(256), primary key"
+              + " (ID))";
+      st.execute(managerTableBuilding);
+
+      String projectManagerTableBuilding =
+          "create memory table PROJECT_MANAGER(EID varchar(256) not null, PROJECT varchar(256),"
+              + " primary key (EID), foreign key (EID) references MANAGER(ID))";
+      st.execute(projectManagerTableBuilding);
+
+      String employeeTableBuilding =
+          "create memory table EMPLOYEE (ID varchar(256) not null, NAME varchar(256), RESIDENCE"
+              + " varchar(256), MANAGER varchar(256), primary key (ID), foreign key (RESIDENCE)"
+              + " references RESIDENCE(ID), foreign key (MANAGER) references MANAGER(ID))";
+      st.execute(employeeTableBuilding);
+
+      String regularEmployeeTableBuilding =
+          "create memory table REGULAR_EMPLOYEE (EID varchar(256) not null, SALARY decimal(10,2),"
+              + " BONUS decimal(10,0), primary key (EID), foreign key (EID) references"
+              + " EMPLOYEE(ID))";
+      st.execute(regularEmployeeTableBuilding);
+
+      String contractEmployeeTableBuilding =
+          "create memory table CONTRACT_EMPLOYEE (EID varchar(256) not null, PAY_PER_HOUR"
+              + " decimal(10,2), CONTRACT_DURATION varchar(256), primary key (EID), foreign key"
+              + " (EID) references EMPLOYEE(ID))";
+      st.execute(contractEmployeeTableBuilding);
+
+      // Records Inserting
+
+      String countryFilling =
+          "insert into COUNTRY (ID,NAME,CONTINENT) values (" + "('C001','Italy','Europe'))";
+      st.execute(countryFilling);
+
+      String residenceFilling =
+          "insert into RESIDENCE (ID,CITY,COUNTRY) values ("
+              + "('R001','Rome','C001'),"
+              + "('R002','Milan','C001'))";
+      st.execute(residenceFilling);
+
+      String managerFilling = "insert into MANAGER (ID,NAME) values (" + "('M001','Bill Right'))";
+      st.execute(managerFilling);
+
+      String projectManagerFilling =
+          "insert into PROJECT_MANAGER (EID,PROJECT) values (" + "('M001','New World'))";
+      st.execute(projectManagerFilling);
+
+      String employeeFilling =
+          "insert into EMPLOYEE (ID,NAME,RESIDENCE,MANAGER) values ("
+              + "('E001','John Black','R001',null),"
+              + "('E002','Andrew Brown','R001','M001'),"
+              + "('E003','Jack Johnson','R002',null))";
+      st.execute(employeeFilling);
+
+      String regularEmployeeFilling =
+          "insert into REGULAR_EMPLOYEE (EID,SALARY,BONUS) values (" + "('E002','1000.00','10'))";
+      st.execute(regularEmployeeFilling);
+
+      String contractEmployeeFilling =
+          "insert into CONTRACT_EMPLOYEE (EID,PAY_PER_HOUR,CONTRACT_DURATION) values ("
+              + "('E003','50.00','6'))";
+      st.execute(contractEmployeeFilling);
+
+      List<String> excludedTables = new ArrayList<String>();
+      excludedTables.add("RESIDENCE");
+
+      this.mapper =
+          new Hibernate2GraphMapper(
+              dataSource,
+              FilterTableMappingTest.XML_TABLE_PER_SUBCLASS2,
+              null,
+              excludedTables,
+              dbQueryEngine,
+              dataTypeHandler,
+              executionStrategy,
+              nameResolver,
+              statistics);
+
+      mapper.buildSourceDatabaseSchema();
+      mapper.buildGraphModel(new JavaConventionNameResolver());
+
+      /*
+       *  Testing context information
+       */
+
+      assertThat(statistics.totalNumberOfEntities).isEqualTo(6);
+      assertThat(statistics.builtEntities).isEqualTo(6);
+      assertThat(statistics.totalNumberOfRelationships).isEqualTo(4);
+      assertThat(statistics.builtRelationships)
+          .isEqualTo(4); // 3 of these are hierarchical relationships
+
+      assertThat(statistics.totalNumberOfModelVertices).isEqualTo(6);
+      assertThat(statistics.builtModelVertexTypes).isEqualTo(6);
+      assertThat(statistics.totalNumberOfModelEdges).isEqualTo(1);
+      assertThat(statistics.builtModelEdgeTypes).isEqualTo(1);
+
+      /*
+       *  Testing built source db schema
+       */
+
+      Entity employeeEntity = mapper.getDataBaseSchema().getEntityByName("EMPLOYEE");
+      Entity regularEmployeeEntity =
+          mapper.getDataBaseSchema().getEntityByNameIgnoreCase("REGULAR_EMPLOYEE");
+      Entity contractEmployeeEntity =
+          mapper.getDataBaseSchema().getEntityByNameIgnoreCase("CONTRACT_EMPLOYEE");
+      Entity countryEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("COUNTRY");
+      Entity managerEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("MANAGER");
+      Entity projectManagerEntity =
+          mapper.getDataBaseSchema().getEntityByNameIgnoreCase("PROJECT_MANAGER");
+      Entity residenceEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("RESIDENCE");
+
+      // entities check
+      assertThat(mapper.getDataBaseSchema().getEntities().size()).isEqualTo(6);
+      assertThat(mapper.getDataBaseSchema().getCanonicalRelationships().size()).isEqualTo(4);
+      assertThat(employeeEntity).isNotNull();
+      assertThat(regularEmployeeEntity).isNotNull();
+      assertThat(contractEmployeeEntity).isNotNull();
+      assertThat(countryEntity).isNotNull();
+      assertThat(managerEntity).isNotNull();
+      assertThat(residenceEntity).isNull();
+
+      // attributes check
+      assertThat(employeeEntity.getAttributes().size()).isEqualTo(4);
+
+      assertThat(employeeEntity.getAttributeByName("ID")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(employeeEntity.getAttributeByName("ID").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("ID").getOrdinalPosition()).isEqualTo(1);
+      assertThat(employeeEntity.getAttributeByName("ID").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(employeeEntity.getAttributeByName("NAME")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("NAME").getName()).isEqualTo("NAME");
+      assertThat(employeeEntity.getAttributeByName("NAME").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("NAME").getOrdinalPosition()).isEqualTo(2);
+      assertThat(employeeEntity.getAttributeByName("NAME").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getName()).isEqualTo("RESIDENCE");
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getOrdinalPosition()).isEqualTo(3);
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(employeeEntity.getAttributeByName("MANAGER")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getName()).isEqualTo("MANAGER");
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getOrdinalPosition()).isEqualTo(4);
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(regularEmployeeEntity.getAttributes().size()).isEqualTo(2);
+
+      assertThat(regularEmployeeEntity.getAttributeByName("SALARY")).isNotNull();
+      assertThat(regularEmployeeEntity.getAttributeByName("SALARY").getName()).isEqualTo("SALARY");
+      assertThat(regularEmployeeEntity.getAttributeByName("SALARY").getDataType())
+          .isEqualTo("DECIMAL");
+      assertThat(regularEmployeeEntity.getAttributeByName("SALARY").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(regularEmployeeEntity.getAttributeByName("SALARY").getBelongingEntity().getName())
+          .isEqualTo("REGULAR_EMPLOYEE");
+
+      assertThat(regularEmployeeEntity.getAttributeByName("BONUS")).isNotNull();
+      assertThat(regularEmployeeEntity.getAttributeByName("BONUS").getName()).isEqualTo("BONUS");
+      assertThat(regularEmployeeEntity.getAttributeByName("BONUS").getDataType())
+          .isEqualTo("DECIMAL");
+      assertThat(regularEmployeeEntity.getAttributeByName("BONUS").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(regularEmployeeEntity.getAttributeByName("BONUS").getBelongingEntity().getName())
+          .isEqualTo("REGULAR_EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getAttributes().size()).isEqualTo(2);
+
+      assertThat(contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR")).isNotNull();
+      assertThat(contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getName())
+          .isEqualTo("PAY_PER_HOUR");
+      assertThat(contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getDataType())
+          .isEqualTo("DECIMAL");
+      assertThat(contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(
+              contractEmployeeEntity
+                  .getAttributeByName("PAY_PER_HOUR")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("CONTRACT_EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION")).isNotNull();
+      assertThat(contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getName())
+          .isEqualTo("CONTRACT_DURATION");
+      assertThat(contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(
+              contractEmployeeEntity
+                  .getAttributeByName("CONTRACT_DURATION")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("CONTRACT_EMPLOYEE");
+
+      assertThat(countryEntity.getAttributes().size()).isEqualTo(3);
+
+      assertThat(countryEntity.getAttributeByName("ID")).isNotNull();
+      assertThat(countryEntity.getAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(countryEntity.getAttributeByName("ID").getDataType()).isEqualTo("VARCHAR");
+      assertThat(countryEntity.getAttributeByName("ID").getOrdinalPosition()).isEqualTo(1);
+      assertThat(countryEntity.getAttributeByName("ID").getBelongingEntity().getName())
+          .isEqualTo("COUNTRY");
+
+      assertThat(countryEntity.getAttributeByName("NAME")).isNotNull();
+      assertThat(countryEntity.getAttributeByName("NAME").getName()).isEqualTo("NAME");
+      assertThat(countryEntity.getAttributeByName("NAME").getDataType()).isEqualTo("VARCHAR");
+      assertThat(countryEntity.getAttributeByName("NAME").getOrdinalPosition()).isEqualTo(2);
+      assertThat(countryEntity.getAttributeByName("NAME").getBelongingEntity().getName())
+          .isEqualTo("COUNTRY");
+
+      assertThat(countryEntity.getAttributeByName("CONTINENT")).isNotNull();
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getName()).isEqualTo("CONTINENT");
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getDataType()).isEqualTo("VARCHAR");
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getOrdinalPosition()).isEqualTo(3);
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getBelongingEntity().getName())
+          .isEqualTo("COUNTRY");
+
+      assertThat(managerEntity.getAttributes().size()).isEqualTo(2);
+
+      assertThat(managerEntity.getAttributeByName("ID")).isNotNull();
+      assertThat(managerEntity.getAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(managerEntity.getAttributeByName("ID").getDataType()).isEqualTo("VARCHAR");
+      assertThat(managerEntity.getAttributeByName("ID").getOrdinalPosition()).isEqualTo(1);
+      assertThat(managerEntity.getAttributeByName("ID").getBelongingEntity().getName())
+          .isEqualTo("MANAGER");
+
+      assertThat(managerEntity.getAttributeByName("NAME")).isNotNull();
+      assertThat(managerEntity.getAttributeByName("NAME").getName()).isEqualTo("NAME");
+      assertThat(managerEntity.getAttributeByName("NAME").getDataType()).isEqualTo("VARCHAR");
+      assertThat(managerEntity.getAttributeByName("NAME").getOrdinalPosition()).isEqualTo(2);
+      assertThat(managerEntity.getAttributeByName("NAME").getBelongingEntity().getName())
+          .isEqualTo("MANAGER");
+
+      assertThat(projectManagerEntity.getAttributes().size()).isEqualTo(1);
+
+      assertThat(projectManagerEntity.getAttributeByName("PROJECT")).isNotNull();
+      assertThat(projectManagerEntity.getAttributeByName("PROJECT").getName()).isEqualTo("PROJECT");
+      assertThat(projectManagerEntity.getAttributeByName("PROJECT").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerEntity.getAttributeByName("PROJECT").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(projectManagerEntity.getAttributeByName("PROJECT").getBelongingEntity().getName())
+          .isEqualTo("PROJECT_MANAGER");
+
+      // inherited attributes check
+      assertThat(employeeEntity.getInheritedAttributes().size()).isEqualTo(0);
+
+      assertThat(regularEmployeeEntity.getInheritedAttributes().size()).isEqualTo(4);
+
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("ID")).isNotNull();
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("ID").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("ID").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(
+              regularEmployeeEntity
+                  .getInheritedAttributeByName("ID")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("NAME")).isNotNull();
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("NAME").getName())
+          .isEqualTo("NAME");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("NAME").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("NAME").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(
+              regularEmployeeEntity
+                  .getInheritedAttributeByName("NAME")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE")).isNotNull();
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getName())
+          .isEqualTo("RESIDENCE");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(
+              regularEmployeeEntity
+                  .getInheritedAttributeByName("RESIDENCE")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("MANAGER")).isNotNull();
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getName())
+          .isEqualTo("MANAGER");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getOrdinalPosition())
+          .isEqualTo(4);
+      assertThat(
+              regularEmployeeEntity
+                  .getInheritedAttributeByName("MANAGER")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getInheritedAttributes().size()).isEqualTo(4);
+
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("ID")).isNotNull();
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("ID").getName())
+          .isEqualTo("ID");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("ID").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("ID").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(
+              contractEmployeeEntity
+                  .getInheritedAttributeByName("ID")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("NAME")).isNotNull();
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("NAME").getName())
+          .isEqualTo("NAME");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("NAME").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("NAME").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(
+              contractEmployeeEntity
+                  .getInheritedAttributeByName("NAME")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE")).isNotNull();
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getName())
+          .isEqualTo("RESIDENCE");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(
+              contractEmployeeEntity
+                  .getInheritedAttributeByName("RESIDENCE")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("MANAGER")).isNotNull();
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getName())
+          .isEqualTo("MANAGER");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getOrdinalPosition())
+          .isEqualTo(4);
+      assertThat(
+              contractEmployeeEntity
+                  .getInheritedAttributeByName("MANAGER")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(projectManagerEntity.getInheritedAttributes().size()).isEqualTo(2);
+
+      assertThat(projectManagerEntity.getInheritedAttributeByName("ID")).isNotNull();
+      assertThat(projectManagerEntity.getInheritedAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(projectManagerEntity.getInheritedAttributeByName("ID").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerEntity.getInheritedAttributeByName("ID").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(
+              projectManagerEntity.getInheritedAttributeByName("ID").getBelongingEntity().getName())
+          .isEqualTo("MANAGER");
+
+      assertThat(projectManagerEntity.getInheritedAttributeByName("NAME")).isNotNull();
+      assertThat(projectManagerEntity.getInheritedAttributeByName("NAME").getName())
+          .isEqualTo("NAME");
+      assertThat(projectManagerEntity.getInheritedAttributeByName("NAME").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerEntity.getInheritedAttributeByName("NAME").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(
+              projectManagerEntity
+                  .getInheritedAttributeByName("NAME")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("MANAGER");
+
+      assertThat(countryEntity.getInheritedAttributes().size()).isEqualTo(0);
+      assertThat(managerEntity.getInheritedAttributes().size()).isEqualTo(0);
+
+      // primary key check
+      assertThat(regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().size()).isEqualTo(1);
+      assertThat(regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName())
+          .isEqualTo("EID");
+      assertThat(regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              regularEmployeeEntity
+                  .getPrimaryKey()
+                  .getInvolvedAttributes()
+                  .get(0)
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("REGULAR_EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().size())
+          .isEqualTo(1);
+      assertThat(contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName())
+          .isEqualTo("EID");
+      assertThat(
+              contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeEntity
+                  .getPrimaryKey()
+                  .getInvolvedAttributes()
+                  .get(0)
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("CONTRACT_EMPLOYEE");
+
+      assertThat(projectManagerEntity.getPrimaryKey().getInvolvedAttributes().size()).isEqualTo(1);
+      assertThat(projectManagerEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName())
+          .isEqualTo("EID");
+      assertThat(projectManagerEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              projectManagerEntity
+                  .getPrimaryKey()
+                  .getInvolvedAttributes()
+                  .get(0)
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("PROJECT_MANAGER");
+
+      // relationship, primary and foreign key check
+      assertThat(regularEmployeeEntity.getOutCanonicalRelationships().size()).isEqualTo(1);
+      assertThat(contractEmployeeEntity.getOutCanonicalRelationships().size()).isEqualTo(1);
+      assertThat(employeeEntity.getOutCanonicalRelationships().size()).isEqualTo(1);
+      assertThat(projectManagerEntity.getOutCanonicalRelationships().size()).isEqualTo(1);
+      assertThat(managerEntity.getOutCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(countryEntity.getOutCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(regularEmployeeEntity.getInCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(contractEmployeeEntity.getInCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(employeeEntity.getInCanonicalRelationships().size()).isEqualTo(2);
+      assertThat(projectManagerEntity.getInCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(managerEntity.getInCanonicalRelationships().size()).isEqualTo(2);
+      assertThat(countryEntity.getInCanonicalRelationships().size()).isEqualTo(0);
+
+      assertThat(regularEmployeeEntity.getForeignKeys().size()).isEqualTo(1);
+      assertThat(contractEmployeeEntity.getForeignKeys().size()).isEqualTo(1);
+      assertThat(employeeEntity.getForeignKeys().size()).isEqualTo(1);
+      assertThat(projectManagerEntity.getForeignKeys().size()).isEqualTo(1);
+      assertThat(managerEntity.getForeignKeys().size()).isEqualTo(0);
+      assertThat(countryEntity.getForeignKeys().size()).isEqualTo(0);
+
+      Iterator<CanonicalRelationship> itEmp =
+          employeeEntity.getOutCanonicalRelationships().iterator();
+      CanonicalRelationship currentEmpRel = itEmp.next();
+      assertThat(currentEmpRel.getParentEntity().getName()).isEqualTo("MANAGER");
+      assertThat(currentEmpRel.getForeignEntity().getName()).isEqualTo("EMPLOYEE");
+      assertThat(currentEmpRel.getPrimaryKey()).isEqualTo(managerEntity.getPrimaryKey());
+      assertThat(currentEmpRel.getForeignKey()).isEqualTo(employeeEntity.getForeignKeys().get(0));
+      assertThat(itEmp.hasNext()).isFalse();
+
+      Iterator<CanonicalRelationship> itManager =
+          managerEntity.getInCanonicalRelationships().iterator();
+      CanonicalRelationship currentManRel = itManager.next();
+      assertThat(currentManRel).isEqualTo(currentEmpRel);
+
+      Iterator<CanonicalRelationship> itContEmp =
+          contractEmployeeEntity.getOutCanonicalRelationships().iterator();
+      CanonicalRelationship currentContEmpRel = itContEmp.next();
+      itEmp = employeeEntity.getInCanonicalRelationships().iterator();
+      currentEmpRel = itEmp.next();
+      assertThat(currentEmpRel).isEqualTo(currentContEmpRel);
+
+      Iterator<CanonicalRelationship> itRegEmp =
+          regularEmployeeEntity.getOutCanonicalRelationships().iterator();
+      CanonicalRelationship currentRegEmpRel = itRegEmp.next();
+      currentEmpRel = itEmp.next();
+      assertThat(currentEmpRel).isEqualTo(currentRegEmpRel);
+
+      // inherited relationships check
+      assertThat(regularEmployeeEntity.getInheritedOutCanonicalRelationships().size()).isEqualTo(1);
+      assertThat(contractEmployeeEntity.getInheritedOutCanonicalRelationships().size())
+          .isEqualTo(1);
+      assertThat(employeeEntity.getInheritedOutCanonicalRelationships().size()).isEqualTo(0);
+
+      itRegEmp = regularEmployeeEntity.getInheritedOutCanonicalRelationships().iterator();
+      itContEmp = contractEmployeeEntity.getInheritedOutCanonicalRelationships().iterator();
+      currentRegEmpRel = itRegEmp.next();
+      currentContEmpRel = itContEmp.next();
+      assertThat(currentRegEmpRel.getParentEntity().getName()).isEqualTo("MANAGER");
+      assertThat(currentRegEmpRel.getForeignEntity().getName()).isEqualTo("EMPLOYEE");
+      assertThat(currentContEmpRel.getParentEntity().getName()).isEqualTo("MANAGER");
+      assertThat(currentContEmpRel.getForeignEntity().getName()).isEqualTo("EMPLOYEE");
+      assertThat(currentRegEmpRel.getPrimaryKey()).isEqualTo(managerEntity.getPrimaryKey());
+      assertThat(currentRegEmpRel.getFromColumns().size()).isEqualTo(1);
+      assertThat(currentRegEmpRel.getFromColumns().get(0).getName()).isEqualTo("MANAGER");
+      assertThat(currentContEmpRel.getPrimaryKey()).isEqualTo(managerEntity.getPrimaryKey());
+      assertThat(currentContEmpRel.getFromColumns().size()).isEqualTo(1);
+      assertThat(currentContEmpRel.getFromColumns().get(0).getName()).isEqualTo("MANAGER");
+      assertThat(itRegEmp.hasNext()).isFalse();
+      assertThat(itContEmp.hasNext()).isFalse();
+
+      // inheritance check
+      assertThat(regularEmployeeEntity.getParentEntity()).isEqualTo(employeeEntity);
+      assertThat(contractEmployeeEntity.getParentEntity()).isEqualTo(employeeEntity);
+      assertThat(employeeEntity.getParentEntity()).isNull();
+
+      assertThat(regularEmployeeEntity.getInheritanceLevel()).isEqualTo(1);
+      assertThat(contractEmployeeEntity.getInheritanceLevel()).isEqualTo(1);
+      assertThat(employeeEntity.getInheritanceLevel()).isEqualTo(0);
+
+      // Hierarchical Bag check
+      assertThat(mapper.getDataBaseSchema().getHierarchicalBags().size()).isEqualTo(2);
+
+      HierarchicalBag hierarchicalBag1 = mapper.getDataBaseSchema().getHierarchicalBags().get(0);
+      HierarchicalBag hierarchicalBag2 = mapper.getDataBaseSchema().getHierarchicalBags().get(1);
+      assertThat(hierarchicalBag1.getInheritancePattern()).isEqualTo("table-per-type");
+      assertThat(hierarchicalBag2.getInheritancePattern()).isEqualTo("table-per-type");
+
+      assertThat(hierarchicalBag1.getDepth2entities().size()).isEqualTo(2);
+
+      assertThat(hierarchicalBag1.getDepth2entities().get(0).size()).isEqualTo(1);
+      Iterator<Entity> it = hierarchicalBag1.getDepth2entities().get(0).iterator();
+      assertThat(it.next().getName()).isEqualTo("EMPLOYEE");
+      assertThat(it.hasNext()).isFalse();
+
+      assertThat(hierarchicalBag1.getDepth2entities().get(1).size()).isEqualTo(2);
+      it = hierarchicalBag1.getDepth2entities().get(1).iterator();
+      assertThat(it.next().getName()).isEqualTo("REGULAR_EMPLOYEE");
+      assertThat(it.next().getName()).isEqualTo("CONTRACT_EMPLOYEE");
+      assertThat(it.hasNext()).isFalse();
+
+      assertThat(employeeEntity.getHierarchicalBag()).isEqualTo(hierarchicalBag1);
+      assertThat(regularEmployeeEntity.getHierarchicalBag()).isEqualTo(hierarchicalBag1);
+      assertThat(contractEmployeeEntity.getHierarchicalBag()).isEqualTo(hierarchicalBag1);
+
+      assertThat(hierarchicalBag1.getDiscriminatorColumn()).isNotNull();
+
+      assertThat(hierarchicalBag2.getDepth2entities().size()).isEqualTo(2);
+
+      assertThat(hierarchicalBag2.getDepth2entities().get(0).size()).isEqualTo(1);
+      it = hierarchicalBag2.getDepth2entities().get(0).iterator();
+      assertThat(it.next().getName()).isEqualTo("MANAGER");
+      assertThat(it.hasNext()).isFalse();
+
+      assertThat(hierarchicalBag2.getDepth2entities().get(1).size()).isEqualTo(1);
+      it = hierarchicalBag2.getDepth2entities().get(1).iterator();
+      assertThat(it.next().getName()).isEqualTo("PROJECT_MANAGER");
+      assertThat(it.hasNext()).isFalse();
+
+      assertThat(managerEntity.getHierarchicalBag()).isEqualTo(hierarchicalBag2);
+      assertThat(projectManagerEntity.getHierarchicalBag()).isEqualTo(hierarchicalBag2);
+
+      assertThat(hierarchicalBag2.getDiscriminatorColumn()).isNotNull();
+
+      /*
+       *  Testing built graph model
+       */
+
+      VertexType employeeVertexType = mapper.getGraphModel().getVertexTypeByName("Employee");
+      VertexType regularEmployeeVertexType =
+          mapper.getGraphModel().getVertexTypeByName("RegularEmployee");
+      VertexType contractEmployeeVertexType =
+          mapper.getGraphModel().getVertexTypeByName("ContractEmployee");
+      VertexType countryVertexType = mapper.getGraphModel().getVertexTypeByName("Country");
+      VertexType managerVertexType = mapper.getGraphModel().getVertexTypeByName("Manager");
+      VertexType projectManagerVertexType =
+          mapper.getGraphModel().getVertexTypeByName("ProjectManager");
+      VertexType residenceVertexType = mapper.getGraphModel().getVertexTypeByName("Residence");
+
+      // vertices check
+      assertThat(mapper.getGraphModel().getVerticesType().size()).isEqualTo(6);
+      assertThat(employeeVertexType).isNotNull();
+      assertThat(regularEmployeeVertexType).isNotNull();
+      assertThat(contractEmployeeVertexType).isNotNull();
+      assertThat(countryVertexType).isNotNull();
+      assertThat(managerVertexType).isNotNull();
+      assertThat(projectManagerVertexType).isNotNull();
+      assertThat(residenceVertexType).isNull();
+
+      // properties check
+      assertThat(employeeVertexType.getProperties().size()).isEqualTo(4);
+
+      assertThat(employeeVertexType.getPropertyByName("id")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+      assertThat(employeeVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+      assertThat(employeeVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
+
+      assertThat(employeeVertexType.getPropertyByName("name")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+      assertThat(employeeVertexType.getPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(2);
+      assertThat(employeeVertexType.getPropertyByName("name").isFromPrimaryKey()).isFalse();
+
+      assertThat(employeeVertexType.getPropertyByName("residence")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("residence").getName())
+          .isEqualTo("residence");
+      assertThat(employeeVertexType.getPropertyByName("residence").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("residence").getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(employeeVertexType.getPropertyByName("residence").isFromPrimaryKey()).isFalse();
+
+      assertThat(employeeVertexType.getPropertyByName("manager")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("manager").getName()).isEqualTo("manager");
+      assertThat(employeeVertexType.getPropertyByName("manager").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("manager").getOrdinalPosition()).isEqualTo(4);
+      assertThat(employeeVertexType.getPropertyByName("manager").isFromPrimaryKey()).isFalse();
+
+      assertThat(regularEmployeeVertexType.getProperties().size()).isEqualTo(2);
+
+      assertThat(regularEmployeeVertexType.getPropertyByName("salary")).isNotNull();
+      assertThat(regularEmployeeVertexType.getPropertyByName("salary").getName())
+          .isEqualTo("salary");
+      assertThat(regularEmployeeVertexType.getPropertyByName("salary").getOriginalType())
+          .isEqualTo("DECIMAL");
+      assertThat(regularEmployeeVertexType.getPropertyByName("salary").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(regularEmployeeVertexType.getPropertyByName("salary").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(regularEmployeeVertexType.getPropertyByName("bonus")).isNotNull();
+      assertThat(regularEmployeeVertexType.getPropertyByName("bonus").getName()).isEqualTo("bonus");
+      assertThat(regularEmployeeVertexType.getPropertyByName("bonus").getOriginalType())
+          .isEqualTo("DECIMAL");
+      assertThat(regularEmployeeVertexType.getPropertyByName("bonus").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(regularEmployeeVertexType.getPropertyByName("bonus").isFromPrimaryKey()).isFalse();
+
+      assertThat(contractEmployeeVertexType.getProperties().size()).isEqualTo(2);
+
+      assertThat(contractEmployeeVertexType.getPropertyByName("payPerHour")).isNotNull();
+      assertThat(contractEmployeeVertexType.getPropertyByName("payPerHour").getName())
+          .isEqualTo("payPerHour");
+      assertThat(contractEmployeeVertexType.getPropertyByName("payPerHour").getOriginalType())
+          .isEqualTo("DECIMAL");
+      assertThat(contractEmployeeVertexType.getPropertyByName("payPerHour").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(contractEmployeeVertexType.getPropertyByName("payPerHour").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(contractEmployeeVertexType.getPropertyByName("contractDuration")).isNotNull();
+      assertThat(contractEmployeeVertexType.getPropertyByName("contractDuration").getName())
+          .isEqualTo("contractDuration");
+      assertThat(contractEmployeeVertexType.getPropertyByName("contractDuration").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeVertexType.getPropertyByName("contractDuration").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(
+              contractEmployeeVertexType.getPropertyByName("contractDuration").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(countryVertexType.getProperties().size()).isEqualTo(3);
+
+      assertThat(countryVertexType.getPropertyByName("id")).isNotNull();
+      assertThat(countryVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+      assertThat(countryVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+      assertThat(countryVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+      assertThat(countryVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
+
+      assertThat(countryVertexType.getPropertyByName("name")).isNotNull();
+      assertThat(countryVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+      assertThat(countryVertexType.getPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(countryVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(2);
+      assertThat(countryVertexType.getPropertyByName("name").isFromPrimaryKey()).isFalse();
+
+      assertThat(countryVertexType.getPropertyByName("continent")).isNotNull();
+      assertThat(countryVertexType.getPropertyByName("continent").getName()).isEqualTo("continent");
+      assertThat(countryVertexType.getPropertyByName("continent").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(countryVertexType.getPropertyByName("continent").getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(countryVertexType.getPropertyByName("continent").isFromPrimaryKey()).isFalse();
+
+      assertThat(managerVertexType.getProperties().size()).isEqualTo(2);
+
+      assertThat(managerVertexType.getPropertyByName("id")).isNotNull();
+      assertThat(managerVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+      assertThat(managerVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+      assertThat(managerVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+      assertThat(managerVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
+
+      assertThat(managerVertexType.getPropertyByName("name")).isNotNull();
+      assertThat(managerVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+      assertThat(managerVertexType.getPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(managerVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(2);
+      assertThat(managerVertexType.getPropertyByName("name").isFromPrimaryKey()).isFalse();
+
+      assertThat(projectManagerVertexType.getProperties().size()).isEqualTo(1);
+
+      assertThat(projectManagerVertexType.getPropertyByName("project")).isNotNull();
+      assertThat(projectManagerVertexType.getPropertyByName("project").getName())
+          .isEqualTo("project");
+      assertThat(projectManagerVertexType.getPropertyByName("project").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerVertexType.getPropertyByName("project").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(projectManagerVertexType.getPropertyByName("project").isFromPrimaryKey())
+          .isFalse();
+
+      // inherited properties check
+      assertThat(employeeVertexType.getInheritedProperties().size()).isEqualTo(0);
+
+      assertThat(regularEmployeeVertexType.getInheritedProperties().size()).isEqualTo(4);
+
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("id")).isNotNull();
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("id").getName())
+          .isEqualTo("id");
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("id").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("id").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("id").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("name")).isNotNull();
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("name").getName())
+          .isEqualTo("name");
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("name").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("name").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("residence")).isNotNull();
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("residence").getName())
+          .isEqualTo("residence");
+      assertThat(
+              regularEmployeeVertexType.getInheritedPropertyByName("residence").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              regularEmployeeVertexType
+                  .getInheritedPropertyByName("residence")
+                  .getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(
+              regularEmployeeVertexType.getInheritedPropertyByName("residence").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("manager")).isNotNull();
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("manager").getName())
+          .isEqualTo("manager");
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("manager").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              regularEmployeeVertexType.getInheritedPropertyByName("manager").getOrdinalPosition())
+          .isEqualTo(4);
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("manager").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(contractEmployeeVertexType.getInheritedProperties().size()).isEqualTo(4);
+
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("id")).isNotNull();
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("id").getName())
+          .isEqualTo("id");
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("id").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("id").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("id").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("name")).isNotNull();
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("name").getName())
+          .isEqualTo("name");
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("name").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("name").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("residence")).isNotNull();
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("residence").getName())
+          .isEqualTo("residence");
+      assertThat(
+              contractEmployeeVertexType.getInheritedPropertyByName("residence").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeVertexType
+                  .getInheritedPropertyByName("residence")
+                  .getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(
+              contractEmployeeVertexType.getInheritedPropertyByName("residence").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("manager")).isNotNull();
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("manager").getName())
+          .isEqualTo("manager");
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("manager").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeVertexType.getInheritedPropertyByName("manager").getOrdinalPosition())
+          .isEqualTo(4);
+      assertThat(
+              contractEmployeeVertexType.getInheritedPropertyByName("manager").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(projectManagerVertexType.getInheritedProperties().size()).isEqualTo(2);
+
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("id")).isNotNull();
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("id").getName())
+          .isEqualTo("id");
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("id").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("id").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("id").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("name")).isNotNull();
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("name").getName())
+          .isEqualTo("name");
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("name").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("name").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(countryVertexType.getInheritedProperties().size()).isEqualTo(0);
+      assertThat(managerVertexType.getInheritedProperties().size()).isEqualTo(0);
+
+      // edges check
+
+      assertThat(mapper.getRelationship2edgeType().size()).isEqualTo(1);
+
+      assertThat(mapper.getGraphModel().getEdgesType().size()).isEqualTo(1);
+      assertThat(mapper.getGraphModel().getEdgesType().get(0).getName()).isEqualTo("HasManager");
+
+      assertThat(employeeVertexType.getOutEdgesType().size()).isEqualTo(1);
+      assertThat(employeeVertexType.getOutEdgesType().get(0).getName()).isEqualTo("HasManager");
+
+      assertThat(regularEmployeeVertexType.getOutEdgesType().size()).isEqualTo(1);
+      assertThat(regularEmployeeVertexType.getOutEdgesType().get(0).getName())
+          .isEqualTo("HasManager");
+
+      assertThat(contractEmployeeVertexType.getOutEdgesType().size()).isEqualTo(1);
+      assertThat(contractEmployeeVertexType.getOutEdgesType().get(0).getName())
+          .isEqualTo("HasManager");
+
+      /*
+       * Rules check
+       */
+
+      // Classes Mapping
+
+      assertThat(mapper.getVertexType2EVClassMappers().size()).isEqualTo(6);
+      assertThat(mapper.getEntity2EVClassMappers().size()).isEqualTo(6);
+
+      assertThat(mapper.getEVClassMappersByVertex(employeeVertexType).size()).isEqualTo(1);
+      EVClassMapper employeeClassMapper =
+          mapper.getEVClassMappersByVertex(employeeVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(employeeEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(employeeEntity).get(0))
+          .isEqualTo(employeeClassMapper);
+      assertThat(employeeEntity).isEqualTo(employeeClassMapper.getEntity());
+      assertThat(employeeVertexType).isEqualTo(employeeClassMapper.getVertexType());
+
+      assertThat(employeeClassMapper.getAttribute2property().size()).isEqualTo(4);
+      assertThat(employeeClassMapper.getProperty2attribute().size()).isEqualTo(4);
+      assertThat(employeeClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+      assertThat(employeeClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+      assertThat(employeeClassMapper.getAttribute2property().get("RESIDENCE"))
+          .isEqualTo("residence");
+      assertThat(employeeClassMapper.getAttribute2property().get("MANAGER")).isEqualTo("manager");
+      assertThat(employeeClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+      assertThat(employeeClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
+      assertThat(employeeClassMapper.getProperty2attribute().get("residence"))
+          .isEqualTo("RESIDENCE");
+      assertThat(employeeClassMapper.getProperty2attribute().get("manager")).isEqualTo("MANAGER");
+
+      assertThat(mapper.getEVClassMappersByVertex(regularEmployeeVertexType).size()).isEqualTo(1);
+      EVClassMapper regularEmployeeClassMapper =
+          mapper.getEVClassMappersByVertex(regularEmployeeVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(regularEmployeeEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(regularEmployeeEntity).get(0))
+          .isEqualTo(regularEmployeeClassMapper);
+      assertThat(regularEmployeeEntity).isEqualTo(regularEmployeeClassMapper.getEntity());
+      assertThat(regularEmployeeVertexType).isEqualTo(regularEmployeeClassMapper.getVertexType());
+
+      assertThat(regularEmployeeClassMapper.getAttribute2property().size()).isEqualTo(2);
+      assertThat(regularEmployeeClassMapper.getProperty2attribute().size()).isEqualTo(2);
+      assertThat(regularEmployeeClassMapper.getAttribute2property().get("SALARY"))
+          .isEqualTo("salary");
+      assertThat(regularEmployeeClassMapper.getAttribute2property().get("BONUS"))
+          .isEqualTo("bonus");
+      assertThat(regularEmployeeClassMapper.getProperty2attribute().get("salary"))
+          .isEqualTo("SALARY");
+      assertThat(regularEmployeeClassMapper.getProperty2attribute().get("bonus"))
+          .isEqualTo("BONUS");
+
+      assertThat(mapper.getEVClassMappersByVertex(contractEmployeeVertexType).size()).isEqualTo(1);
+      EVClassMapper contractEmployeeClassMapper =
+          mapper.getEVClassMappersByVertex(contractEmployeeVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(contractEmployeeEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(contractEmployeeEntity).get(0))
+          .isEqualTo(contractEmployeeClassMapper);
+      assertThat(contractEmployeeEntity).isEqualTo(contractEmployeeClassMapper.getEntity());
+      assertThat(contractEmployeeVertexType).isEqualTo(contractEmployeeClassMapper.getVertexType());
+
+      assertThat(contractEmployeeClassMapper.getAttribute2property().size()).isEqualTo(2);
+      assertThat(contractEmployeeClassMapper.getProperty2attribute().size()).isEqualTo(2);
+      assertThat(contractEmployeeClassMapper.getAttribute2property().get("PAY_PER_HOUR"))
+          .isEqualTo("payPerHour");
+      assertThat(contractEmployeeClassMapper.getAttribute2property().get("CONTRACT_DURATION"))
+          .isEqualTo("contractDuration");
+      assertThat(contractEmployeeClassMapper.getProperty2attribute().get("payPerHour"))
+          .isEqualTo("PAY_PER_HOUR");
+      assertThat(contractEmployeeClassMapper.getProperty2attribute().get("contractDuration"))
+          .isEqualTo("CONTRACT_DURATION");
+
+      assertThat(mapper.getEVClassMappersByVertex(countryVertexType).size()).isEqualTo(1);
+      EVClassMapper countryClassMapper = mapper.getEVClassMappersByVertex(countryVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(countryEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(countryEntity).get(0))
+          .isEqualTo(countryClassMapper);
+      assertThat(countryEntity).isEqualTo(countryClassMapper.getEntity());
+      assertThat(countryVertexType).isEqualTo(countryClassMapper.getVertexType());
+
+      assertThat(countryClassMapper.getAttribute2property().size()).isEqualTo(3);
+      assertThat(countryClassMapper.getProperty2attribute().size()).isEqualTo(3);
+      assertThat(countryClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+      assertThat(countryClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+      assertThat(countryClassMapper.getAttribute2property().get("CONTINENT"))
+          .isEqualTo("continent");
+      assertThat(countryClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+      assertThat(countryClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
+      assertThat(countryClassMapper.getProperty2attribute().get("continent"))
+          .isEqualTo("CONTINENT");
+
+      assertThat(mapper.getEVClassMappersByVertex(managerVertexType).size()).isEqualTo(1);
+      EVClassMapper managerClassMapper = mapper.getEVClassMappersByVertex(managerVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(managerEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(managerEntity).get(0))
+          .isEqualTo(managerClassMapper);
+      assertThat(managerEntity).isEqualTo(managerClassMapper.getEntity());
+      assertThat(managerVertexType).isEqualTo(managerClassMapper.getVertexType());
+
+      assertThat(managerClassMapper.getAttribute2property().size()).isEqualTo(2);
+      assertThat(managerClassMapper.getProperty2attribute().size()).isEqualTo(2);
+      assertThat(managerClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+      assertThat(managerClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+      assertThat(managerClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+      assertThat(managerClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
+
+      assertThat(mapper.getEVClassMappersByVertex(projectManagerVertexType).size()).isEqualTo(1);
+      EVClassMapper projectManagerClassMapper =
+          mapper.getEVClassMappersByVertex(projectManagerVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(projectManagerEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(projectManagerEntity).get(0))
+          .isEqualTo(projectManagerClassMapper);
+      assertThat(projectManagerEntity).isEqualTo(projectManagerClassMapper.getEntity());
+      assertThat(projectManagerVertexType).isEqualTo(projectManagerClassMapper.getVertexType());
+
+      assertThat(projectManagerClassMapper.getAttribute2property().size()).isEqualTo(1);
+      assertThat(projectManagerClassMapper.getProperty2attribute().size()).isEqualTo(1);
+      assertThat(projectManagerClassMapper.getAttribute2property().get("PROJECT"))
+          .isEqualTo("project");
+      assertThat(projectManagerClassMapper.getProperty2attribute().get("project"))
+          .isEqualTo("PROJECT");
+
+      // Relationships-Edges Mapping
+
+      Iterator<CanonicalRelationship> itRelationships =
+          employeeEntity.getOutCanonicalRelationships().iterator();
+      CanonicalRelationship hasManagerRelationship = itRelationships.next();
+      assertThat(itRelationships.hasNext()).isFalse();
+
+      EdgeType hasManagerEdgeType = mapper.getGraphModel().getEdgeTypeByName("HasManager");
+
+      assertThat(mapper.getRelationship2edgeType().size()).isEqualTo(1);
+      assertThat(mapper.getRelationship2edgeType().get(hasManagerRelationship))
+          .isEqualTo(hasManagerEdgeType);
+
+      assertThat(mapper.getEdgeType2relationships().size()).isEqualTo(1);
+      assertThat(mapper.getEdgeType2relationships().get(hasManagerEdgeType).size()).isEqualTo(1);
+      assertThat(
+              mapper
+                  .getEdgeType2relationships()
+                  .get(hasManagerEdgeType)
+                  .contains(hasManagerRelationship))
+          .isTrue();
+
+      // JoinVertexes-AggregatorEdges Mapping
+
+      assertThat(mapper.getJoinVertex2aggregatorEdges().size()).isEqualTo(0);
+    } catch (Exception e) {
+      e.printStackTrace();
+      fail("");
+    } finally {
+      try {
+        // Dropping Source DB Schema and OrientGraph
+        String dbDropping = "drop schema public cascade";
+        st.execute(dbDropping);
+        connection.close();
+      } catch (Exception e) {
+        e.printStackTrace();
+        fail("");
+      }
     }
-
-    @Test
-    /*
-     * Filtering out a table through exclude-tables (with Table per Type inheritance).
-     */public void filterOutThroughExcludeWithTablePerTypeInheritance() {
-        Connection connection = null;
-        Statement st = null;
-
-        try {
-            Class.forName(this.driver);
-            connection = DriverManager.getConnection(this.jurl, this.username, this.password);
-
-            String countryTableBuilding = "create memory table COUNTRY(ID varchar(256) not null, NAME varchar(256), CONTINENT varchar(256), primary key (ID))";
-            st = connection.createStatement();
-            st.execute(countryTableBuilding);
-
-            String residenceTableBuilding =
-                "create memory table RESIDENCE(ID varchar(256) not null, CITY varchar(256), COUNTRY varchar(256), primary key (ID))";
-            st = connection.createStatement();
-            st.execute(residenceTableBuilding);
-
-            String managerTableBuilding = "create memory table MANAGER(ID varchar(256) not null, NAME varchar(256), primary key (ID))";
-            st.execute(managerTableBuilding);
-
-            String projectManagerTableBuilding =
-                "create memory table PROJECT_MANAGER(EID varchar(256) not null, PROJECT varchar(256), primary key (EID), foreign key (EID) references MANAGER(ID))";
-            st.execute(projectManagerTableBuilding);
-
-            String employeeTableBuilding =
-                "create memory table EMPLOYEE (ID varchar(256) not null," +
-                " NAME varchar(256), RESIDENCE varchar(256), MANAGER varchar(256), primary key (ID), " +
-                "foreign key (RESIDENCE) references RESIDENCE(ID), foreign key (MANAGER) references MANAGER(ID))";
-            st.execute(employeeTableBuilding);
-
-            String regularEmployeeTableBuilding =
-                "create memory table REGULAR_EMPLOYEE (EID varchar(256) not null, " +
-                "SALARY decimal(10,2), BONUS decimal(10,0), primary key (EID), foreign key (EID) references EMPLOYEE(ID))";
-            st.execute(regularEmployeeTableBuilding);
-
-            String contractEmployeeTableBuilding =
-                "create memory table CONTRACT_EMPLOYEE (EID varchar(256) not null, " +
-                "PAY_PER_HOUR decimal(10,2), CONTRACT_DURATION varchar(256), primary key (EID), foreign key (EID) references EMPLOYEE(ID))";
-            st.execute(contractEmployeeTableBuilding);
-
-            // Records Inserting
-
-            String countryFilling = "insert into COUNTRY (ID,NAME,CONTINENT) values (" + "('C001','Italy','Europe'))";
-            st.execute(countryFilling);
-
-            String residenceFilling = "insert into RESIDENCE (ID,CITY,COUNTRY) values (" + "('R001','Rome','C001')," + "('R002','Milan','C001'))";
-            st.execute(residenceFilling);
-
-            String managerFilling = "insert into MANAGER (ID,NAME) values (" + "('M001','Bill Right'))";
-            st.execute(managerFilling);
-
-            String projectManagerFilling = "insert into PROJECT_MANAGER (EID,PROJECT) values (" + "('M001','New World'))";
-            st.execute(projectManagerFilling);
-
-            String employeeFilling =
-                "insert into EMPLOYEE (ID,NAME,RESIDENCE,MANAGER) values (" +
-                "('E001','John Black','R001',null)," +
-                "('E002','Andrew Brown','R001','M001')," +
-                "('E003','Jack Johnson','R002',null))";
-            st.execute(employeeFilling);
-
-            String regularEmployeeFilling = "insert into REGULAR_EMPLOYEE (EID,SALARY,BONUS) values (" + "('E002','1000.00','10'))";
-            st.execute(regularEmployeeFilling);
-
-            String contractEmployeeFilling = "insert into CONTRACT_EMPLOYEE (EID,PAY_PER_HOUR,CONTRACT_DURATION) values (" + "('E003','50.00','6'))";
-            st.execute(contractEmployeeFilling);
-
-            List<String> excludedTables = new ArrayList<String>();
-            excludedTables.add("RESIDENCE");
-
-            this.mapper =
-                new Hibernate2GraphMapper(
-                    dataSource,
-                    FilterTableMappingTest.XML_TABLE_PER_SUBCLASS2,
-                    null,
-                    excludedTables,
-                    dbQueryEngine,
-                    dataTypeHandler,
-                    executionStrategy,
-                    nameResolver,
-                    statistics
-                );
-
-            mapper.buildSourceDatabaseSchema();
-            mapper.buildGraphModel(new JavaConventionNameResolver());
-
-            /*
-             *  Testing context information
-             */
-
-            assertEquals(6, statistics.totalNumberOfEntities);
-            assertEquals(6, statistics.builtEntities);
-            assertEquals(4, statistics.totalNumberOfRelationships);
-            assertEquals(4, statistics.builtRelationships); // 3 of these are hierarchical relationships
-
-            assertEquals(6, statistics.totalNumberOfModelVertices);
-            assertEquals(6, statistics.builtModelVertexTypes);
-            assertEquals(1, statistics.totalNumberOfModelEdges);
-            assertEquals(1, statistics.builtModelEdgeTypes);
-
-            /*
-             *  Testing built source db schema
-             */
-
-            Entity employeeEntity = mapper.getDataBaseSchema().getEntityByName("EMPLOYEE");
-            Entity regularEmployeeEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("REGULAR_EMPLOYEE");
-            Entity contractEmployeeEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("CONTRACT_EMPLOYEE");
-            Entity countryEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("COUNTRY");
-            Entity managerEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("MANAGER");
-            Entity projectManagerEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("PROJECT_MANAGER");
-            Entity residenceEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("RESIDENCE");
-
-            // entities check
-            assertEquals(6, mapper.getDataBaseSchema().getEntities().size());
-            assertEquals(4, mapper.getDataBaseSchema().getCanonicalRelationships().size());
-            assertNotNull(employeeEntity);
-            assertNotNull(regularEmployeeEntity);
-            assertNotNull(contractEmployeeEntity);
-            assertNotNull(countryEntity);
-            assertNotNull(managerEntity);
-            assertNull(residenceEntity);
-
-            // attributes check
-            assertEquals(4, employeeEntity.getAttributes().size());
-
-            assertNotNull(employeeEntity.getAttributeByName("ID"));
-            assertEquals("ID", employeeEntity.getAttributeByName("ID").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("ID").getDataType());
-            assertEquals(1, employeeEntity.getAttributeByName("ID").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(employeeEntity.getAttributeByName("NAME"));
-            assertEquals("NAME", employeeEntity.getAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("NAME").getDataType());
-            assertEquals(2, employeeEntity.getAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertNotNull(employeeEntity.getAttributeByName("RESIDENCE"));
-            assertEquals("RESIDENCE", employeeEntity.getAttributeByName("RESIDENCE").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("RESIDENCE").getDataType());
-            assertEquals(3, employeeEntity.getAttributeByName("RESIDENCE").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("RESIDENCE").getBelongingEntity().getName());
-
-            assertNotNull(employeeEntity.getAttributeByName("MANAGER"));
-            assertEquals("MANAGER", employeeEntity.getAttributeByName("MANAGER").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("MANAGER").getDataType());
-            assertEquals(4, employeeEntity.getAttributeByName("MANAGER").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("MANAGER").getBelongingEntity().getName());
-
-            assertEquals(2, regularEmployeeEntity.getAttributes().size());
-
-            assertNotNull(regularEmployeeEntity.getAttributeByName("SALARY"));
-            assertEquals("SALARY", regularEmployeeEntity.getAttributeByName("SALARY").getName());
-            assertEquals("DECIMAL", regularEmployeeEntity.getAttributeByName("SALARY").getDataType());
-            assertEquals(1, regularEmployeeEntity.getAttributeByName("SALARY").getOrdinalPosition());
-            assertEquals("REGULAR_EMPLOYEE", regularEmployeeEntity.getAttributeByName("SALARY").getBelongingEntity().getName());
-
-            assertNotNull(regularEmployeeEntity.getAttributeByName("BONUS"));
-            assertEquals("BONUS", regularEmployeeEntity.getAttributeByName("BONUS").getName());
-            assertEquals("DECIMAL", regularEmployeeEntity.getAttributeByName("BONUS").getDataType());
-            assertEquals(2, regularEmployeeEntity.getAttributeByName("BONUS").getOrdinalPosition());
-            assertEquals("REGULAR_EMPLOYEE", regularEmployeeEntity.getAttributeByName("BONUS").getBelongingEntity().getName());
-
-            assertEquals(2, contractEmployeeEntity.getAttributes().size());
-
-            assertNotNull(contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR"));
-            assertEquals("PAY_PER_HOUR", contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getName());
-            assertEquals("DECIMAL", contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getDataType());
-            assertEquals(1, contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getOrdinalPosition());
-            assertEquals("CONTRACT_EMPLOYEE", contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getBelongingEntity().getName());
-
-            assertNotNull(contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION"));
-            assertEquals("CONTRACT_DURATION", contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getDataType());
-            assertEquals(2, contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getOrdinalPosition());
-            assertEquals("CONTRACT_EMPLOYEE", contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getBelongingEntity().getName());
-
-            assertEquals(3, countryEntity.getAttributes().size());
-
-            assertNotNull(countryEntity.getAttributeByName("ID"));
-            assertEquals("ID", countryEntity.getAttributeByName("ID").getName());
-            assertEquals("VARCHAR", countryEntity.getAttributeByName("ID").getDataType());
-            assertEquals(1, countryEntity.getAttributeByName("ID").getOrdinalPosition());
-            assertEquals("COUNTRY", countryEntity.getAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(countryEntity.getAttributeByName("NAME"));
-            assertEquals("NAME", countryEntity.getAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", countryEntity.getAttributeByName("NAME").getDataType());
-            assertEquals(2, countryEntity.getAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("COUNTRY", countryEntity.getAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertNotNull(countryEntity.getAttributeByName("CONTINENT"));
-            assertEquals("CONTINENT", countryEntity.getAttributeByName("CONTINENT").getName());
-            assertEquals("VARCHAR", countryEntity.getAttributeByName("CONTINENT").getDataType());
-            assertEquals(3, countryEntity.getAttributeByName("CONTINENT").getOrdinalPosition());
-            assertEquals("COUNTRY", countryEntity.getAttributeByName("CONTINENT").getBelongingEntity().getName());
-
-            assertEquals(2, managerEntity.getAttributes().size());
-
-            assertNotNull(managerEntity.getAttributeByName("ID"));
-            assertEquals("ID", managerEntity.getAttributeByName("ID").getName());
-            assertEquals("VARCHAR", managerEntity.getAttributeByName("ID").getDataType());
-            assertEquals(1, managerEntity.getAttributeByName("ID").getOrdinalPosition());
-            assertEquals("MANAGER", managerEntity.getAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(managerEntity.getAttributeByName("NAME"));
-            assertEquals("NAME", managerEntity.getAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", managerEntity.getAttributeByName("NAME").getDataType());
-            assertEquals(2, managerEntity.getAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("MANAGER", managerEntity.getAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertEquals(1, projectManagerEntity.getAttributes().size());
-
-            assertNotNull(projectManagerEntity.getAttributeByName("PROJECT"));
-            assertEquals("PROJECT", projectManagerEntity.getAttributeByName("PROJECT").getName());
-            assertEquals("VARCHAR", projectManagerEntity.getAttributeByName("PROJECT").getDataType());
-            assertEquals(1, projectManagerEntity.getAttributeByName("PROJECT").getOrdinalPosition());
-            assertEquals("PROJECT_MANAGER", projectManagerEntity.getAttributeByName("PROJECT").getBelongingEntity().getName());
-
-            // inherited attributes check
-            assertEquals(0, employeeEntity.getInheritedAttributes().size());
-
-            assertEquals(4, regularEmployeeEntity.getInheritedAttributes().size());
-
-            assertNotNull(regularEmployeeEntity.getInheritedAttributeByName("ID"));
-            assertEquals("ID", regularEmployeeEntity.getInheritedAttributeByName("ID").getName());
-            assertEquals("VARCHAR", regularEmployeeEntity.getInheritedAttributeByName("ID").getDataType());
-            assertEquals(1, regularEmployeeEntity.getInheritedAttributeByName("ID").getOrdinalPosition());
-            assertEquals("EMPLOYEE", regularEmployeeEntity.getInheritedAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(regularEmployeeEntity.getInheritedAttributeByName("NAME"));
-            assertEquals("NAME", regularEmployeeEntity.getInheritedAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", regularEmployeeEntity.getInheritedAttributeByName("NAME").getDataType());
-            assertEquals(2, regularEmployeeEntity.getInheritedAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("EMPLOYEE", regularEmployeeEntity.getInheritedAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertNotNull(regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE"));
-            assertEquals("RESIDENCE", regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getName());
-            assertEquals("VARCHAR", regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getDataType());
-            assertEquals(3, regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getOrdinalPosition());
-            assertEquals("EMPLOYEE", regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getBelongingEntity().getName());
-
-            assertNotNull(regularEmployeeEntity.getInheritedAttributeByName("MANAGER"));
-            assertEquals("MANAGER", regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getName());
-            assertEquals("VARCHAR", regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getDataType());
-            assertEquals(4, regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getOrdinalPosition());
-            assertEquals("EMPLOYEE", regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getBelongingEntity().getName());
-
-            assertEquals(4, contractEmployeeEntity.getInheritedAttributes().size());
-
-            assertNotNull(contractEmployeeEntity.getInheritedAttributeByName("ID"));
-            assertEquals("ID", contractEmployeeEntity.getInheritedAttributeByName("ID").getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getInheritedAttributeByName("ID").getDataType());
-            assertEquals(1, contractEmployeeEntity.getInheritedAttributeByName("ID").getOrdinalPosition());
-            assertEquals("EMPLOYEE", contractEmployeeEntity.getInheritedAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(contractEmployeeEntity.getInheritedAttributeByName("NAME"));
-            assertEquals("NAME", contractEmployeeEntity.getInheritedAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getInheritedAttributeByName("NAME").getDataType());
-            assertEquals(2, contractEmployeeEntity.getInheritedAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("EMPLOYEE", contractEmployeeEntity.getInheritedAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertNotNull(contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE"));
-            assertEquals("RESIDENCE", contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getDataType());
-            assertEquals(3, contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getOrdinalPosition());
-            assertEquals("EMPLOYEE", contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getBelongingEntity().getName());
-
-            assertNotNull(contractEmployeeEntity.getInheritedAttributeByName("MANAGER"));
-            assertEquals("MANAGER", contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getDataType());
-            assertEquals(4, contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getOrdinalPosition());
-            assertEquals("EMPLOYEE", contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getBelongingEntity().getName());
-
-            assertEquals(2, projectManagerEntity.getInheritedAttributes().size());
-
-            assertNotNull(projectManagerEntity.getInheritedAttributeByName("ID"));
-            assertEquals("ID", projectManagerEntity.getInheritedAttributeByName("ID").getName());
-            assertEquals("VARCHAR", projectManagerEntity.getInheritedAttributeByName("ID").getDataType());
-            assertEquals(1, projectManagerEntity.getInheritedAttributeByName("ID").getOrdinalPosition());
-            assertEquals("MANAGER", projectManagerEntity.getInheritedAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(projectManagerEntity.getInheritedAttributeByName("NAME"));
-            assertEquals("NAME", projectManagerEntity.getInheritedAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", projectManagerEntity.getInheritedAttributeByName("NAME").getDataType());
-            assertEquals(2, projectManagerEntity.getInheritedAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("MANAGER", projectManagerEntity.getInheritedAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertEquals(0, countryEntity.getInheritedAttributes().size());
-            assertEquals(0, managerEntity.getInheritedAttributes().size());
-
-            // primary key check
-            assertEquals(1, regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().size());
-            assertEquals("EID", regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName());
-            assertEquals("VARCHAR", regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType());
-            assertEquals("REGULAR_EMPLOYEE", regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getBelongingEntity().getName());
-
-            assertEquals(1, contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().size());
-            assertEquals("EID", contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType());
-            assertEquals("CONTRACT_EMPLOYEE", contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getBelongingEntity().getName());
-
-            assertEquals(1, projectManagerEntity.getPrimaryKey().getInvolvedAttributes().size());
-            assertEquals("EID", projectManagerEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName());
-            assertEquals("VARCHAR", projectManagerEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType());
-            assertEquals("PROJECT_MANAGER", projectManagerEntity.getPrimaryKey().getInvolvedAttributes().get(0).getBelongingEntity().getName());
-
-            // relationship, primary and foreign key check
-            assertEquals(1, regularEmployeeEntity.getOutCanonicalRelationships().size());
-            assertEquals(1, contractEmployeeEntity.getOutCanonicalRelationships().size());
-            assertEquals(1, employeeEntity.getOutCanonicalRelationships().size());
-            assertEquals(1, projectManagerEntity.getOutCanonicalRelationships().size());
-            assertEquals(0, managerEntity.getOutCanonicalRelationships().size());
-            assertEquals(0, countryEntity.getOutCanonicalRelationships().size());
-            assertEquals(0, regularEmployeeEntity.getInCanonicalRelationships().size());
-            assertEquals(0, contractEmployeeEntity.getInCanonicalRelationships().size());
-            assertEquals(2, employeeEntity.getInCanonicalRelationships().size());
-            assertEquals(0, projectManagerEntity.getInCanonicalRelationships().size());
-            assertEquals(2, managerEntity.getInCanonicalRelationships().size());
-            assertEquals(0, countryEntity.getInCanonicalRelationships().size());
-
-            assertEquals(1, regularEmployeeEntity.getForeignKeys().size());
-            assertEquals(1, contractEmployeeEntity.getForeignKeys().size());
-            assertEquals(1, employeeEntity.getForeignKeys().size());
-            assertEquals(1, projectManagerEntity.getForeignKeys().size());
-            assertEquals(0, managerEntity.getForeignKeys().size());
-            assertEquals(0, countryEntity.getForeignKeys().size());
-
-            Iterator<CanonicalRelationship> itEmp = employeeEntity.getOutCanonicalRelationships().iterator();
-            CanonicalRelationship currentEmpRel = itEmp.next();
-            assertEquals("MANAGER", currentEmpRel.getParentEntity().getName());
-            assertEquals("EMPLOYEE", currentEmpRel.getForeignEntity().getName());
-            assertEquals(managerEntity.getPrimaryKey(), currentEmpRel.getPrimaryKey());
-            assertEquals(employeeEntity.getForeignKeys().get(0), currentEmpRel.getForeignKey());
-            assertFalse(itEmp.hasNext());
-
-            Iterator<CanonicalRelationship> itManager = managerEntity.getInCanonicalRelationships().iterator();
-            CanonicalRelationship currentManRel = itManager.next();
-            assertEquals(currentEmpRel, currentManRel);
-
-            Iterator<CanonicalRelationship> itContEmp = contractEmployeeEntity.getOutCanonicalRelationships().iterator();
-            CanonicalRelationship currentContEmpRel = itContEmp.next();
-            itEmp = employeeEntity.getInCanonicalRelationships().iterator();
-            currentEmpRel = itEmp.next();
-            assertEquals(currentContEmpRel, currentEmpRel);
-
-            Iterator<CanonicalRelationship> itRegEmp = regularEmployeeEntity.getOutCanonicalRelationships().iterator();
-            CanonicalRelationship currentRegEmpRel = itRegEmp.next();
-            currentEmpRel = itEmp.next();
-            assertEquals(currentRegEmpRel, currentEmpRel);
-
-            // inherited relationships check
-            assertEquals(1, regularEmployeeEntity.getInheritedOutCanonicalRelationships().size());
-            assertEquals(1, contractEmployeeEntity.getInheritedOutCanonicalRelationships().size());
-            assertEquals(0, employeeEntity.getInheritedOutCanonicalRelationships().size());
-
-            itRegEmp = regularEmployeeEntity.getInheritedOutCanonicalRelationships().iterator();
-            itContEmp = contractEmployeeEntity.getInheritedOutCanonicalRelationships().iterator();
-            currentRegEmpRel = itRegEmp.next();
-            currentContEmpRel = itContEmp.next();
-            assertEquals("MANAGER", currentRegEmpRel.getParentEntity().getName());
-            assertEquals("EMPLOYEE", currentRegEmpRel.getForeignEntity().getName());
-            assertEquals("MANAGER", currentContEmpRel.getParentEntity().getName());
-            assertEquals("EMPLOYEE", currentContEmpRel.getForeignEntity().getName());
-            assertEquals(managerEntity.getPrimaryKey(), currentRegEmpRel.getPrimaryKey());
-            assertEquals(1, currentRegEmpRel.getFromColumns().size());
-            assertEquals("MANAGER", currentRegEmpRel.getFromColumns().get(0).getName());
-            assertEquals(managerEntity.getPrimaryKey(), currentContEmpRel.getPrimaryKey());
-            assertEquals(1, currentContEmpRel.getFromColumns().size());
-            assertEquals("MANAGER", currentContEmpRel.getFromColumns().get(0).getName());
-            assertFalse(itRegEmp.hasNext());
-            assertFalse(itContEmp.hasNext());
-
-            // inheritance check
-            assertEquals(employeeEntity, regularEmployeeEntity.getParentEntity());
-            assertEquals(employeeEntity, contractEmployeeEntity.getParentEntity());
-            assertNull(employeeEntity.getParentEntity());
-
-            assertEquals(1, regularEmployeeEntity.getInheritanceLevel());
-            assertEquals(1, contractEmployeeEntity.getInheritanceLevel());
-            assertEquals(0, employeeEntity.getInheritanceLevel());
-
-            // Hierarchical Bag check
-            assertEquals(2, mapper.getDataBaseSchema().getHierarchicalBags().size());
-
-            HierarchicalBag hierarchicalBag1 = mapper.getDataBaseSchema().getHierarchicalBags().get(0);
-            HierarchicalBag hierarchicalBag2 = mapper.getDataBaseSchema().getHierarchicalBags().get(1);
-            assertEquals("table-per-type", hierarchicalBag1.getInheritancePattern());
-            assertEquals("table-per-type", hierarchicalBag2.getInheritancePattern());
-
-            assertEquals(2, hierarchicalBag1.getDepth2entities().size());
-
-            assertEquals(1, hierarchicalBag1.getDepth2entities().get(0).size());
-            Iterator<Entity> it = hierarchicalBag1.getDepth2entities().get(0).iterator();
-            assertEquals("EMPLOYEE", it.next().getName());
-            assertTrue(!it.hasNext());
-
-            assertEquals(2, hierarchicalBag1.getDepth2entities().get(1).size());
-            it = hierarchicalBag1.getDepth2entities().get(1).iterator();
-            assertEquals("REGULAR_EMPLOYEE", it.next().getName());
-            assertEquals("CONTRACT_EMPLOYEE", it.next().getName());
-            assertTrue(!it.hasNext());
-
-            assertEquals(hierarchicalBag1, employeeEntity.getHierarchicalBag());
-            assertEquals(hierarchicalBag1, regularEmployeeEntity.getHierarchicalBag());
-            assertEquals(hierarchicalBag1, contractEmployeeEntity.getHierarchicalBag());
-
-            assertNotNull(hierarchicalBag1.getDiscriminatorColumn());
-
-            assertEquals(2, hierarchicalBag2.getDepth2entities().size());
-
-            assertEquals(1, hierarchicalBag2.getDepth2entities().get(0).size());
-            it = hierarchicalBag2.getDepth2entities().get(0).iterator();
-            assertEquals("MANAGER", it.next().getName());
-            assertTrue(!it.hasNext());
-
-            assertEquals(1, hierarchicalBag2.getDepth2entities().get(1).size());
-            it = hierarchicalBag2.getDepth2entities().get(1).iterator();
-            assertEquals("PROJECT_MANAGER", it.next().getName());
-            assertTrue(!it.hasNext());
-
-            assertEquals(hierarchicalBag2, managerEntity.getHierarchicalBag());
-            assertEquals(hierarchicalBag2, projectManagerEntity.getHierarchicalBag());
-
-            assertNotNull(hierarchicalBag2.getDiscriminatorColumn());
-
-            /*
-             *  Testing built graph model
-             */
-
-            VertexType employeeVertexType = mapper.getGraphModel().getVertexTypeByName("Employee");
-            VertexType regularEmployeeVertexType = mapper.getGraphModel().getVertexTypeByName("RegularEmployee");
-            VertexType contractEmployeeVertexType = mapper.getGraphModel().getVertexTypeByName("ContractEmployee");
-            VertexType countryVertexType = mapper.getGraphModel().getVertexTypeByName("Country");
-            VertexType managerVertexType = mapper.getGraphModel().getVertexTypeByName("Manager");
-            VertexType projectManagerVertexType = mapper.getGraphModel().getVertexTypeByName("ProjectManager");
-            VertexType residenceVertexType = mapper.getGraphModel().getVertexTypeByName("Residence");
-
-            // vertices check
-            assertEquals(6, mapper.getGraphModel().getVerticesType().size());
-            assertNotNull(employeeVertexType);
-            assertNotNull(regularEmployeeVertexType);
-            assertNotNull(contractEmployeeVertexType);
-            assertNotNull(countryVertexType);
-            assertNotNull(managerVertexType);
-            assertNotNull(projectManagerVertexType);
-            assertNull(residenceVertexType);
-
-            // properties check
-            assertEquals(4, employeeVertexType.getProperties().size());
-
-            assertNotNull(employeeVertexType.getPropertyByName("id"));
-            assertEquals("id", employeeVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, employeeVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, employeeVertexType.getPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(employeeVertexType.getPropertyByName("name"));
-            assertEquals("name", employeeVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(2, employeeVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, employeeVertexType.getPropertyByName("name").isFromPrimaryKey());
-
-            assertNotNull(employeeVertexType.getPropertyByName("residence"));
-            assertEquals("residence", employeeVertexType.getPropertyByName("residence").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("residence").getOriginalType());
-            assertEquals(3, employeeVertexType.getPropertyByName("residence").getOrdinalPosition());
-            assertEquals(false, employeeVertexType.getPropertyByName("residence").isFromPrimaryKey());
-
-            assertNotNull(employeeVertexType.getPropertyByName("manager"));
-            assertEquals("manager", employeeVertexType.getPropertyByName("manager").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("manager").getOriginalType());
-            assertEquals(4, employeeVertexType.getPropertyByName("manager").getOrdinalPosition());
-            assertEquals(false, employeeVertexType.getPropertyByName("manager").isFromPrimaryKey());
-
-            assertEquals(2, regularEmployeeVertexType.getProperties().size());
-
-            assertNotNull(regularEmployeeVertexType.getPropertyByName("salary"));
-            assertEquals("salary", regularEmployeeVertexType.getPropertyByName("salary").getName());
-            assertEquals("DECIMAL", regularEmployeeVertexType.getPropertyByName("salary").getOriginalType());
-            assertEquals(1, regularEmployeeVertexType.getPropertyByName("salary").getOrdinalPosition());
-            assertEquals(false, regularEmployeeVertexType.getPropertyByName("salary").isFromPrimaryKey());
-
-            assertNotNull(regularEmployeeVertexType.getPropertyByName("bonus"));
-            assertEquals("bonus", regularEmployeeVertexType.getPropertyByName("bonus").getName());
-            assertEquals("DECIMAL", regularEmployeeVertexType.getPropertyByName("bonus").getOriginalType());
-            assertEquals(2, regularEmployeeVertexType.getPropertyByName("bonus").getOrdinalPosition());
-            assertEquals(false, regularEmployeeVertexType.getPropertyByName("bonus").isFromPrimaryKey());
-
-            assertEquals(2, contractEmployeeVertexType.getProperties().size());
-
-            assertNotNull(contractEmployeeVertexType.getPropertyByName("payPerHour"));
-            assertEquals("payPerHour", contractEmployeeVertexType.getPropertyByName("payPerHour").getName());
-            assertEquals("DECIMAL", contractEmployeeVertexType.getPropertyByName("payPerHour").getOriginalType());
-            assertEquals(1, contractEmployeeVertexType.getPropertyByName("payPerHour").getOrdinalPosition());
-            assertEquals(false, contractEmployeeVertexType.getPropertyByName("payPerHour").isFromPrimaryKey());
-
-            assertNotNull(contractEmployeeVertexType.getPropertyByName("contractDuration"));
-            assertEquals("contractDuration", contractEmployeeVertexType.getPropertyByName("contractDuration").getName());
-            assertEquals("VARCHAR", contractEmployeeVertexType.getPropertyByName("contractDuration").getOriginalType());
-            assertEquals(2, contractEmployeeVertexType.getPropertyByName("contractDuration").getOrdinalPosition());
-            assertEquals(false, contractEmployeeVertexType.getPropertyByName("contractDuration").isFromPrimaryKey());
-
-            assertEquals(3, countryVertexType.getProperties().size());
-
-            assertNotNull(countryVertexType.getPropertyByName("id"));
-            assertEquals("id", countryVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", countryVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, countryVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, countryVertexType.getPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(countryVertexType.getPropertyByName("name"));
-            assertEquals("name", countryVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", countryVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(2, countryVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, countryVertexType.getPropertyByName("name").isFromPrimaryKey());
-
-            assertNotNull(countryVertexType.getPropertyByName("continent"));
-            assertEquals("continent", countryVertexType.getPropertyByName("continent").getName());
-            assertEquals("VARCHAR", countryVertexType.getPropertyByName("continent").getOriginalType());
-            assertEquals(3, countryVertexType.getPropertyByName("continent").getOrdinalPosition());
-            assertEquals(false, countryVertexType.getPropertyByName("continent").isFromPrimaryKey());
-
-            assertEquals(2, managerVertexType.getProperties().size());
-
-            assertNotNull(managerVertexType.getPropertyByName("id"));
-            assertEquals("id", managerVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", managerVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, managerVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, managerVertexType.getPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(managerVertexType.getPropertyByName("name"));
-            assertEquals("name", managerVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", managerVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(2, managerVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, managerVertexType.getPropertyByName("name").isFromPrimaryKey());
-
-            assertEquals(1, projectManagerVertexType.getProperties().size());
-
-            assertNotNull(projectManagerVertexType.getPropertyByName("project"));
-            assertEquals("project", projectManagerVertexType.getPropertyByName("project").getName());
-            assertEquals("VARCHAR", projectManagerVertexType.getPropertyByName("project").getOriginalType());
-            assertEquals(1, projectManagerVertexType.getPropertyByName("project").getOrdinalPosition());
-            assertEquals(false, projectManagerVertexType.getPropertyByName("project").isFromPrimaryKey());
-
-            // inherited properties check
-            assertEquals(0, employeeVertexType.getInheritedProperties().size());
-
-            assertEquals(4, regularEmployeeVertexType.getInheritedProperties().size());
-
-            assertNotNull(regularEmployeeVertexType.getInheritedPropertyByName("id"));
-            assertEquals("id", regularEmployeeVertexType.getInheritedPropertyByName("id").getName());
-            assertEquals("VARCHAR", regularEmployeeVertexType.getInheritedPropertyByName("id").getOriginalType());
-            assertEquals(1, regularEmployeeVertexType.getInheritedPropertyByName("id").getOrdinalPosition());
-            assertEquals(false, regularEmployeeVertexType.getInheritedPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(regularEmployeeVertexType.getInheritedPropertyByName("name"));
-            assertEquals("name", regularEmployeeVertexType.getInheritedPropertyByName("name").getName());
-            assertEquals("VARCHAR", regularEmployeeVertexType.getInheritedPropertyByName("name").getOriginalType());
-            assertEquals(2, regularEmployeeVertexType.getInheritedPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, regularEmployeeVertexType.getInheritedPropertyByName("name").isFromPrimaryKey());
-
-            assertNotNull(regularEmployeeVertexType.getInheritedPropertyByName("residence"));
-            assertEquals("residence", regularEmployeeVertexType.getInheritedPropertyByName("residence").getName());
-            assertEquals("VARCHAR", regularEmployeeVertexType.getInheritedPropertyByName("residence").getOriginalType());
-            assertEquals(3, regularEmployeeVertexType.getInheritedPropertyByName("residence").getOrdinalPosition());
-            assertEquals(false, regularEmployeeVertexType.getInheritedPropertyByName("residence").isFromPrimaryKey());
-
-            assertNotNull(regularEmployeeVertexType.getInheritedPropertyByName("manager"));
-            assertEquals("manager", regularEmployeeVertexType.getInheritedPropertyByName("manager").getName());
-            assertEquals("VARCHAR", regularEmployeeVertexType.getInheritedPropertyByName("manager").getOriginalType());
-            assertEquals(4, regularEmployeeVertexType.getInheritedPropertyByName("manager").getOrdinalPosition());
-            assertEquals(false, regularEmployeeVertexType.getInheritedPropertyByName("manager").isFromPrimaryKey());
-
-            assertEquals(4, contractEmployeeVertexType.getInheritedProperties().size());
-
-            assertNotNull(contractEmployeeVertexType.getInheritedPropertyByName("id"));
-            assertEquals("id", contractEmployeeVertexType.getInheritedPropertyByName("id").getName());
-            assertEquals("VARCHAR", contractEmployeeVertexType.getInheritedPropertyByName("id").getOriginalType());
-            assertEquals(1, contractEmployeeVertexType.getInheritedPropertyByName("id").getOrdinalPosition());
-            assertEquals(false, contractEmployeeVertexType.getInheritedPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(contractEmployeeVertexType.getInheritedPropertyByName("name"));
-            assertEquals("name", contractEmployeeVertexType.getInheritedPropertyByName("name").getName());
-            assertEquals("VARCHAR", contractEmployeeVertexType.getInheritedPropertyByName("name").getOriginalType());
-            assertEquals(2, contractEmployeeVertexType.getInheritedPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, contractEmployeeVertexType.getInheritedPropertyByName("name").isFromPrimaryKey());
-
-            assertNotNull(contractEmployeeVertexType.getInheritedPropertyByName("residence"));
-            assertEquals("residence", contractEmployeeVertexType.getInheritedPropertyByName("residence").getName());
-            assertEquals("VARCHAR", contractEmployeeVertexType.getInheritedPropertyByName("residence").getOriginalType());
-            assertEquals(3, contractEmployeeVertexType.getInheritedPropertyByName("residence").getOrdinalPosition());
-            assertEquals(false, contractEmployeeVertexType.getInheritedPropertyByName("residence").isFromPrimaryKey());
-
-            assertNotNull(contractEmployeeVertexType.getInheritedPropertyByName("manager"));
-            assertEquals("manager", contractEmployeeVertexType.getInheritedPropertyByName("manager").getName());
-            assertEquals("VARCHAR", contractEmployeeVertexType.getInheritedPropertyByName("manager").getOriginalType());
-            assertEquals(4, contractEmployeeVertexType.getInheritedPropertyByName("manager").getOrdinalPosition());
-            assertEquals(false, contractEmployeeVertexType.getInheritedPropertyByName("manager").isFromPrimaryKey());
-
-            assertEquals(2, projectManagerVertexType.getInheritedProperties().size());
-
-            assertNotNull(projectManagerVertexType.getInheritedPropertyByName("id"));
-            assertEquals("id", projectManagerVertexType.getInheritedPropertyByName("id").getName());
-            assertEquals("VARCHAR", projectManagerVertexType.getInheritedPropertyByName("id").getOriginalType());
-            assertEquals(1, projectManagerVertexType.getInheritedPropertyByName("id").getOrdinalPosition());
-            assertEquals(false, projectManagerVertexType.getInheritedPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(projectManagerVertexType.getInheritedPropertyByName("name"));
-            assertEquals("name", projectManagerVertexType.getInheritedPropertyByName("name").getName());
-            assertEquals("VARCHAR", projectManagerVertexType.getInheritedPropertyByName("name").getOriginalType());
-            assertEquals(2, projectManagerVertexType.getInheritedPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, projectManagerVertexType.getInheritedPropertyByName("name").isFromPrimaryKey());
-
-            assertEquals(0, countryVertexType.getInheritedProperties().size());
-            assertEquals(0, managerVertexType.getInheritedProperties().size());
-
-            // edges check
-
-            assertEquals(1, mapper.getRelationship2edgeType().size());
-
-            assertEquals(1, mapper.getGraphModel().getEdgesType().size());
-            assertEquals("HasManager", mapper.getGraphModel().getEdgesType().get(0).getName());
-
-            assertEquals(1, employeeVertexType.getOutEdgesType().size());
-            assertEquals("HasManager", employeeVertexType.getOutEdgesType().get(0).getName());
-
-            assertEquals(1, regularEmployeeVertexType.getOutEdgesType().size());
-            assertEquals("HasManager", regularEmployeeVertexType.getOutEdgesType().get(0).getName());
-
-            assertEquals(1, contractEmployeeVertexType.getOutEdgesType().size());
-            assertEquals("HasManager", contractEmployeeVertexType.getOutEdgesType().get(0).getName());
-
-            /*
-             * Rules check
-             */
-
-            // Classes Mapping
-
-            assertEquals(6, mapper.getVertexType2EVClassMappers().size());
-            assertEquals(6, mapper.getEntity2EVClassMappers().size());
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(employeeVertexType).size());
-            EVClassMapper employeeClassMapper = mapper.getEVClassMappersByVertex(employeeVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(employeeEntity).size());
-            assertEquals(employeeClassMapper, mapper.getEVClassMappersByEntity(employeeEntity).get(0));
-            assertEquals(employeeClassMapper.getEntity(), employeeEntity);
-            assertEquals(employeeClassMapper.getVertexType(), employeeVertexType);
-
-            assertEquals(4, employeeClassMapper.getAttribute2property().size());
-            assertEquals(4, employeeClassMapper.getProperty2attribute().size());
-            assertEquals("id", employeeClassMapper.getAttribute2property().get("ID"));
-            assertEquals("name", employeeClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("residence", employeeClassMapper.getAttribute2property().get("RESIDENCE"));
-            assertEquals("manager", employeeClassMapper.getAttribute2property().get("MANAGER"));
-            assertEquals("ID", employeeClassMapper.getProperty2attribute().get("id"));
-            assertEquals("NAME", employeeClassMapper.getProperty2attribute().get("name"));
-            assertEquals("RESIDENCE", employeeClassMapper.getProperty2attribute().get("residence"));
-            assertEquals("MANAGER", employeeClassMapper.getProperty2attribute().get("manager"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(regularEmployeeVertexType).size());
-            EVClassMapper regularEmployeeClassMapper = mapper.getEVClassMappersByVertex(regularEmployeeVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(regularEmployeeEntity).size());
-            assertEquals(regularEmployeeClassMapper, mapper.getEVClassMappersByEntity(regularEmployeeEntity).get(0));
-            assertEquals(regularEmployeeClassMapper.getEntity(), regularEmployeeEntity);
-            assertEquals(regularEmployeeClassMapper.getVertexType(), regularEmployeeVertexType);
-
-            assertEquals(2, regularEmployeeClassMapper.getAttribute2property().size());
-            assertEquals(2, regularEmployeeClassMapper.getProperty2attribute().size());
-            assertEquals("salary", regularEmployeeClassMapper.getAttribute2property().get("SALARY"));
-            assertEquals("bonus", regularEmployeeClassMapper.getAttribute2property().get("BONUS"));
-            assertEquals("SALARY", regularEmployeeClassMapper.getProperty2attribute().get("salary"));
-            assertEquals("BONUS", regularEmployeeClassMapper.getProperty2attribute().get("bonus"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(contractEmployeeVertexType).size());
-            EVClassMapper contractEmployeeClassMapper = mapper.getEVClassMappersByVertex(contractEmployeeVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(contractEmployeeEntity).size());
-            assertEquals(contractEmployeeClassMapper, mapper.getEVClassMappersByEntity(contractEmployeeEntity).get(0));
-            assertEquals(contractEmployeeClassMapper.getEntity(), contractEmployeeEntity);
-            assertEquals(contractEmployeeClassMapper.getVertexType(), contractEmployeeVertexType);
-
-            assertEquals(2, contractEmployeeClassMapper.getAttribute2property().size());
-            assertEquals(2, contractEmployeeClassMapper.getProperty2attribute().size());
-            assertEquals("payPerHour", contractEmployeeClassMapper.getAttribute2property().get("PAY_PER_HOUR"));
-            assertEquals("contractDuration", contractEmployeeClassMapper.getAttribute2property().get("CONTRACT_DURATION"));
-            assertEquals("PAY_PER_HOUR", contractEmployeeClassMapper.getProperty2attribute().get("payPerHour"));
-            assertEquals("CONTRACT_DURATION", contractEmployeeClassMapper.getProperty2attribute().get("contractDuration"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(countryVertexType).size());
-            EVClassMapper countryClassMapper = mapper.getEVClassMappersByVertex(countryVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(countryEntity).size());
-            assertEquals(countryClassMapper, mapper.getEVClassMappersByEntity(countryEntity).get(0));
-            assertEquals(countryClassMapper.getEntity(), countryEntity);
-            assertEquals(countryClassMapper.getVertexType(), countryVertexType);
-
-            assertEquals(3, countryClassMapper.getAttribute2property().size());
-            assertEquals(3, countryClassMapper.getProperty2attribute().size());
-            assertEquals("id", countryClassMapper.getAttribute2property().get("ID"));
-            assertEquals("name", countryClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("continent", countryClassMapper.getAttribute2property().get("CONTINENT"));
-            assertEquals("ID", countryClassMapper.getProperty2attribute().get("id"));
-            assertEquals("NAME", countryClassMapper.getProperty2attribute().get("name"));
-            assertEquals("CONTINENT", countryClassMapper.getProperty2attribute().get("continent"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(managerVertexType).size());
-            EVClassMapper managerClassMapper = mapper.getEVClassMappersByVertex(managerVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(managerEntity).size());
-            assertEquals(managerClassMapper, mapper.getEVClassMappersByEntity(managerEntity).get(0));
-            assertEquals(managerClassMapper.getEntity(), managerEntity);
-            assertEquals(managerClassMapper.getVertexType(), managerVertexType);
-
-            assertEquals(2, managerClassMapper.getAttribute2property().size());
-            assertEquals(2, managerClassMapper.getProperty2attribute().size());
-            assertEquals("id", managerClassMapper.getAttribute2property().get("ID"));
-            assertEquals("name", managerClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("ID", managerClassMapper.getProperty2attribute().get("id"));
-            assertEquals("NAME", managerClassMapper.getProperty2attribute().get("name"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(projectManagerVertexType).size());
-            EVClassMapper projectManagerClassMapper = mapper.getEVClassMappersByVertex(projectManagerVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(projectManagerEntity).size());
-            assertEquals(projectManagerClassMapper, mapper.getEVClassMappersByEntity(projectManagerEntity).get(0));
-            assertEquals(projectManagerClassMapper.getEntity(), projectManagerEntity);
-            assertEquals(projectManagerClassMapper.getVertexType(), projectManagerVertexType);
-
-            assertEquals(1, projectManagerClassMapper.getAttribute2property().size());
-            assertEquals(1, projectManagerClassMapper.getProperty2attribute().size());
-            assertEquals("project", projectManagerClassMapper.getAttribute2property().get("PROJECT"));
-            assertEquals("PROJECT", projectManagerClassMapper.getProperty2attribute().get("project"));
-
-            // Relationships-Edges Mapping
-
-            Iterator<CanonicalRelationship> itRelationships = employeeEntity.getOutCanonicalRelationships().iterator();
-            CanonicalRelationship hasManagerRelationship = itRelationships.next();
-            assertFalse(itRelationships.hasNext());
-
-            EdgeType hasManagerEdgeType = mapper.getGraphModel().getEdgeTypeByName("HasManager");
-
-            assertEquals(1, mapper.getRelationship2edgeType().size());
-            assertEquals(hasManagerEdgeType, mapper.getRelationship2edgeType().get(hasManagerRelationship));
-
-            assertEquals(1, mapper.getEdgeType2relationships().size());
-            assertEquals(1, mapper.getEdgeType2relationships().get(hasManagerEdgeType).size());
-            assertTrue(mapper.getEdgeType2relationships().get(hasManagerEdgeType).contains(hasManagerRelationship));
-
-            // JoinVertexes-AggregatorEdges Mapping
-
-            assertEquals(0, mapper.getJoinVertex2aggregatorEdges().size());
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail();
-        } finally {
-            try {
-                // Dropping Source DB Schema and OrientGraph
-                String dbDropping = "drop schema public cascade";
-                st.execute(dbDropping);
-                connection.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-                fail();
-            }
-        }
+  }
+
+  /*
+   * Filtering out a table through include-tables (with Table per Concrete Type inheritance).
+   */ @Test
+  void filterOutThroughIncludeWithTablePerConcreteTypeInheritance() {
+    Connection connection = null;
+    Statement st = null;
+
+    try {
+      Class.forName(this.driver);
+      connection = DriverManager.getConnection(this.jurl, this.username, this.password);
+
+      String countryTableBuilding =
+          "create memory table COUNTRY(ID varchar(256) not null, NAME varchar(256), CONTINENT"
+              + " varchar(256), primary key (ID))";
+      st = connection.createStatement();
+      st.execute(countryTableBuilding);
+
+      String residenceTableBuilding =
+          "create memory table RESIDENCE(ID varchar(256) not null, CITY varchar(256), COUNTRY"
+              + " varchar(256), primary key (ID))";
+      st = connection.createStatement();
+      st.execute(residenceTableBuilding);
+
+      String managerTableBuilding =
+          "create memory table MANAGER(ID varchar(256) not null, NAME varchar(256), primary key"
+              + " (ID))";
+      st.execute(managerTableBuilding);
+
+      String projectManagerTableBuilding =
+          "create memory table PROJECT_MANAGER(ID varchar(256) not null, NAME varchar(256), PROJECT"
+              + " varchar(256), primary key (ID))";
+      st.execute(projectManagerTableBuilding);
+
+      String employeeTableBuilding =
+          "create memory table EMPLOYEE (ID varchar(256) not null, NAME varchar(256), RESIDENCE"
+              + " varchar(256), MANAGER varchar(256), primary key (ID), foreign key (RESIDENCE)"
+              + " references RESIDENCE(ID), foreign key (MANAGER) references MANAGER(ID))";
+      st.execute(employeeTableBuilding);
+
+      String regularEmployeeTableBuilding =
+          "create memory table REGULAR_EMPLOYEE (ID varchar(256) not null, "
+              + "NAME varchar(256), RESIDENCE varchar(256), MANAGER varchar(256),"
+              + "SALARY decimal(10,2), BONUS decimal(10,0), primary key (ID))";
+      st.execute(regularEmployeeTableBuilding);
+
+      String contractEmployeeTableBuilding =
+          "create memory table CONTRACT_EMPLOYEE (ID varchar(256) not null, "
+              + "NAME varchar(256), RESIDENCE varchar(256), MANAGER varchar(256),"
+              + "PAY_PER_HOUR decimal(10,2), CONTRACT_DURATION varchar(256), primary key (ID))";
+      st.execute(contractEmployeeTableBuilding);
+
+      // Records Inserting
+
+      String countryFilling =
+          "insert into COUNTRY (ID,NAME,CONTINENT) values (" + "('C001','Italy','Europe'))";
+      st.execute(countryFilling);
+
+      String residenceFilling =
+          "insert into RESIDENCE (ID,CITY,COUNTRY) values ("
+              + "('R001','Rome','C001'),"
+              + "('R002','Milan','C001'))";
+      st.execute(residenceFilling);
+
+      String managerFilling = "insert into MANAGER (ID,NAME) values (" + "('M001','Bill Right'))";
+      st.execute(managerFilling);
+
+      String projectManagerFilling =
+          "insert into PROJECT_MANAGER (ID,NAME,PROJECT) values ("
+              + "('M001','Bill Right','New World'))";
+      st.execute(projectManagerFilling);
+
+      String employeeFilling =
+          "insert into EMPLOYEE (ID,NAME,RESIDENCE,MANAGER) values ("
+              + "('E001','John Black','R001',null),"
+              + "('E002','Andrew Brown','R001','M001'),"
+              + "('E003','Jack Johnson','R002',null))";
+      st.execute(employeeFilling);
+
+      String regularEmployeeFilling =
+          "insert into REGULAR_EMPLOYEE (ID,NAME,RESIDENCE,MANAGER,SALARY,BONUS) values ("
+              + "('E002','Andrew Brown','R001','M001','1000.00','10'))";
+      st.execute(regularEmployeeFilling);
+
+      String contractEmployeeFilling =
+          "insert into CONTRACT_EMPLOYEE (ID,NAME,RESIDENCE,MANAGER,PAY_PER_HOUR,CONTRACT_DURATION)"
+              + " values (('E003','Jack Johnson','R002',null,'50.00','6'))";
+      st.execute(contractEmployeeFilling);
+
+      List<String> includedTables = new ArrayList<String>();
+      includedTables.add("COUNTRY");
+      includedTables.add("MANAGER");
+      includedTables.add("PROJECT_MANAGER");
+      includedTables.add("EMPLOYEE");
+      includedTables.add("REGULAR_EMPLOYEE");
+      includedTables.add("CONTRACT_EMPLOYEE");
+
+      this.mapper =
+          new Hibernate2GraphMapper(
+              dataSource,
+              FilterTableMappingTest.XML_TABLE_PER_CONCRETE_CLASS,
+              includedTables,
+              null,
+              dbQueryEngine,
+              dataTypeHandler,
+              executionStrategy,
+              nameResolver,
+              statistics);
+      mapper.buildSourceDatabaseSchema();
+      mapper.buildGraphModel(new JavaConventionNameResolver());
+
+      /*
+       *  Testing context information
+       */
+
+      assertThat(statistics.totalNumberOfEntities).isEqualTo(6);
+      assertThat(statistics.builtEntities).isEqualTo(6);
+      assertThat(statistics.totalNumberOfRelationships).isEqualTo(1);
+      assertThat(statistics.builtRelationships).isEqualTo(1);
+
+      assertThat(statistics.totalNumberOfModelVertices).isEqualTo(6);
+      assertThat(statistics.builtModelVertexTypes).isEqualTo(6);
+      assertThat(statistics.totalNumberOfModelEdges).isEqualTo(1);
+      assertThat(statistics.builtModelEdgeTypes).isEqualTo(1);
+
+      /*
+       *  Testing built source db schema
+       */
+
+      Entity employeeEntity = mapper.getDataBaseSchema().getEntityByName("EMPLOYEE");
+      Entity regularEmployeeEntity =
+          mapper.getDataBaseSchema().getEntityByNameIgnoreCase("REGULAR_EMPLOYEE");
+      Entity contractEmployeeEntity =
+          mapper.getDataBaseSchema().getEntityByNameIgnoreCase("CONTRACT_EMPLOYEE");
+      Entity countryEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("COUNTRY");
+      Entity managerEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("MANAGER");
+      Entity projectManagerEntity =
+          mapper.getDataBaseSchema().getEntityByNameIgnoreCase("PROJECT_MANAGER");
+      Entity residenceEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("RESIDENCE");
+
+      // entities check
+      assertThat(mapper.getDataBaseSchema().getEntities().size()).isEqualTo(6);
+      assertThat(mapper.getDataBaseSchema().getCanonicalRelationships().size()).isEqualTo(1);
+      assertThat(employeeEntity).isNotNull();
+      assertThat(regularEmployeeEntity).isNotNull();
+      assertThat(contractEmployeeEntity).isNotNull();
+      assertThat(countryEntity).isNotNull();
+      assertThat(managerEntity).isNotNull();
+      assertThat(residenceEntity).isNull();
+
+      // attributes check
+      assertThat(employeeEntity.getAttributes().size()).isEqualTo(4);
+
+      assertThat(employeeEntity.getAttributeByName("ID")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(employeeEntity.getAttributeByName("ID").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("ID").getOrdinalPosition()).isEqualTo(1);
+      assertThat(employeeEntity.getAttributeByName("ID").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(employeeEntity.getAttributeByName("NAME")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("NAME").getName()).isEqualTo("NAME");
+      assertThat(employeeEntity.getAttributeByName("NAME").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("NAME").getOrdinalPosition()).isEqualTo(2);
+      assertThat(employeeEntity.getAttributeByName("NAME").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getName()).isEqualTo("RESIDENCE");
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getOrdinalPosition()).isEqualTo(3);
+      assertThat(employeeEntity.getAttributeByName("RESIDENCE").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(employeeEntity.getAttributeByName("MANAGER")).isNotNull();
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getName()).isEqualTo("MANAGER");
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getDataType()).isEqualTo("VARCHAR");
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getOrdinalPosition()).isEqualTo(4);
+      assertThat(employeeEntity.getAttributeByName("MANAGER").getBelongingEntity().getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(regularEmployeeEntity.getAttributes().size()).isEqualTo(2);
+
+      assertThat(regularEmployeeEntity.getAttributeByName("SALARY")).isNotNull();
+      assertThat(regularEmployeeEntity.getAttributeByName("SALARY").getName()).isEqualTo("SALARY");
+      assertThat(regularEmployeeEntity.getAttributeByName("SALARY").getDataType())
+          .isEqualTo("DECIMAL");
+      assertThat(regularEmployeeEntity.getAttributeByName("SALARY").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(regularEmployeeEntity.getAttributeByName("SALARY").getBelongingEntity().getName())
+          .isEqualTo("REGULAR_EMPLOYEE");
+
+      assertThat(regularEmployeeEntity.getAttributeByName("BONUS")).isNotNull();
+      assertThat(regularEmployeeEntity.getAttributeByName("BONUS").getName()).isEqualTo("BONUS");
+      assertThat(regularEmployeeEntity.getAttributeByName("BONUS").getDataType())
+          .isEqualTo("DECIMAL");
+      assertThat(regularEmployeeEntity.getAttributeByName("BONUS").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(regularEmployeeEntity.getAttributeByName("BONUS").getBelongingEntity().getName())
+          .isEqualTo("REGULAR_EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getAttributes().size()).isEqualTo(2);
+
+      assertThat(contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR")).isNotNull();
+      assertThat(contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getName())
+          .isEqualTo("PAY_PER_HOUR");
+      assertThat(contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getDataType())
+          .isEqualTo("DECIMAL");
+      assertThat(contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(
+              contractEmployeeEntity
+                  .getAttributeByName("PAY_PER_HOUR")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("CONTRACT_EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION")).isNotNull();
+      assertThat(contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getName())
+          .isEqualTo("CONTRACT_DURATION");
+      assertThat(contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(
+              contractEmployeeEntity
+                  .getAttributeByName("CONTRACT_DURATION")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("CONTRACT_EMPLOYEE");
+
+      assertThat(countryEntity.getAttributes().size()).isEqualTo(3);
+
+      assertThat(countryEntity.getAttributeByName("ID")).isNotNull();
+      assertThat(countryEntity.getAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(countryEntity.getAttributeByName("ID").getDataType()).isEqualTo("VARCHAR");
+      assertThat(countryEntity.getAttributeByName("ID").getOrdinalPosition()).isEqualTo(1);
+      assertThat(countryEntity.getAttributeByName("ID").getBelongingEntity().getName())
+          .isEqualTo("COUNTRY");
+
+      assertThat(countryEntity.getAttributeByName("NAME")).isNotNull();
+      assertThat(countryEntity.getAttributeByName("NAME").getName()).isEqualTo("NAME");
+      assertThat(countryEntity.getAttributeByName("NAME").getDataType()).isEqualTo("VARCHAR");
+      assertThat(countryEntity.getAttributeByName("NAME").getOrdinalPosition()).isEqualTo(2);
+      assertThat(countryEntity.getAttributeByName("NAME").getBelongingEntity().getName())
+          .isEqualTo("COUNTRY");
+
+      assertThat(countryEntity.getAttributeByName("CONTINENT")).isNotNull();
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getName()).isEqualTo("CONTINENT");
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getDataType()).isEqualTo("VARCHAR");
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getOrdinalPosition()).isEqualTo(3);
+      assertThat(countryEntity.getAttributeByName("CONTINENT").getBelongingEntity().getName())
+          .isEqualTo("COUNTRY");
+
+      assertThat(managerEntity.getAttributes().size()).isEqualTo(2);
+
+      assertThat(managerEntity.getAttributeByName("ID")).isNotNull();
+      assertThat(managerEntity.getAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(managerEntity.getAttributeByName("ID").getDataType()).isEqualTo("VARCHAR");
+      assertThat(managerEntity.getAttributeByName("ID").getOrdinalPosition()).isEqualTo(1);
+      assertThat(managerEntity.getAttributeByName("ID").getBelongingEntity().getName())
+          .isEqualTo("MANAGER");
+
+      assertThat(managerEntity.getAttributeByName("NAME")).isNotNull();
+      assertThat(managerEntity.getAttributeByName("NAME").getName()).isEqualTo("NAME");
+      assertThat(managerEntity.getAttributeByName("NAME").getDataType()).isEqualTo("VARCHAR");
+      assertThat(managerEntity.getAttributeByName("NAME").getOrdinalPosition()).isEqualTo(2);
+      assertThat(managerEntity.getAttributeByName("NAME").getBelongingEntity().getName())
+          .isEqualTo("MANAGER");
+
+      assertThat(projectManagerEntity.getAttributes().size()).isEqualTo(1);
+
+      assertThat(projectManagerEntity.getAttributeByName("PROJECT")).isNotNull();
+      assertThat(projectManagerEntity.getAttributeByName("PROJECT").getName()).isEqualTo("PROJECT");
+      assertThat(projectManagerEntity.getAttributeByName("PROJECT").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerEntity.getAttributeByName("PROJECT").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(projectManagerEntity.getAttributeByName("PROJECT").getBelongingEntity().getName())
+          .isEqualTo("PROJECT_MANAGER");
+
+      // inherited attributes check
+      assertThat(employeeEntity.getInheritedAttributes().size()).isEqualTo(0);
+
+      assertThat(regularEmployeeEntity.getInheritedAttributes().size()).isEqualTo(4);
+
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("ID")).isNotNull();
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("ID").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("ID").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(
+              regularEmployeeEntity
+                  .getInheritedAttributeByName("ID")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("NAME")).isNotNull();
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("NAME").getName())
+          .isEqualTo("NAME");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("NAME").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("NAME").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(
+              regularEmployeeEntity
+                  .getInheritedAttributeByName("NAME")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE")).isNotNull();
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getName())
+          .isEqualTo("RESIDENCE");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(
+              regularEmployeeEntity
+                  .getInheritedAttributeByName("RESIDENCE")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("MANAGER")).isNotNull();
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getName())
+          .isEqualTo("MANAGER");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getOrdinalPosition())
+          .isEqualTo(4);
+      assertThat(
+              regularEmployeeEntity
+                  .getInheritedAttributeByName("MANAGER")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getInheritedAttributes().size()).isEqualTo(4);
+
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("ID")).isNotNull();
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("ID").getName())
+          .isEqualTo("ID");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("ID").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("ID").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(
+              contractEmployeeEntity
+                  .getInheritedAttributeByName("ID")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("NAME")).isNotNull();
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("NAME").getName())
+          .isEqualTo("NAME");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("NAME").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("NAME").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(
+              contractEmployeeEntity
+                  .getInheritedAttributeByName("NAME")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE")).isNotNull();
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getName())
+          .isEqualTo("RESIDENCE");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(
+              contractEmployeeEntity
+                  .getInheritedAttributeByName("RESIDENCE")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("MANAGER")).isNotNull();
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getName())
+          .isEqualTo("MANAGER");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getOrdinalPosition())
+          .isEqualTo(4);
+      assertThat(
+              contractEmployeeEntity
+                  .getInheritedAttributeByName("MANAGER")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("EMPLOYEE");
+
+      assertThat(projectManagerEntity.getInheritedAttributes().size()).isEqualTo(2);
+
+      assertThat(projectManagerEntity.getInheritedAttributeByName("ID")).isNotNull();
+      assertThat(projectManagerEntity.getInheritedAttributeByName("ID").getName()).isEqualTo("ID");
+      assertThat(projectManagerEntity.getInheritedAttributeByName("ID").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerEntity.getInheritedAttributeByName("ID").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(
+              projectManagerEntity.getInheritedAttributeByName("ID").getBelongingEntity().getName())
+          .isEqualTo("MANAGER");
+
+      assertThat(projectManagerEntity.getInheritedAttributeByName("NAME")).isNotNull();
+      assertThat(projectManagerEntity.getInheritedAttributeByName("NAME").getName())
+          .isEqualTo("NAME");
+      assertThat(projectManagerEntity.getInheritedAttributeByName("NAME").getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerEntity.getInheritedAttributeByName("NAME").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(
+              projectManagerEntity
+                  .getInheritedAttributeByName("NAME")
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("MANAGER");
+
+      assertThat(countryEntity.getInheritedAttributes().size()).isEqualTo(0);
+      assertThat(managerEntity.getInheritedAttributes().size()).isEqualTo(0);
+
+      // primary key check
+      assertThat(regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().size()).isEqualTo(1);
+      assertThat(regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName())
+          .isEqualTo("ID");
+      assertThat(regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              regularEmployeeEntity
+                  .getPrimaryKey()
+                  .getInvolvedAttributes()
+                  .get(0)
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("REGULAR_EMPLOYEE");
+
+      assertThat(contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().size())
+          .isEqualTo(1);
+      assertThat(contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName())
+          .isEqualTo("ID");
+      assertThat(
+              contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeEntity
+                  .getPrimaryKey()
+                  .getInvolvedAttributes()
+                  .get(0)
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("CONTRACT_EMPLOYEE");
+
+      assertThat(projectManagerEntity.getPrimaryKey().getInvolvedAttributes().size()).isEqualTo(1);
+      assertThat(projectManagerEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName())
+          .isEqualTo("ID");
+      assertThat(projectManagerEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              projectManagerEntity
+                  .getPrimaryKey()
+                  .getInvolvedAttributes()
+                  .get(0)
+                  .getBelongingEntity()
+                  .getName())
+          .isEqualTo("PROJECT_MANAGER");
+
+      // relationship, primary and foreign key check
+      assertThat(regularEmployeeEntity.getOutCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(contractEmployeeEntity.getOutCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(employeeEntity.getOutCanonicalRelationships().size()).isEqualTo(1);
+      assertThat(projectManagerEntity.getOutCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(managerEntity.getOutCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(countryEntity.getOutCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(regularEmployeeEntity.getInCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(contractEmployeeEntity.getInCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(employeeEntity.getInCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(projectManagerEntity.getInCanonicalRelationships().size()).isEqualTo(0);
+      assertThat(managerEntity.getInCanonicalRelationships().size()).isEqualTo(1);
+      assertThat(countryEntity.getInCanonicalRelationships().size()).isEqualTo(0);
+
+      assertThat(regularEmployeeEntity.getForeignKeys().size()).isEqualTo(0);
+      assertThat(contractEmployeeEntity.getForeignKeys().size()).isEqualTo(0);
+      assertThat(employeeEntity.getForeignKeys().size()).isEqualTo(1);
+      assertThat(projectManagerEntity.getForeignKeys().size()).isEqualTo(0);
+      assertThat(managerEntity.getForeignKeys().size()).isEqualTo(0);
+      assertThat(countryEntity.getForeignKeys().size()).isEqualTo(0);
+
+      Iterator<CanonicalRelationship> itEmp =
+          employeeEntity.getOutCanonicalRelationships().iterator();
+      CanonicalRelationship currentEmpRel = itEmp.next();
+      assertThat(currentEmpRel.getParentEntity().getName()).isEqualTo("MANAGER");
+      assertThat(currentEmpRel.getForeignEntity().getName()).isEqualTo("EMPLOYEE");
+      assertThat(currentEmpRel.getPrimaryKey()).isEqualTo(managerEntity.getPrimaryKey());
+      assertThat(currentEmpRel.getForeignKey()).isEqualTo(employeeEntity.getForeignKeys().get(0));
+      assertThat(itEmp.hasNext()).isFalse();
+
+      Iterator<CanonicalRelationship> itManager =
+          managerEntity.getInCanonicalRelationships().iterator();
+      CanonicalRelationship currentManRel = itManager.next();
+      assertThat(currentManRel).isEqualTo(currentEmpRel);
+
+      // inherited relationships check
+      assertThat(regularEmployeeEntity.getInheritedOutCanonicalRelationships().size()).isEqualTo(1);
+      assertThat(contractEmployeeEntity.getInheritedOutCanonicalRelationships().size())
+          .isEqualTo(1);
+      assertThat(employeeEntity.getInheritedOutCanonicalRelationships().size()).isEqualTo(0);
+
+      Iterator<CanonicalRelationship> itRegEmp =
+          regularEmployeeEntity.getInheritedOutCanonicalRelationships().iterator();
+      Iterator<CanonicalRelationship> itContEmp =
+          contractEmployeeEntity.getInheritedOutCanonicalRelationships().iterator();
+      CanonicalRelationship currentRegEmpRel = itRegEmp.next();
+      CanonicalRelationship currentContEmpRel = itContEmp.next();
+      assertThat(currentRegEmpRel.getParentEntity().getName()).isEqualTo("MANAGER");
+      assertThat(currentRegEmpRel.getForeignEntity().getName()).isEqualTo("EMPLOYEE");
+      assertThat(currentContEmpRel.getParentEntity().getName()).isEqualTo("MANAGER");
+      assertThat(currentContEmpRel.getForeignEntity().getName()).isEqualTo("EMPLOYEE");
+      assertThat(currentRegEmpRel.getPrimaryKey()).isEqualTo(managerEntity.getPrimaryKey());
+      assertThat(currentRegEmpRel.getFromColumns().size()).isEqualTo(1);
+      assertThat(currentRegEmpRel.getFromColumns().get(0).getName()).isEqualTo("MANAGER");
+      assertThat(currentContEmpRel.getPrimaryKey()).isEqualTo(managerEntity.getPrimaryKey());
+      assertThat(currentContEmpRel.getFromColumns().size()).isEqualTo(1);
+      assertThat(currentContEmpRel.getFromColumns().get(0).getName()).isEqualTo("MANAGER");
+      assertThat(itRegEmp.hasNext()).isFalse();
+      assertThat(itContEmp.hasNext()).isFalse();
+
+      // inheritance check
+      assertThat(regularEmployeeEntity.getParentEntity()).isEqualTo(employeeEntity);
+      assertThat(contractEmployeeEntity.getParentEntity()).isEqualTo(employeeEntity);
+      assertThat(employeeEntity.getParentEntity()).isNull();
+
+      assertThat(regularEmployeeEntity.getInheritanceLevel()).isEqualTo(1);
+      assertThat(contractEmployeeEntity.getInheritanceLevel()).isEqualTo(1);
+      assertThat(employeeEntity.getInheritanceLevel()).isEqualTo(0);
+
+      // Hierarchical Bag check
+      assertThat(mapper.getDataBaseSchema().getHierarchicalBags().size()).isEqualTo(2);
+
+      HierarchicalBag hierarchicalBag1 = mapper.getDataBaseSchema().getHierarchicalBags().get(0);
+      HierarchicalBag hierarchicalBag2 = mapper.getDataBaseSchema().getHierarchicalBags().get(1);
+      assertThat(hierarchicalBag1.getInheritancePattern()).isEqualTo("table-per-concrete-type");
+      assertThat(hierarchicalBag2.getInheritancePattern()).isEqualTo("table-per-concrete-type");
+
+      assertThat(hierarchicalBag1.getDepth2entities().size()).isEqualTo(2);
+
+      assertThat(hierarchicalBag1.getDepth2entities().get(0).size()).isEqualTo(1);
+      Iterator<Entity> it = hierarchicalBag1.getDepth2entities().get(0).iterator();
+      assertThat(it.next().getName()).isEqualTo("EMPLOYEE");
+      assertThat(it.hasNext()).isFalse();
+
+      assertThat(hierarchicalBag1.getDepth2entities().get(1).size()).isEqualTo(2);
+      it = hierarchicalBag1.getDepth2entities().get(1).iterator();
+      assertThat(it.next().getName()).isEqualTo("REGULAR_EMPLOYEE");
+      assertThat(it.next().getName()).isEqualTo("CONTRACT_EMPLOYEE");
+      assertThat(it.hasNext()).isFalse();
+
+      assertThat(employeeEntity.getHierarchicalBag()).isEqualTo(hierarchicalBag1);
+      assertThat(regularEmployeeEntity.getHierarchicalBag()).isEqualTo(hierarchicalBag1);
+      assertThat(contractEmployeeEntity.getHierarchicalBag()).isEqualTo(hierarchicalBag1);
+
+      assertThat(hierarchicalBag1.getDiscriminatorColumn()).isNull();
+
+      assertThat(hierarchicalBag2.getDepth2entities().size()).isEqualTo(2);
+
+      assertThat(hierarchicalBag2.getDepth2entities().get(0).size()).isEqualTo(1);
+      it = hierarchicalBag2.getDepth2entities().get(0).iterator();
+      assertThat(it.next().getName()).isEqualTo("MANAGER");
+      assertThat(it.hasNext()).isFalse();
+
+      assertThat(hierarchicalBag2.getDepth2entities().get(1).size()).isEqualTo(1);
+      it = hierarchicalBag2.getDepth2entities().get(1).iterator();
+      assertThat(it.next().getName()).isEqualTo("PROJECT_MANAGER");
+      assertThat(it.hasNext()).isFalse();
+
+      assertThat(managerEntity.getHierarchicalBag()).isEqualTo(hierarchicalBag2);
+      assertThat(projectManagerEntity.getHierarchicalBag()).isEqualTo(hierarchicalBag2);
+
+      assertThat(hierarchicalBag2.getDiscriminatorColumn()).isNull();
+
+      /*
+       *  Testing built graph model
+       */
+
+      VertexType employeeVertexType = mapper.getGraphModel().getVertexTypeByName("Employee");
+      VertexType regularEmployeeVertexType =
+          mapper.getGraphModel().getVertexTypeByName("RegularEmployee");
+      VertexType contractEmployeeVertexType =
+          mapper.getGraphModel().getVertexTypeByName("ContractEmployee");
+      VertexType countryVertexType = mapper.getGraphModel().getVertexTypeByName("Country");
+      VertexType managerVertexType = mapper.getGraphModel().getVertexTypeByName("Manager");
+      VertexType projectManagerVertexType =
+          mapper.getGraphModel().getVertexTypeByName("ProjectManager");
+      VertexType residenceVertexType = mapper.getGraphModel().getVertexTypeByName("Residence");
+
+      // vertices check
+      assertThat(mapper.getGraphModel().getVerticesType().size()).isEqualTo(6);
+      assertThat(employeeVertexType).isNotNull();
+      assertThat(regularEmployeeVertexType).isNotNull();
+      assertThat(contractEmployeeVertexType).isNotNull();
+      assertThat(countryVertexType).isNotNull();
+      assertThat(managerVertexType).isNotNull();
+      assertThat(projectManagerVertexType).isNotNull();
+      assertThat(residenceVertexType).isNull();
+
+      // properties check
+      assertThat(employeeVertexType.getProperties().size()).isEqualTo(4);
+
+      assertThat(employeeVertexType.getPropertyByName("id")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+      assertThat(employeeVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+      assertThat(employeeVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
+
+      assertThat(employeeVertexType.getPropertyByName("name")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+      assertThat(employeeVertexType.getPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(2);
+      assertThat(employeeVertexType.getPropertyByName("name").isFromPrimaryKey()).isFalse();
+
+      assertThat(employeeVertexType.getPropertyByName("residence")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("residence").getName())
+          .isEqualTo("residence");
+      assertThat(employeeVertexType.getPropertyByName("residence").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("residence").getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(employeeVertexType.getPropertyByName("residence").isFromPrimaryKey()).isFalse();
+
+      assertThat(employeeVertexType.getPropertyByName("manager")).isNotNull();
+      assertThat(employeeVertexType.getPropertyByName("manager").getName()).isEqualTo("manager");
+      assertThat(employeeVertexType.getPropertyByName("manager").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(employeeVertexType.getPropertyByName("manager").getOrdinalPosition()).isEqualTo(4);
+      assertThat(employeeVertexType.getPropertyByName("manager").isFromPrimaryKey()).isFalse();
+
+      assertThat(regularEmployeeVertexType.getProperties().size()).isEqualTo(2);
+
+      assertThat(regularEmployeeVertexType.getPropertyByName("salary")).isNotNull();
+      assertThat(regularEmployeeVertexType.getPropertyByName("salary").getName())
+          .isEqualTo("salary");
+      assertThat(regularEmployeeVertexType.getPropertyByName("salary").getOriginalType())
+          .isEqualTo("DECIMAL");
+      assertThat(regularEmployeeVertexType.getPropertyByName("salary").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(regularEmployeeVertexType.getPropertyByName("salary").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(regularEmployeeVertexType.getPropertyByName("bonus")).isNotNull();
+      assertThat(regularEmployeeVertexType.getPropertyByName("bonus").getName()).isEqualTo("bonus");
+      assertThat(regularEmployeeVertexType.getPropertyByName("bonus").getOriginalType())
+          .isEqualTo("DECIMAL");
+      assertThat(regularEmployeeVertexType.getPropertyByName("bonus").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(regularEmployeeVertexType.getPropertyByName("bonus").isFromPrimaryKey()).isFalse();
+
+      assertThat(contractEmployeeVertexType.getProperties().size()).isEqualTo(2);
+
+      assertThat(contractEmployeeVertexType.getPropertyByName("payPerHour")).isNotNull();
+      assertThat(contractEmployeeVertexType.getPropertyByName("payPerHour").getName())
+          .isEqualTo("payPerHour");
+      assertThat(contractEmployeeVertexType.getPropertyByName("payPerHour").getOriginalType())
+          .isEqualTo("DECIMAL");
+      assertThat(contractEmployeeVertexType.getPropertyByName("payPerHour").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(contractEmployeeVertexType.getPropertyByName("payPerHour").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(contractEmployeeVertexType.getPropertyByName("contractDuration")).isNotNull();
+      assertThat(contractEmployeeVertexType.getPropertyByName("contractDuration").getName())
+          .isEqualTo("contractDuration");
+      assertThat(contractEmployeeVertexType.getPropertyByName("contractDuration").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeVertexType.getPropertyByName("contractDuration").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(
+              contractEmployeeVertexType.getPropertyByName("contractDuration").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(countryVertexType.getProperties().size()).isEqualTo(3);
+
+      assertThat(countryVertexType.getPropertyByName("id")).isNotNull();
+      assertThat(countryVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+      assertThat(countryVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+      assertThat(countryVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+      assertThat(countryVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
+
+      assertThat(countryVertexType.getPropertyByName("name")).isNotNull();
+      assertThat(countryVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+      assertThat(countryVertexType.getPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(countryVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(2);
+      assertThat(countryVertexType.getPropertyByName("name").isFromPrimaryKey()).isFalse();
+
+      assertThat(countryVertexType.getPropertyByName("continent")).isNotNull();
+      assertThat(countryVertexType.getPropertyByName("continent").getName()).isEqualTo("continent");
+      assertThat(countryVertexType.getPropertyByName("continent").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(countryVertexType.getPropertyByName("continent").getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(countryVertexType.getPropertyByName("continent").isFromPrimaryKey()).isFalse();
+
+      assertThat(managerVertexType.getProperties().size()).isEqualTo(2);
+
+      assertThat(managerVertexType.getPropertyByName("id")).isNotNull();
+      assertThat(managerVertexType.getPropertyByName("id").getName()).isEqualTo("id");
+      assertThat(managerVertexType.getPropertyByName("id").getOriginalType()).isEqualTo("VARCHAR");
+      assertThat(managerVertexType.getPropertyByName("id").getOrdinalPosition()).isEqualTo(1);
+      assertThat(managerVertexType.getPropertyByName("id").isFromPrimaryKey()).isTrue();
+
+      assertThat(managerVertexType.getPropertyByName("name")).isNotNull();
+      assertThat(managerVertexType.getPropertyByName("name").getName()).isEqualTo("name");
+      assertThat(managerVertexType.getPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(managerVertexType.getPropertyByName("name").getOrdinalPosition()).isEqualTo(2);
+      assertThat(managerVertexType.getPropertyByName("name").isFromPrimaryKey()).isFalse();
+
+      assertThat(projectManagerVertexType.getProperties().size()).isEqualTo(1);
+
+      assertThat(projectManagerVertexType.getPropertyByName("project")).isNotNull();
+      assertThat(projectManagerVertexType.getPropertyByName("project").getName())
+          .isEqualTo("project");
+      assertThat(projectManagerVertexType.getPropertyByName("project").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerVertexType.getPropertyByName("project").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(projectManagerVertexType.getPropertyByName("project").isFromPrimaryKey())
+          .isFalse();
+
+      // inherited properties check
+      assertThat(employeeVertexType.getInheritedProperties().size()).isEqualTo(0);
+
+      assertThat(regularEmployeeVertexType.getInheritedProperties().size()).isEqualTo(4);
+
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("id")).isNotNull();
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("id").getName())
+          .isEqualTo("id");
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("id").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("id").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("id").isFromPrimaryKey())
+          .isTrue();
+
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("name")).isNotNull();
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("name").getName())
+          .isEqualTo("name");
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("name").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("name").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("residence")).isNotNull();
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("residence").getName())
+          .isEqualTo("residence");
+      assertThat(
+              regularEmployeeVertexType.getInheritedPropertyByName("residence").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              regularEmployeeVertexType
+                  .getInheritedPropertyByName("residence")
+                  .getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(
+              regularEmployeeVertexType.getInheritedPropertyByName("residence").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("manager")).isNotNull();
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("manager").getName())
+          .isEqualTo("manager");
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("manager").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              regularEmployeeVertexType.getInheritedPropertyByName("manager").getOrdinalPosition())
+          .isEqualTo(4);
+      assertThat(regularEmployeeVertexType.getInheritedPropertyByName("manager").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(contractEmployeeVertexType.getInheritedProperties().size()).isEqualTo(4);
+
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("id")).isNotNull();
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("id").getName())
+          .isEqualTo("id");
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("id").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("id").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("id").isFromPrimaryKey())
+          .isTrue();
+
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("name")).isNotNull();
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("name").getName())
+          .isEqualTo("name");
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("name").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("name").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("residence")).isNotNull();
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("residence").getName())
+          .isEqualTo("residence");
+      assertThat(
+              contractEmployeeVertexType.getInheritedPropertyByName("residence").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeVertexType
+                  .getInheritedPropertyByName("residence")
+                  .getOrdinalPosition())
+          .isEqualTo(3);
+      assertThat(
+              contractEmployeeVertexType.getInheritedPropertyByName("residence").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("manager")).isNotNull();
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("manager").getName())
+          .isEqualTo("manager");
+      assertThat(contractEmployeeVertexType.getInheritedPropertyByName("manager").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(
+              contractEmployeeVertexType.getInheritedPropertyByName("manager").getOrdinalPosition())
+          .isEqualTo(4);
+      assertThat(
+              contractEmployeeVertexType.getInheritedPropertyByName("manager").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(projectManagerVertexType.getInheritedProperties().size()).isEqualTo(2);
+
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("id")).isNotNull();
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("id").getName())
+          .isEqualTo("id");
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("id").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("id").getOrdinalPosition())
+          .isEqualTo(1);
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("id").isFromPrimaryKey())
+          .isTrue();
+
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("name")).isNotNull();
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("name").getName())
+          .isEqualTo("name");
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("name").getOriginalType())
+          .isEqualTo("VARCHAR");
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("name").getOrdinalPosition())
+          .isEqualTo(2);
+      assertThat(projectManagerVertexType.getInheritedPropertyByName("name").isFromPrimaryKey())
+          .isFalse();
+
+      assertThat(countryVertexType.getInheritedProperties().size()).isEqualTo(0);
+      assertThat(managerVertexType.getInheritedProperties().size()).isEqualTo(0);
+
+      // edges check
+
+      assertThat(mapper.getRelationship2edgeType().size()).isEqualTo(1);
+
+      assertThat(mapper.getGraphModel().getEdgesType().size()).isEqualTo(1);
+      assertThat(mapper.getGraphModel().getEdgesType().get(0).getName()).isEqualTo("HasManager");
+
+      assertThat(employeeVertexType.getOutEdgesType().size()).isEqualTo(1);
+      assertThat(employeeVertexType.getOutEdgesType().get(0).getName()).isEqualTo("HasManager");
+
+      assertThat(regularEmployeeVertexType.getOutEdgesType().size()).isEqualTo(1);
+      assertThat(regularEmployeeVertexType.getOutEdgesType().get(0).getName())
+          .isEqualTo("HasManager");
+
+      assertThat(contractEmployeeVertexType.getOutEdgesType().size()).isEqualTo(1);
+      assertThat(contractEmployeeVertexType.getOutEdgesType().get(0).getName())
+          .isEqualTo("HasManager");
+
+      /*
+       * Rules check
+       */
+
+      // Classes Mapping
+
+      assertThat(mapper.getVertexType2EVClassMappers().size()).isEqualTo(6);
+      assertThat(mapper.getEntity2EVClassMappers().size()).isEqualTo(6);
+
+      assertThat(mapper.getEVClassMappersByVertex(employeeVertexType).size()).isEqualTo(1);
+      EVClassMapper employeeClassMapper =
+          mapper.getEVClassMappersByVertex(employeeVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(employeeEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(employeeEntity).get(0))
+          .isEqualTo(employeeClassMapper);
+      assertThat(employeeEntity).isEqualTo(employeeClassMapper.getEntity());
+      assertThat(employeeVertexType).isEqualTo(employeeClassMapper.getVertexType());
+
+      assertThat(employeeClassMapper.getAttribute2property().size()).isEqualTo(4);
+      assertThat(employeeClassMapper.getProperty2attribute().size()).isEqualTo(4);
+      assertThat(employeeClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+      assertThat(employeeClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+      assertThat(employeeClassMapper.getAttribute2property().get("RESIDENCE"))
+          .isEqualTo("residence");
+      assertThat(employeeClassMapper.getAttribute2property().get("MANAGER")).isEqualTo("manager");
+      assertThat(employeeClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+      assertThat(employeeClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
+      assertThat(employeeClassMapper.getProperty2attribute().get("residence"))
+          .isEqualTo("RESIDENCE");
+      assertThat(employeeClassMapper.getProperty2attribute().get("manager")).isEqualTo("MANAGER");
+
+      assertThat(mapper.getEVClassMappersByVertex(regularEmployeeVertexType).size()).isEqualTo(1);
+      EVClassMapper regularEmployeeClassMapper =
+          mapper.getEVClassMappersByVertex(regularEmployeeVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(regularEmployeeEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(regularEmployeeEntity).get(0))
+          .isEqualTo(regularEmployeeClassMapper);
+      assertThat(regularEmployeeEntity).isEqualTo(regularEmployeeClassMapper.getEntity());
+      assertThat(regularEmployeeVertexType).isEqualTo(regularEmployeeClassMapper.getVertexType());
+
+      assertThat(regularEmployeeClassMapper.getAttribute2property().size()).isEqualTo(2);
+      assertThat(regularEmployeeClassMapper.getProperty2attribute().size()).isEqualTo(2);
+      assertThat(regularEmployeeClassMapper.getAttribute2property().get("SALARY"))
+          .isEqualTo("salary");
+      assertThat(regularEmployeeClassMapper.getAttribute2property().get("BONUS"))
+          .isEqualTo("bonus");
+      assertThat(regularEmployeeClassMapper.getProperty2attribute().get("salary"))
+          .isEqualTo("SALARY");
+      assertThat(regularEmployeeClassMapper.getProperty2attribute().get("bonus"))
+          .isEqualTo("BONUS");
+
+      assertThat(mapper.getEVClassMappersByVertex(contractEmployeeVertexType).size()).isEqualTo(1);
+      EVClassMapper contractEmployeeClassMapper =
+          mapper.getEVClassMappersByVertex(contractEmployeeVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(contractEmployeeEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(contractEmployeeEntity).get(0))
+          .isEqualTo(contractEmployeeClassMapper);
+      assertThat(contractEmployeeEntity).isEqualTo(contractEmployeeClassMapper.getEntity());
+      assertThat(contractEmployeeVertexType).isEqualTo(contractEmployeeClassMapper.getVertexType());
+
+      assertThat(contractEmployeeClassMapper.getAttribute2property().size()).isEqualTo(2);
+      assertThat(contractEmployeeClassMapper.getProperty2attribute().size()).isEqualTo(2);
+      assertThat(contractEmployeeClassMapper.getAttribute2property().get("PAY_PER_HOUR"))
+          .isEqualTo("payPerHour");
+      assertThat(contractEmployeeClassMapper.getAttribute2property().get("CONTRACT_DURATION"))
+          .isEqualTo("contractDuration");
+      assertThat(contractEmployeeClassMapper.getProperty2attribute().get("payPerHour"))
+          .isEqualTo("PAY_PER_HOUR");
+      assertThat(contractEmployeeClassMapper.getProperty2attribute().get("contractDuration"))
+          .isEqualTo("CONTRACT_DURATION");
+
+      assertThat(mapper.getEVClassMappersByVertex(countryVertexType).size()).isEqualTo(1);
+      EVClassMapper countryClassMapper = mapper.getEVClassMappersByVertex(countryVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(countryEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(countryEntity).get(0))
+          .isEqualTo(countryClassMapper);
+      assertThat(countryEntity).isEqualTo(countryClassMapper.getEntity());
+      assertThat(countryVertexType).isEqualTo(countryClassMapper.getVertexType());
+
+      assertThat(countryClassMapper.getAttribute2property().size()).isEqualTo(3);
+      assertThat(countryClassMapper.getProperty2attribute().size()).isEqualTo(3);
+      assertThat(countryClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+      assertThat(countryClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+      assertThat(countryClassMapper.getAttribute2property().get("CONTINENT"))
+          .isEqualTo("continent");
+      assertThat(countryClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+      assertThat(countryClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
+      assertThat(countryClassMapper.getProperty2attribute().get("continent"))
+          .isEqualTo("CONTINENT");
+
+      assertThat(mapper.getEVClassMappersByVertex(managerVertexType).size()).isEqualTo(1);
+      EVClassMapper managerClassMapper = mapper.getEVClassMappersByVertex(managerVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(managerEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(managerEntity).get(0))
+          .isEqualTo(managerClassMapper);
+      assertThat(managerEntity).isEqualTo(managerClassMapper.getEntity());
+      assertThat(managerVertexType).isEqualTo(managerClassMapper.getVertexType());
+
+      assertThat(managerClassMapper.getAttribute2property().size()).isEqualTo(2);
+      assertThat(managerClassMapper.getProperty2attribute().size()).isEqualTo(2);
+      assertThat(managerClassMapper.getAttribute2property().get("ID")).isEqualTo("id");
+      assertThat(managerClassMapper.getAttribute2property().get("NAME")).isEqualTo("name");
+      assertThat(managerClassMapper.getProperty2attribute().get("id")).isEqualTo("ID");
+      assertThat(managerClassMapper.getProperty2attribute().get("name")).isEqualTo("NAME");
+
+      assertThat(mapper.getEVClassMappersByVertex(projectManagerVertexType).size()).isEqualTo(1);
+      EVClassMapper projectManagerClassMapper =
+          mapper.getEVClassMappersByVertex(projectManagerVertexType).get(0);
+      assertThat(mapper.getEVClassMappersByEntity(projectManagerEntity).size()).isEqualTo(1);
+      assertThat(mapper.getEVClassMappersByEntity(projectManagerEntity).get(0))
+          .isEqualTo(projectManagerClassMapper);
+      assertThat(projectManagerEntity).isEqualTo(projectManagerClassMapper.getEntity());
+      assertThat(projectManagerVertexType).isEqualTo(projectManagerClassMapper.getVertexType());
+
+      assertThat(projectManagerClassMapper.getAttribute2property().size()).isEqualTo(1);
+      assertThat(projectManagerClassMapper.getProperty2attribute().size()).isEqualTo(1);
+      assertThat(projectManagerClassMapper.getAttribute2property().get("PROJECT"))
+          .isEqualTo("project");
+      assertThat(projectManagerClassMapper.getProperty2attribute().get("project"))
+          .isEqualTo("PROJECT");
+
+      // Relationships-Edges Mapping
+
+      Iterator<CanonicalRelationship> itRelationships =
+          employeeEntity.getOutCanonicalRelationships().iterator();
+      CanonicalRelationship hasManagerRelationship = itRelationships.next();
+      assertThat(itRelationships.hasNext()).isFalse();
+
+      EdgeType hasManagerEdgeType = mapper.getGraphModel().getEdgeTypeByName("HasManager");
+
+      assertThat(mapper.getRelationship2edgeType().size()).isEqualTo(1);
+      assertThat(mapper.getRelationship2edgeType().get(hasManagerRelationship))
+          .isEqualTo(hasManagerEdgeType);
+
+      assertThat(mapper.getEdgeType2relationships().size()).isEqualTo(1);
+      assertThat(mapper.getEdgeType2relationships().get(hasManagerEdgeType).size()).isEqualTo(1);
+      assertThat(
+              mapper
+                  .getEdgeType2relationships()
+                  .get(hasManagerEdgeType)
+                  .contains(hasManagerRelationship))
+          .isTrue();
+
+      // JoinVertexes-AggregatorEdges Mapping
+
+      assertThat(mapper.getJoinVertex2aggregatorEdges().size()).isEqualTo(0);
+    } catch (Exception e) {
+      e.printStackTrace();
+      fail("");
+    } finally {
+      try {
+        // Dropping Source DB Schema and OrientGraph
+        String dbDropping = "drop schema public cascade";
+        st.execute(dbDropping);
+        connection.close();
+      } catch (Exception e) {
+        e.printStackTrace();
+        fail("");
+      }
     }
-
-    @Test
-    /*
-     * Filtering out a table through include-tables (with Table per Concrete Type inheritance).
-     */public void filterOutThroughIncludeWithTablePerConcreteTypeInheritance() {
-        Connection connection = null;
-        Statement st = null;
-
-        try {
-            Class.forName(this.driver);
-            connection = DriverManager.getConnection(this.jurl, this.username, this.password);
-
-            String countryTableBuilding = "create memory table COUNTRY(ID varchar(256) not null, NAME varchar(256), CONTINENT varchar(256), primary key (ID))";
-            st = connection.createStatement();
-            st.execute(countryTableBuilding);
-
-            String residenceTableBuilding =
-                "create memory table RESIDENCE(ID varchar(256) not null, CITY varchar(256), COUNTRY varchar(256), primary key (ID))";
-            st = connection.createStatement();
-            st.execute(residenceTableBuilding);
-
-            String managerTableBuilding = "create memory table MANAGER(ID varchar(256) not null, NAME varchar(256), primary key (ID))";
-            st.execute(managerTableBuilding);
-
-            String projectManagerTableBuilding =
-                "create memory table PROJECT_MANAGER(ID varchar(256) not null, NAME varchar(256), PROJECT varchar(256), primary key (ID))";
-            st.execute(projectManagerTableBuilding);
-
-            String employeeTableBuilding =
-                "create memory table EMPLOYEE (ID varchar(256) not null," +
-                " NAME varchar(256), RESIDENCE varchar(256), MANAGER varchar(256), primary key (ID), " +
-                "foreign key (RESIDENCE) references RESIDENCE(ID), foreign key (MANAGER) references MANAGER(ID))";
-            st.execute(employeeTableBuilding);
-
-            String regularEmployeeTableBuilding =
-                "create memory table REGULAR_EMPLOYEE (ID varchar(256) not null, " +
-                "NAME varchar(256), RESIDENCE varchar(256), MANAGER varchar(256)," +
-                "SALARY decimal(10,2), BONUS decimal(10,0), primary key (ID))";
-            st.execute(regularEmployeeTableBuilding);
-
-            String contractEmployeeTableBuilding =
-                "create memory table CONTRACT_EMPLOYEE (ID varchar(256) not null, " +
-                "NAME varchar(256), RESIDENCE varchar(256), MANAGER varchar(256)," +
-                "PAY_PER_HOUR decimal(10,2), CONTRACT_DURATION varchar(256), primary key (ID))";
-            st.execute(contractEmployeeTableBuilding);
-
-            // Records Inserting
-
-            String countryFilling = "insert into COUNTRY (ID,NAME,CONTINENT) values (" + "('C001','Italy','Europe'))";
-            st.execute(countryFilling);
-
-            String residenceFilling = "insert into RESIDENCE (ID,CITY,COUNTRY) values (" + "('R001','Rome','C001')," + "('R002','Milan','C001'))";
-            st.execute(residenceFilling);
-
-            String managerFilling = "insert into MANAGER (ID,NAME) values (" + "('M001','Bill Right'))";
-            st.execute(managerFilling);
-
-            String projectManagerFilling = "insert into PROJECT_MANAGER (ID,NAME,PROJECT) values (" + "('M001','Bill Right','New World'))";
-            st.execute(projectManagerFilling);
-
-            String employeeFilling =
-                "insert into EMPLOYEE (ID,NAME,RESIDENCE,MANAGER) values (" +
-                "('E001','John Black','R001',null)," +
-                "('E002','Andrew Brown','R001','M001')," +
-                "('E003','Jack Johnson','R002',null))";
-            st.execute(employeeFilling);
-
-            String regularEmployeeFilling =
-                "insert into REGULAR_EMPLOYEE (ID,NAME,RESIDENCE,MANAGER,SALARY,BONUS) values (" + "('E002','Andrew Brown','R001','M001','1000.00','10'))";
-            st.execute(regularEmployeeFilling);
-
-            String contractEmployeeFilling =
-                "insert into CONTRACT_EMPLOYEE (ID,NAME,RESIDENCE,MANAGER,PAY_PER_HOUR,CONTRACT_DURATION) values (" +
-                "('E003','Jack Johnson','R002',null,'50.00','6'))";
-            st.execute(contractEmployeeFilling);
-
-            List<String> includedTables = new ArrayList<String>();
-            includedTables.add("COUNTRY");
-            includedTables.add("MANAGER");
-            includedTables.add("PROJECT_MANAGER");
-            includedTables.add("EMPLOYEE");
-            includedTables.add("REGULAR_EMPLOYEE");
-            includedTables.add("CONTRACT_EMPLOYEE");
-
-            this.mapper =
-                new Hibernate2GraphMapper(
-                    dataSource,
-                    FilterTableMappingTest.XML_TABLE_PER_CONCRETE_CLASS,
-                    includedTables,
-                    null,
-                    dbQueryEngine,
-                    dataTypeHandler,
-                    executionStrategy,
-                    nameResolver,
-                    statistics
-                );
-            mapper.buildSourceDatabaseSchema();
-            mapper.buildGraphModel(new JavaConventionNameResolver());
-
-            /*
-             *  Testing context information
-             */
-
-            assertEquals(6, statistics.totalNumberOfEntities);
-            assertEquals(6, statistics.builtEntities);
-            assertEquals(1, statistics.totalNumberOfRelationships);
-            assertEquals(1, statistics.builtRelationships);
-
-            assertEquals(6, statistics.totalNumberOfModelVertices);
-            assertEquals(6, statistics.builtModelVertexTypes);
-            assertEquals(1, statistics.totalNumberOfModelEdges);
-            assertEquals(1, statistics.builtModelEdgeTypes);
-
-            /*
-             *  Testing built source db schema
-             */
-
-            Entity employeeEntity = mapper.getDataBaseSchema().getEntityByName("EMPLOYEE");
-            Entity regularEmployeeEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("REGULAR_EMPLOYEE");
-            Entity contractEmployeeEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("CONTRACT_EMPLOYEE");
-            Entity countryEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("COUNTRY");
-            Entity managerEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("MANAGER");
-            Entity projectManagerEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("PROJECT_MANAGER");
-            Entity residenceEntity = mapper.getDataBaseSchema().getEntityByNameIgnoreCase("RESIDENCE");
-
-            // entities check
-            assertEquals(6, mapper.getDataBaseSchema().getEntities().size());
-            assertEquals(1, mapper.getDataBaseSchema().getCanonicalRelationships().size());
-            assertNotNull(employeeEntity);
-            assertNotNull(regularEmployeeEntity);
-            assertNotNull(contractEmployeeEntity);
-            assertNotNull(countryEntity);
-            assertNotNull(managerEntity);
-            assertNull(residenceEntity);
-
-            // attributes check
-            assertEquals(4, employeeEntity.getAttributes().size());
-
-            assertNotNull(employeeEntity.getAttributeByName("ID"));
-            assertEquals("ID", employeeEntity.getAttributeByName("ID").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("ID").getDataType());
-            assertEquals(1, employeeEntity.getAttributeByName("ID").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(employeeEntity.getAttributeByName("NAME"));
-            assertEquals("NAME", employeeEntity.getAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("NAME").getDataType());
-            assertEquals(2, employeeEntity.getAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertNotNull(employeeEntity.getAttributeByName("RESIDENCE"));
-            assertEquals("RESIDENCE", employeeEntity.getAttributeByName("RESIDENCE").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("RESIDENCE").getDataType());
-            assertEquals(3, employeeEntity.getAttributeByName("RESIDENCE").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("RESIDENCE").getBelongingEntity().getName());
-
-            assertNotNull(employeeEntity.getAttributeByName("MANAGER"));
-            assertEquals("MANAGER", employeeEntity.getAttributeByName("MANAGER").getName());
-            assertEquals("VARCHAR", employeeEntity.getAttributeByName("MANAGER").getDataType());
-            assertEquals(4, employeeEntity.getAttributeByName("MANAGER").getOrdinalPosition());
-            assertEquals("EMPLOYEE", employeeEntity.getAttributeByName("MANAGER").getBelongingEntity().getName());
-
-            assertEquals(2, regularEmployeeEntity.getAttributes().size());
-
-            assertNotNull(regularEmployeeEntity.getAttributeByName("SALARY"));
-            assertEquals("SALARY", regularEmployeeEntity.getAttributeByName("SALARY").getName());
-            assertEquals("DECIMAL", regularEmployeeEntity.getAttributeByName("SALARY").getDataType());
-            assertEquals(1, regularEmployeeEntity.getAttributeByName("SALARY").getOrdinalPosition());
-            assertEquals("REGULAR_EMPLOYEE", regularEmployeeEntity.getAttributeByName("SALARY").getBelongingEntity().getName());
-
-            assertNotNull(regularEmployeeEntity.getAttributeByName("BONUS"));
-            assertEquals("BONUS", regularEmployeeEntity.getAttributeByName("BONUS").getName());
-            assertEquals("DECIMAL", regularEmployeeEntity.getAttributeByName("BONUS").getDataType());
-            assertEquals(2, regularEmployeeEntity.getAttributeByName("BONUS").getOrdinalPosition());
-            assertEquals("REGULAR_EMPLOYEE", regularEmployeeEntity.getAttributeByName("BONUS").getBelongingEntity().getName());
-
-            assertEquals(2, contractEmployeeEntity.getAttributes().size());
-
-            assertNotNull(contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR"));
-            assertEquals("PAY_PER_HOUR", contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getName());
-            assertEquals("DECIMAL", contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getDataType());
-            assertEquals(1, contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getOrdinalPosition());
-            assertEquals("CONTRACT_EMPLOYEE", contractEmployeeEntity.getAttributeByName("PAY_PER_HOUR").getBelongingEntity().getName());
-
-            assertNotNull(contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION"));
-            assertEquals("CONTRACT_DURATION", contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getDataType());
-            assertEquals(2, contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getOrdinalPosition());
-            assertEquals("CONTRACT_EMPLOYEE", contractEmployeeEntity.getAttributeByName("CONTRACT_DURATION").getBelongingEntity().getName());
-
-            assertEquals(3, countryEntity.getAttributes().size());
-
-            assertNotNull(countryEntity.getAttributeByName("ID"));
-            assertEquals("ID", countryEntity.getAttributeByName("ID").getName());
-            assertEquals("VARCHAR", countryEntity.getAttributeByName("ID").getDataType());
-            assertEquals(1, countryEntity.getAttributeByName("ID").getOrdinalPosition());
-            assertEquals("COUNTRY", countryEntity.getAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(countryEntity.getAttributeByName("NAME"));
-            assertEquals("NAME", countryEntity.getAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", countryEntity.getAttributeByName("NAME").getDataType());
-            assertEquals(2, countryEntity.getAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("COUNTRY", countryEntity.getAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertNotNull(countryEntity.getAttributeByName("CONTINENT"));
-            assertEquals("CONTINENT", countryEntity.getAttributeByName("CONTINENT").getName());
-            assertEquals("VARCHAR", countryEntity.getAttributeByName("CONTINENT").getDataType());
-            assertEquals(3, countryEntity.getAttributeByName("CONTINENT").getOrdinalPosition());
-            assertEquals("COUNTRY", countryEntity.getAttributeByName("CONTINENT").getBelongingEntity().getName());
-
-            assertEquals(2, managerEntity.getAttributes().size());
-
-            assertNotNull(managerEntity.getAttributeByName("ID"));
-            assertEquals("ID", managerEntity.getAttributeByName("ID").getName());
-            assertEquals("VARCHAR", managerEntity.getAttributeByName("ID").getDataType());
-            assertEquals(1, managerEntity.getAttributeByName("ID").getOrdinalPosition());
-            assertEquals("MANAGER", managerEntity.getAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(managerEntity.getAttributeByName("NAME"));
-            assertEquals("NAME", managerEntity.getAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", managerEntity.getAttributeByName("NAME").getDataType());
-            assertEquals(2, managerEntity.getAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("MANAGER", managerEntity.getAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertEquals(1, projectManagerEntity.getAttributes().size());
-
-            assertNotNull(projectManagerEntity.getAttributeByName("PROJECT"));
-            assertEquals("PROJECT", projectManagerEntity.getAttributeByName("PROJECT").getName());
-            assertEquals("VARCHAR", projectManagerEntity.getAttributeByName("PROJECT").getDataType());
-            assertEquals(1, projectManagerEntity.getAttributeByName("PROJECT").getOrdinalPosition());
-            assertEquals("PROJECT_MANAGER", projectManagerEntity.getAttributeByName("PROJECT").getBelongingEntity().getName());
-
-            // inherited attributes check
-            assertEquals(0, employeeEntity.getInheritedAttributes().size());
-
-            assertEquals(4, regularEmployeeEntity.getInheritedAttributes().size());
-
-            assertNotNull(regularEmployeeEntity.getInheritedAttributeByName("ID"));
-            assertEquals("ID", regularEmployeeEntity.getInheritedAttributeByName("ID").getName());
-            assertEquals("VARCHAR", regularEmployeeEntity.getInheritedAttributeByName("ID").getDataType());
-            assertEquals(1, regularEmployeeEntity.getInheritedAttributeByName("ID").getOrdinalPosition());
-            assertEquals("EMPLOYEE", regularEmployeeEntity.getInheritedAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(regularEmployeeEntity.getInheritedAttributeByName("NAME"));
-            assertEquals("NAME", regularEmployeeEntity.getInheritedAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", regularEmployeeEntity.getInheritedAttributeByName("NAME").getDataType());
-            assertEquals(2, regularEmployeeEntity.getInheritedAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("EMPLOYEE", regularEmployeeEntity.getInheritedAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertNotNull(regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE"));
-            assertEquals("RESIDENCE", regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getName());
-            assertEquals("VARCHAR", regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getDataType());
-            assertEquals(3, regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getOrdinalPosition());
-            assertEquals("EMPLOYEE", regularEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getBelongingEntity().getName());
-
-            assertNotNull(regularEmployeeEntity.getInheritedAttributeByName("MANAGER"));
-            assertEquals("MANAGER", regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getName());
-            assertEquals("VARCHAR", regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getDataType());
-            assertEquals(4, regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getOrdinalPosition());
-            assertEquals("EMPLOYEE", regularEmployeeEntity.getInheritedAttributeByName("MANAGER").getBelongingEntity().getName());
-
-            assertEquals(4, contractEmployeeEntity.getInheritedAttributes().size());
-
-            assertNotNull(contractEmployeeEntity.getInheritedAttributeByName("ID"));
-            assertEquals("ID", contractEmployeeEntity.getInheritedAttributeByName("ID").getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getInheritedAttributeByName("ID").getDataType());
-            assertEquals(1, contractEmployeeEntity.getInheritedAttributeByName("ID").getOrdinalPosition());
-            assertEquals("EMPLOYEE", contractEmployeeEntity.getInheritedAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(contractEmployeeEntity.getInheritedAttributeByName("NAME"));
-            assertEquals("NAME", contractEmployeeEntity.getInheritedAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getInheritedAttributeByName("NAME").getDataType());
-            assertEquals(2, contractEmployeeEntity.getInheritedAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("EMPLOYEE", contractEmployeeEntity.getInheritedAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertNotNull(contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE"));
-            assertEquals("RESIDENCE", contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getDataType());
-            assertEquals(3, contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getOrdinalPosition());
-            assertEquals("EMPLOYEE", contractEmployeeEntity.getInheritedAttributeByName("RESIDENCE").getBelongingEntity().getName());
-
-            assertNotNull(contractEmployeeEntity.getInheritedAttributeByName("MANAGER"));
-            assertEquals("MANAGER", contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getDataType());
-            assertEquals(4, contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getOrdinalPosition());
-            assertEquals("EMPLOYEE", contractEmployeeEntity.getInheritedAttributeByName("MANAGER").getBelongingEntity().getName());
-
-            assertEquals(2, projectManagerEntity.getInheritedAttributes().size());
-
-            assertNotNull(projectManagerEntity.getInheritedAttributeByName("ID"));
-            assertEquals("ID", projectManagerEntity.getInheritedAttributeByName("ID").getName());
-            assertEquals("VARCHAR", projectManagerEntity.getInheritedAttributeByName("ID").getDataType());
-            assertEquals(1, projectManagerEntity.getInheritedAttributeByName("ID").getOrdinalPosition());
-            assertEquals("MANAGER", projectManagerEntity.getInheritedAttributeByName("ID").getBelongingEntity().getName());
-
-            assertNotNull(projectManagerEntity.getInheritedAttributeByName("NAME"));
-            assertEquals("NAME", projectManagerEntity.getInheritedAttributeByName("NAME").getName());
-            assertEquals("VARCHAR", projectManagerEntity.getInheritedAttributeByName("NAME").getDataType());
-            assertEquals(2, projectManagerEntity.getInheritedAttributeByName("NAME").getOrdinalPosition());
-            assertEquals("MANAGER", projectManagerEntity.getInheritedAttributeByName("NAME").getBelongingEntity().getName());
-
-            assertEquals(0, countryEntity.getInheritedAttributes().size());
-            assertEquals(0, managerEntity.getInheritedAttributes().size());
-
-            // primary key check
-            assertEquals(1, regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().size());
-            assertEquals("ID", regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName());
-            assertEquals("VARCHAR", regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType());
-            assertEquals("REGULAR_EMPLOYEE", regularEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getBelongingEntity().getName());
-
-            assertEquals(1, contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().size());
-            assertEquals("ID", contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName());
-            assertEquals("VARCHAR", contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType());
-            assertEquals("CONTRACT_EMPLOYEE", contractEmployeeEntity.getPrimaryKey().getInvolvedAttributes().get(0).getBelongingEntity().getName());
-
-            assertEquals(1, projectManagerEntity.getPrimaryKey().getInvolvedAttributes().size());
-            assertEquals("ID", projectManagerEntity.getPrimaryKey().getInvolvedAttributes().get(0).getName());
-            assertEquals("VARCHAR", projectManagerEntity.getPrimaryKey().getInvolvedAttributes().get(0).getDataType());
-            assertEquals("PROJECT_MANAGER", projectManagerEntity.getPrimaryKey().getInvolvedAttributes().get(0).getBelongingEntity().getName());
-
-            // relationship, primary and foreign key check
-            assertEquals(0, regularEmployeeEntity.getOutCanonicalRelationships().size());
-            assertEquals(0, contractEmployeeEntity.getOutCanonicalRelationships().size());
-            assertEquals(1, employeeEntity.getOutCanonicalRelationships().size());
-            assertEquals(0, projectManagerEntity.getOutCanonicalRelationships().size());
-            assertEquals(0, managerEntity.getOutCanonicalRelationships().size());
-            assertEquals(0, countryEntity.getOutCanonicalRelationships().size());
-            assertEquals(0, regularEmployeeEntity.getInCanonicalRelationships().size());
-            assertEquals(0, contractEmployeeEntity.getInCanonicalRelationships().size());
-            assertEquals(0, employeeEntity.getInCanonicalRelationships().size());
-            assertEquals(0, projectManagerEntity.getInCanonicalRelationships().size());
-            assertEquals(1, managerEntity.getInCanonicalRelationships().size());
-            assertEquals(0, countryEntity.getInCanonicalRelationships().size());
-
-            assertEquals(0, regularEmployeeEntity.getForeignKeys().size());
-            assertEquals(0, contractEmployeeEntity.getForeignKeys().size());
-            assertEquals(1, employeeEntity.getForeignKeys().size());
-            assertEquals(0, projectManagerEntity.getForeignKeys().size());
-            assertEquals(0, managerEntity.getForeignKeys().size());
-            assertEquals(0, countryEntity.getForeignKeys().size());
-
-            Iterator<CanonicalRelationship> itEmp = employeeEntity.getOutCanonicalRelationships().iterator();
-            CanonicalRelationship currentEmpRel = itEmp.next();
-            assertEquals("MANAGER", currentEmpRel.getParentEntity().getName());
-            assertEquals("EMPLOYEE", currentEmpRel.getForeignEntity().getName());
-            assertEquals(managerEntity.getPrimaryKey(), currentEmpRel.getPrimaryKey());
-            assertEquals(employeeEntity.getForeignKeys().get(0), currentEmpRel.getForeignKey());
-            assertFalse(itEmp.hasNext());
-
-            Iterator<CanonicalRelationship> itManager = managerEntity.getInCanonicalRelationships().iterator();
-            CanonicalRelationship currentManRel = itManager.next();
-            assertEquals(currentEmpRel, currentManRel);
-
-            // inherited relationships check
-            assertEquals(1, regularEmployeeEntity.getInheritedOutCanonicalRelationships().size());
-            assertEquals(1, contractEmployeeEntity.getInheritedOutCanonicalRelationships().size());
-            assertEquals(0, employeeEntity.getInheritedOutCanonicalRelationships().size());
-
-            Iterator<CanonicalRelationship> itRegEmp = regularEmployeeEntity.getInheritedOutCanonicalRelationships().iterator();
-            Iterator<CanonicalRelationship> itContEmp = contractEmployeeEntity.getInheritedOutCanonicalRelationships().iterator();
-            CanonicalRelationship currentRegEmpRel = itRegEmp.next();
-            CanonicalRelationship currentContEmpRel = itContEmp.next();
-            assertEquals("MANAGER", currentRegEmpRel.getParentEntity().getName());
-            assertEquals("EMPLOYEE", currentRegEmpRel.getForeignEntity().getName());
-            assertEquals("MANAGER", currentContEmpRel.getParentEntity().getName());
-            assertEquals("EMPLOYEE", currentContEmpRel.getForeignEntity().getName());
-            assertEquals(managerEntity.getPrimaryKey(), currentRegEmpRel.getPrimaryKey());
-            assertEquals(1, currentRegEmpRel.getFromColumns().size());
-            assertEquals("MANAGER", currentRegEmpRel.getFromColumns().get(0).getName());
-            assertEquals(managerEntity.getPrimaryKey(), currentContEmpRel.getPrimaryKey());
-            assertEquals(1, currentContEmpRel.getFromColumns().size());
-            assertEquals("MANAGER", currentContEmpRel.getFromColumns().get(0).getName());
-            assertFalse(itRegEmp.hasNext());
-            assertFalse(itContEmp.hasNext());
-
-            // inheritance check
-            assertEquals(employeeEntity, regularEmployeeEntity.getParentEntity());
-            assertEquals(employeeEntity, contractEmployeeEntity.getParentEntity());
-            assertNull(employeeEntity.getParentEntity());
-
-            assertEquals(1, regularEmployeeEntity.getInheritanceLevel());
-            assertEquals(1, contractEmployeeEntity.getInheritanceLevel());
-            assertEquals(0, employeeEntity.getInheritanceLevel());
-
-            // Hierarchical Bag check
-            assertEquals(2, mapper.getDataBaseSchema().getHierarchicalBags().size());
-
-            HierarchicalBag hierarchicalBag1 = mapper.getDataBaseSchema().getHierarchicalBags().get(0);
-            HierarchicalBag hierarchicalBag2 = mapper.getDataBaseSchema().getHierarchicalBags().get(1);
-            assertEquals("table-per-concrete-type", hierarchicalBag1.getInheritancePattern());
-            assertEquals("table-per-concrete-type", hierarchicalBag2.getInheritancePattern());
-
-            assertEquals(2, hierarchicalBag1.getDepth2entities().size());
-
-            assertEquals(1, hierarchicalBag1.getDepth2entities().get(0).size());
-            Iterator<Entity> it = hierarchicalBag1.getDepth2entities().get(0).iterator();
-            assertEquals("EMPLOYEE", it.next().getName());
-            assertTrue(!it.hasNext());
-
-            assertEquals(2, hierarchicalBag1.getDepth2entities().get(1).size());
-            it = hierarchicalBag1.getDepth2entities().get(1).iterator();
-            assertEquals("REGULAR_EMPLOYEE", it.next().getName());
-            assertEquals("CONTRACT_EMPLOYEE", it.next().getName());
-            assertTrue(!it.hasNext());
-
-            assertEquals(hierarchicalBag1, employeeEntity.getHierarchicalBag());
-            assertEquals(hierarchicalBag1, regularEmployeeEntity.getHierarchicalBag());
-            assertEquals(hierarchicalBag1, contractEmployeeEntity.getHierarchicalBag());
-
-            assertNull(hierarchicalBag1.getDiscriminatorColumn());
-
-            assertEquals(2, hierarchicalBag2.getDepth2entities().size());
-
-            assertEquals(1, hierarchicalBag2.getDepth2entities().get(0).size());
-            it = hierarchicalBag2.getDepth2entities().get(0).iterator();
-            assertEquals("MANAGER", it.next().getName());
-            assertTrue(!it.hasNext());
-
-            assertEquals(1, hierarchicalBag2.getDepth2entities().get(1).size());
-            it = hierarchicalBag2.getDepth2entities().get(1).iterator();
-            assertEquals("PROJECT_MANAGER", it.next().getName());
-            assertTrue(!it.hasNext());
-
-            assertEquals(hierarchicalBag2, managerEntity.getHierarchicalBag());
-            assertEquals(hierarchicalBag2, projectManagerEntity.getHierarchicalBag());
-
-            assertNull(hierarchicalBag2.getDiscriminatorColumn());
-
-            /*
-             *  Testing built graph model
-             */
-
-            VertexType employeeVertexType = mapper.getGraphModel().getVertexTypeByName("Employee");
-            VertexType regularEmployeeVertexType = mapper.getGraphModel().getVertexTypeByName("RegularEmployee");
-            VertexType contractEmployeeVertexType = mapper.getGraphModel().getVertexTypeByName("ContractEmployee");
-            VertexType countryVertexType = mapper.getGraphModel().getVertexTypeByName("Country");
-            VertexType managerVertexType = mapper.getGraphModel().getVertexTypeByName("Manager");
-            VertexType projectManagerVertexType = mapper.getGraphModel().getVertexTypeByName("ProjectManager");
-            VertexType residenceVertexType = mapper.getGraphModel().getVertexTypeByName("Residence");
-
-            // vertices check
-            assertEquals(6, mapper.getGraphModel().getVerticesType().size());
-            assertNotNull(employeeVertexType);
-            assertNotNull(regularEmployeeVertexType);
-            assertNotNull(contractEmployeeVertexType);
-            assertNotNull(countryVertexType);
-            assertNotNull(managerVertexType);
-            assertNotNull(projectManagerVertexType);
-            assertNull(residenceVertexType);
-
-            // properties check
-            assertEquals(4, employeeVertexType.getProperties().size());
-
-            assertNotNull(employeeVertexType.getPropertyByName("id"));
-            assertEquals("id", employeeVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, employeeVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, employeeVertexType.getPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(employeeVertexType.getPropertyByName("name"));
-            assertEquals("name", employeeVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(2, employeeVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, employeeVertexType.getPropertyByName("name").isFromPrimaryKey());
-
-            assertNotNull(employeeVertexType.getPropertyByName("residence"));
-            assertEquals("residence", employeeVertexType.getPropertyByName("residence").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("residence").getOriginalType());
-            assertEquals(3, employeeVertexType.getPropertyByName("residence").getOrdinalPosition());
-            assertEquals(false, employeeVertexType.getPropertyByName("residence").isFromPrimaryKey());
-
-            assertNotNull(employeeVertexType.getPropertyByName("manager"));
-            assertEquals("manager", employeeVertexType.getPropertyByName("manager").getName());
-            assertEquals("VARCHAR", employeeVertexType.getPropertyByName("manager").getOriginalType());
-            assertEquals(4, employeeVertexType.getPropertyByName("manager").getOrdinalPosition());
-            assertEquals(false, employeeVertexType.getPropertyByName("manager").isFromPrimaryKey());
-
-            assertEquals(2, regularEmployeeVertexType.getProperties().size());
-
-            assertNotNull(regularEmployeeVertexType.getPropertyByName("salary"));
-            assertEquals("salary", regularEmployeeVertexType.getPropertyByName("salary").getName());
-            assertEquals("DECIMAL", regularEmployeeVertexType.getPropertyByName("salary").getOriginalType());
-            assertEquals(1, regularEmployeeVertexType.getPropertyByName("salary").getOrdinalPosition());
-            assertEquals(false, regularEmployeeVertexType.getPropertyByName("salary").isFromPrimaryKey());
-
-            assertNotNull(regularEmployeeVertexType.getPropertyByName("bonus"));
-            assertEquals("bonus", regularEmployeeVertexType.getPropertyByName("bonus").getName());
-            assertEquals("DECIMAL", regularEmployeeVertexType.getPropertyByName("bonus").getOriginalType());
-            assertEquals(2, regularEmployeeVertexType.getPropertyByName("bonus").getOrdinalPosition());
-            assertEquals(false, regularEmployeeVertexType.getPropertyByName("bonus").isFromPrimaryKey());
-
-            assertEquals(2, contractEmployeeVertexType.getProperties().size());
-
-            assertNotNull(contractEmployeeVertexType.getPropertyByName("payPerHour"));
-            assertEquals("payPerHour", contractEmployeeVertexType.getPropertyByName("payPerHour").getName());
-            assertEquals("DECIMAL", contractEmployeeVertexType.getPropertyByName("payPerHour").getOriginalType());
-            assertEquals(1, contractEmployeeVertexType.getPropertyByName("payPerHour").getOrdinalPosition());
-            assertEquals(false, contractEmployeeVertexType.getPropertyByName("payPerHour").isFromPrimaryKey());
-
-            assertNotNull(contractEmployeeVertexType.getPropertyByName("contractDuration"));
-            assertEquals("contractDuration", contractEmployeeVertexType.getPropertyByName("contractDuration").getName());
-            assertEquals("VARCHAR", contractEmployeeVertexType.getPropertyByName("contractDuration").getOriginalType());
-            assertEquals(2, contractEmployeeVertexType.getPropertyByName("contractDuration").getOrdinalPosition());
-            assertEquals(false, contractEmployeeVertexType.getPropertyByName("contractDuration").isFromPrimaryKey());
-
-            assertEquals(3, countryVertexType.getProperties().size());
-
-            assertNotNull(countryVertexType.getPropertyByName("id"));
-            assertEquals("id", countryVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", countryVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, countryVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, countryVertexType.getPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(countryVertexType.getPropertyByName("name"));
-            assertEquals("name", countryVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", countryVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(2, countryVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, countryVertexType.getPropertyByName("name").isFromPrimaryKey());
-
-            assertNotNull(countryVertexType.getPropertyByName("continent"));
-            assertEquals("continent", countryVertexType.getPropertyByName("continent").getName());
-            assertEquals("VARCHAR", countryVertexType.getPropertyByName("continent").getOriginalType());
-            assertEquals(3, countryVertexType.getPropertyByName("continent").getOrdinalPosition());
-            assertEquals(false, countryVertexType.getPropertyByName("continent").isFromPrimaryKey());
-
-            assertEquals(2, managerVertexType.getProperties().size());
-
-            assertNotNull(managerVertexType.getPropertyByName("id"));
-            assertEquals("id", managerVertexType.getPropertyByName("id").getName());
-            assertEquals("VARCHAR", managerVertexType.getPropertyByName("id").getOriginalType());
-            assertEquals(1, managerVertexType.getPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, managerVertexType.getPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(managerVertexType.getPropertyByName("name"));
-            assertEquals("name", managerVertexType.getPropertyByName("name").getName());
-            assertEquals("VARCHAR", managerVertexType.getPropertyByName("name").getOriginalType());
-            assertEquals(2, managerVertexType.getPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, managerVertexType.getPropertyByName("name").isFromPrimaryKey());
-
-            assertEquals(1, projectManagerVertexType.getProperties().size());
-
-            assertNotNull(projectManagerVertexType.getPropertyByName("project"));
-            assertEquals("project", projectManagerVertexType.getPropertyByName("project").getName());
-            assertEquals("VARCHAR", projectManagerVertexType.getPropertyByName("project").getOriginalType());
-            assertEquals(1, projectManagerVertexType.getPropertyByName("project").getOrdinalPosition());
-            assertEquals(false, projectManagerVertexType.getPropertyByName("project").isFromPrimaryKey());
-
-            // inherited properties check
-            assertEquals(0, employeeVertexType.getInheritedProperties().size());
-
-            assertEquals(4, regularEmployeeVertexType.getInheritedProperties().size());
-
-            assertNotNull(regularEmployeeVertexType.getInheritedPropertyByName("id"));
-            assertEquals("id", regularEmployeeVertexType.getInheritedPropertyByName("id").getName());
-            assertEquals("VARCHAR", regularEmployeeVertexType.getInheritedPropertyByName("id").getOriginalType());
-            assertEquals(1, regularEmployeeVertexType.getInheritedPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, regularEmployeeVertexType.getInheritedPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(regularEmployeeVertexType.getInheritedPropertyByName("name"));
-            assertEquals("name", regularEmployeeVertexType.getInheritedPropertyByName("name").getName());
-            assertEquals("VARCHAR", regularEmployeeVertexType.getInheritedPropertyByName("name").getOriginalType());
-            assertEquals(2, regularEmployeeVertexType.getInheritedPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, regularEmployeeVertexType.getInheritedPropertyByName("name").isFromPrimaryKey());
-
-            assertNotNull(regularEmployeeVertexType.getInheritedPropertyByName("residence"));
-            assertEquals("residence", regularEmployeeVertexType.getInheritedPropertyByName("residence").getName());
-            assertEquals("VARCHAR", regularEmployeeVertexType.getInheritedPropertyByName("residence").getOriginalType());
-            assertEquals(3, regularEmployeeVertexType.getInheritedPropertyByName("residence").getOrdinalPosition());
-            assertEquals(false, regularEmployeeVertexType.getInheritedPropertyByName("residence").isFromPrimaryKey());
-
-            assertNotNull(regularEmployeeVertexType.getInheritedPropertyByName("manager"));
-            assertEquals("manager", regularEmployeeVertexType.getInheritedPropertyByName("manager").getName());
-            assertEquals("VARCHAR", regularEmployeeVertexType.getInheritedPropertyByName("manager").getOriginalType());
-            assertEquals(4, regularEmployeeVertexType.getInheritedPropertyByName("manager").getOrdinalPosition());
-            assertEquals(false, regularEmployeeVertexType.getInheritedPropertyByName("manager").isFromPrimaryKey());
-
-            assertEquals(4, contractEmployeeVertexType.getInheritedProperties().size());
-
-            assertNotNull(contractEmployeeVertexType.getInheritedPropertyByName("id"));
-            assertEquals("id", contractEmployeeVertexType.getInheritedPropertyByName("id").getName());
-            assertEquals("VARCHAR", contractEmployeeVertexType.getInheritedPropertyByName("id").getOriginalType());
-            assertEquals(1, contractEmployeeVertexType.getInheritedPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, contractEmployeeVertexType.getInheritedPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(contractEmployeeVertexType.getInheritedPropertyByName("name"));
-            assertEquals("name", contractEmployeeVertexType.getInheritedPropertyByName("name").getName());
-            assertEquals("VARCHAR", contractEmployeeVertexType.getInheritedPropertyByName("name").getOriginalType());
-            assertEquals(2, contractEmployeeVertexType.getInheritedPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, contractEmployeeVertexType.getInheritedPropertyByName("name").isFromPrimaryKey());
-
-            assertNotNull(contractEmployeeVertexType.getInheritedPropertyByName("residence"));
-            assertEquals("residence", contractEmployeeVertexType.getInheritedPropertyByName("residence").getName());
-            assertEquals("VARCHAR", contractEmployeeVertexType.getInheritedPropertyByName("residence").getOriginalType());
-            assertEquals(3, contractEmployeeVertexType.getInheritedPropertyByName("residence").getOrdinalPosition());
-            assertEquals(false, contractEmployeeVertexType.getInheritedPropertyByName("residence").isFromPrimaryKey());
-
-            assertNotNull(contractEmployeeVertexType.getInheritedPropertyByName("manager"));
-            assertEquals("manager", contractEmployeeVertexType.getInheritedPropertyByName("manager").getName());
-            assertEquals("VARCHAR", contractEmployeeVertexType.getInheritedPropertyByName("manager").getOriginalType());
-            assertEquals(4, contractEmployeeVertexType.getInheritedPropertyByName("manager").getOrdinalPosition());
-            assertEquals(false, contractEmployeeVertexType.getInheritedPropertyByName("manager").isFromPrimaryKey());
-
-            assertEquals(2, projectManagerVertexType.getInheritedProperties().size());
-
-            assertNotNull(projectManagerVertexType.getInheritedPropertyByName("id"));
-            assertEquals("id", projectManagerVertexType.getInheritedPropertyByName("id").getName());
-            assertEquals("VARCHAR", projectManagerVertexType.getInheritedPropertyByName("id").getOriginalType());
-            assertEquals(1, projectManagerVertexType.getInheritedPropertyByName("id").getOrdinalPosition());
-            assertEquals(true, projectManagerVertexType.getInheritedPropertyByName("id").isFromPrimaryKey());
-
-            assertNotNull(projectManagerVertexType.getInheritedPropertyByName("name"));
-            assertEquals("name", projectManagerVertexType.getInheritedPropertyByName("name").getName());
-            assertEquals("VARCHAR", projectManagerVertexType.getInheritedPropertyByName("name").getOriginalType());
-            assertEquals(2, projectManagerVertexType.getInheritedPropertyByName("name").getOrdinalPosition());
-            assertEquals(false, projectManagerVertexType.getInheritedPropertyByName("name").isFromPrimaryKey());
-
-            assertEquals(0, countryVertexType.getInheritedProperties().size());
-            assertEquals(0, managerVertexType.getInheritedProperties().size());
-
-            // edges check
-
-            assertEquals(1, mapper.getRelationship2edgeType().size());
-
-            assertEquals(1, mapper.getGraphModel().getEdgesType().size());
-            assertEquals("HasManager", mapper.getGraphModel().getEdgesType().get(0).getName());
-
-            assertEquals(1, employeeVertexType.getOutEdgesType().size());
-            assertEquals("HasManager", employeeVertexType.getOutEdgesType().get(0).getName());
-
-            assertEquals(1, regularEmployeeVertexType.getOutEdgesType().size());
-            assertEquals("HasManager", regularEmployeeVertexType.getOutEdgesType().get(0).getName());
-
-            assertEquals(1, contractEmployeeVertexType.getOutEdgesType().size());
-            assertEquals("HasManager", contractEmployeeVertexType.getOutEdgesType().get(0).getName());
-
-            /*
-             * Rules check
-             */
-
-            // Classes Mapping
-
-            assertEquals(6, mapper.getVertexType2EVClassMappers().size());
-            assertEquals(6, mapper.getEntity2EVClassMappers().size());
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(employeeVertexType).size());
-            EVClassMapper employeeClassMapper = mapper.getEVClassMappersByVertex(employeeVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(employeeEntity).size());
-            assertEquals(employeeClassMapper, mapper.getEVClassMappersByEntity(employeeEntity).get(0));
-            assertEquals(employeeClassMapper.getEntity(), employeeEntity);
-            assertEquals(employeeClassMapper.getVertexType(), employeeVertexType);
-
-            assertEquals(4, employeeClassMapper.getAttribute2property().size());
-            assertEquals(4, employeeClassMapper.getProperty2attribute().size());
-            assertEquals("id", employeeClassMapper.getAttribute2property().get("ID"));
-            assertEquals("name", employeeClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("residence", employeeClassMapper.getAttribute2property().get("RESIDENCE"));
-            assertEquals("manager", employeeClassMapper.getAttribute2property().get("MANAGER"));
-            assertEquals("ID", employeeClassMapper.getProperty2attribute().get("id"));
-            assertEquals("NAME", employeeClassMapper.getProperty2attribute().get("name"));
-            assertEquals("RESIDENCE", employeeClassMapper.getProperty2attribute().get("residence"));
-            assertEquals("MANAGER", employeeClassMapper.getProperty2attribute().get("manager"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(regularEmployeeVertexType).size());
-            EVClassMapper regularEmployeeClassMapper = mapper.getEVClassMappersByVertex(regularEmployeeVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(regularEmployeeEntity).size());
-            assertEquals(regularEmployeeClassMapper, mapper.getEVClassMappersByEntity(regularEmployeeEntity).get(0));
-            assertEquals(regularEmployeeClassMapper.getEntity(), regularEmployeeEntity);
-            assertEquals(regularEmployeeClassMapper.getVertexType(), regularEmployeeVertexType);
-
-            assertEquals(2, regularEmployeeClassMapper.getAttribute2property().size());
-            assertEquals(2, regularEmployeeClassMapper.getProperty2attribute().size());
-            assertEquals("salary", regularEmployeeClassMapper.getAttribute2property().get("SALARY"));
-            assertEquals("bonus", regularEmployeeClassMapper.getAttribute2property().get("BONUS"));
-            assertEquals("SALARY", regularEmployeeClassMapper.getProperty2attribute().get("salary"));
-            assertEquals("BONUS", regularEmployeeClassMapper.getProperty2attribute().get("bonus"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(contractEmployeeVertexType).size());
-            EVClassMapper contractEmployeeClassMapper = mapper.getEVClassMappersByVertex(contractEmployeeVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(contractEmployeeEntity).size());
-            assertEquals(contractEmployeeClassMapper, mapper.getEVClassMappersByEntity(contractEmployeeEntity).get(0));
-            assertEquals(contractEmployeeClassMapper.getEntity(), contractEmployeeEntity);
-            assertEquals(contractEmployeeClassMapper.getVertexType(), contractEmployeeVertexType);
-
-            assertEquals(2, contractEmployeeClassMapper.getAttribute2property().size());
-            assertEquals(2, contractEmployeeClassMapper.getProperty2attribute().size());
-            assertEquals("payPerHour", contractEmployeeClassMapper.getAttribute2property().get("PAY_PER_HOUR"));
-            assertEquals("contractDuration", contractEmployeeClassMapper.getAttribute2property().get("CONTRACT_DURATION"));
-            assertEquals("PAY_PER_HOUR", contractEmployeeClassMapper.getProperty2attribute().get("payPerHour"));
-            assertEquals("CONTRACT_DURATION", contractEmployeeClassMapper.getProperty2attribute().get("contractDuration"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(countryVertexType).size());
-            EVClassMapper countryClassMapper = mapper.getEVClassMappersByVertex(countryVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(countryEntity).size());
-            assertEquals(countryClassMapper, mapper.getEVClassMappersByEntity(countryEntity).get(0));
-            assertEquals(countryClassMapper.getEntity(), countryEntity);
-            assertEquals(countryClassMapper.getVertexType(), countryVertexType);
-
-            assertEquals(3, countryClassMapper.getAttribute2property().size());
-            assertEquals(3, countryClassMapper.getProperty2attribute().size());
-            assertEquals("id", countryClassMapper.getAttribute2property().get("ID"));
-            assertEquals("name", countryClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("continent", countryClassMapper.getAttribute2property().get("CONTINENT"));
-            assertEquals("ID", countryClassMapper.getProperty2attribute().get("id"));
-            assertEquals("NAME", countryClassMapper.getProperty2attribute().get("name"));
-            assertEquals("CONTINENT", countryClassMapper.getProperty2attribute().get("continent"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(managerVertexType).size());
-            EVClassMapper managerClassMapper = mapper.getEVClassMappersByVertex(managerVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(managerEntity).size());
-            assertEquals(managerClassMapper, mapper.getEVClassMappersByEntity(managerEntity).get(0));
-            assertEquals(managerClassMapper.getEntity(), managerEntity);
-            assertEquals(managerClassMapper.getVertexType(), managerVertexType);
-
-            assertEquals(2, managerClassMapper.getAttribute2property().size());
-            assertEquals(2, managerClassMapper.getProperty2attribute().size());
-            assertEquals("id", managerClassMapper.getAttribute2property().get("ID"));
-            assertEquals("name", managerClassMapper.getAttribute2property().get("NAME"));
-            assertEquals("ID", managerClassMapper.getProperty2attribute().get("id"));
-            assertEquals("NAME", managerClassMapper.getProperty2attribute().get("name"));
-
-            assertEquals(1, mapper.getEVClassMappersByVertex(projectManagerVertexType).size());
-            EVClassMapper projectManagerClassMapper = mapper.getEVClassMappersByVertex(projectManagerVertexType).get(0);
-            assertEquals(1, mapper.getEVClassMappersByEntity(projectManagerEntity).size());
-            assertEquals(projectManagerClassMapper, mapper.getEVClassMappersByEntity(projectManagerEntity).get(0));
-            assertEquals(projectManagerClassMapper.getEntity(), projectManagerEntity);
-            assertEquals(projectManagerClassMapper.getVertexType(), projectManagerVertexType);
-
-            assertEquals(1, projectManagerClassMapper.getAttribute2property().size());
-            assertEquals(1, projectManagerClassMapper.getProperty2attribute().size());
-            assertEquals("project", projectManagerClassMapper.getAttribute2property().get("PROJECT"));
-            assertEquals("PROJECT", projectManagerClassMapper.getProperty2attribute().get("project"));
-
-            // Relationships-Edges Mapping
-
-            Iterator<CanonicalRelationship> itRelationships = employeeEntity.getOutCanonicalRelationships().iterator();
-            CanonicalRelationship hasManagerRelationship = itRelationships.next();
-            assertFalse(itRelationships.hasNext());
-
-            EdgeType hasManagerEdgeType = mapper.getGraphModel().getEdgeTypeByName("HasManager");
-
-            assertEquals(1, mapper.getRelationship2edgeType().size());
-            assertEquals(hasManagerEdgeType, mapper.getRelationship2edgeType().get(hasManagerRelationship));
-
-            assertEquals(1, mapper.getEdgeType2relationships().size());
-            assertEquals(1, mapper.getEdgeType2relationships().get(hasManagerEdgeType).size());
-            assertTrue(mapper.getEdgeType2relationships().get(hasManagerEdgeType).contains(hasManagerRelationship));
-
-            // JoinVertexes-AggregatorEdges Mapping
-
-            assertEquals(0, mapper.getJoinVertex2aggregatorEdges().size());
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail();
-        } finally {
-            try {
-                // Dropping Source DB Schema and OrientGraph
-                String dbDropping = "drop schema public cascade";
-                st.execute(dbDropping);
-                connection.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-                fail();
-            }
-        }
-    }
+  }
 }

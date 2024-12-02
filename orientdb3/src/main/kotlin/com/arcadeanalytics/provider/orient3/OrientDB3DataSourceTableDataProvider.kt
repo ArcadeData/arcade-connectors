@@ -39,20 +39,29 @@ import org.slf4j.LoggerFactory
  * Specialized provider for OrientDB 3.0.x
  */
 class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
-
     private val log = LoggerFactory.getLogger(OrientDB3DataSourceTableDataProvider::class.java)
 
     override fun supportedDataSourceTypes(): Set<String> = setOf(ORIENTDB3)
 
-    override fun fetchData(dataSource: DataSourceInfo, query: String, params: QueryParams, limit: Int): GraphData {
+    override fun fetchData(
+        dataSource: DataSourceInfo,
+        query: String,
+        params: QueryParams,
+        limit: Int,
+    ): GraphData {
         var filledQuery = query
-        params.asSequence()
+        params
+            .asSequence()
             .forEach { p -> filledQuery = filledQuery.replace("${p.name.prefixIfAbsent(":")}", p.value) }
 
         return fetchData(dataSource, filledQuery, limit)
     }
 
-    override fun fetchData(dataSource: DataSourceInfo, query: String, limit: Int): GraphData {
+    override fun fetchData(
+        dataSource: DataSourceInfo,
+        query: String,
+        limit: Int,
+    ): GraphData {
         log.info("fetching data from '{}' with query '{}' ", dataSource.id, truncate(query, 256))
 
         open(dataSource)
@@ -60,7 +69,8 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
 
                 val lang = if (query.startsWith("gremlin:")) "gremlin" else "sql"
 
-                db.execute(lang, query.removePrefix("gremlin:"))
+                db
+                    .execute(lang, query.removePrefix("gremlin:"))
                     .use { resultSet ->
 
                         val data = mapResultSet(resultSet)
@@ -76,10 +86,12 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
         val nodesProperties = mutableMapOf<String, TypeProperty>()
 
         var count: Long = 0
-        val cytoNodes = resultSet.asSequence()
-            .map { v -> populateProperties(nodesProperties, v) }
-            .map { v -> toCytoData(v, count++) }
-            .toSet()
+        val cytoNodes =
+            resultSet
+                .asSequence()
+                .map { v -> populateProperties(nodesProperties, v) }
+                .map { v -> toCytoData(v, count++) }
+                .toSet()
 
         log.debug("properties:: {} ", nodesProperties)
         val tableClass = mutableMapOf<String, Any>()
@@ -96,28 +108,35 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
         return GraphData(nodeClasses, edgeClasses, cytoNodes, cytoEdges)
     }
 
-    private fun populateProperties(properties: MutableMap<String, TypeProperty>, element: OResult): OResult {
-        val props = element.propertyNames
-            .asSequence()
-            .filter { name -> !properties.containsKey(name) }
-            .filter { p -> !p.startsWith("@") }
-            .filter { p -> !p.startsWith("in_") }
-            .filter { p -> !p.startsWith("out_") }
-            .map { name ->
+    private fun populateProperties(
+        properties: MutableMap<String, TypeProperty>,
+        element: OResult,
+    ): OResult {
+        val props =
+            element.propertyNames
+                .asSequence()
+                .filter { name -> !properties.containsKey(name) }
+                .filter { p -> !p.startsWith("@") }
+                .filter { p -> !p.startsWith("in_") }
+                .filter { p -> !p.startsWith("out_") }
+                .map { name ->
 
-                val property = element.getProperty<Any>(name)
+                    val property = element.getProperty<Any>(name)
 
-                val type = property.javaClass.simpleName
+                    val type = property.javaClass.simpleName
 
-                name to TypeProperty(name, type)
-            }.toMap()
+                    name to TypeProperty(name, type)
+                }.toMap()
 
         properties.putAll(props)
 
         return element
     }
 
-    private fun toCytoData(element: OResult, index: Long): CytoData {
+    private fun toCytoData(
+        element: OResult,
+        index: Long,
+    ): CytoData {
         val record: MutableMap<String, Any> = transformToMap(element)
 
         cleanRecord(record)
@@ -139,7 +158,8 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
 
     private fun transformToMap(doc: OResult): MutableMap<String, Any> {
         val record = HashMap<String, Any>()
-        doc.propertyNames.asSequence()
+        doc.propertyNames
+            .asSequence()
             .filter { p -> !p.startsWith("@") }
             .filter { p -> !p.startsWith("in_") }
             .filter { p -> !p.startsWith("out_") }
@@ -150,8 +170,7 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
                     propertyType != OType.LINKLIST ||
                     propertyType != OType.LINKSET ||
                     propertyType != OType.LINKMAP
-            }
-            .filter { property -> doc.getProperty<Any>(property) != null }
+            }.filter { property -> doc.getProperty<Any>(property) != null }
             .forEach { property ->
 
                 var value = doc.getProperty<Any>(property)
@@ -159,9 +178,10 @@ class OrientDB3DataSourceTableDataProvider : DataSourceTableDataProvider {
                 record[property] = value
             }
 
-        record[ODocumentHelper.ATTRIBUTE_RID] = doc.identity
-            .filter { id -> id.isValid }
-            .map { id -> id.toString() }
+        record[ODocumentHelper.ATTRIBUTE_RID] =
+            doc.identity
+                .filter { id -> id.isValid }
+                .map { id -> id.toString() }
 
         record[ODocumentHelper.ATTRIBUTE_CLASS] = TABLE_CLASS
 

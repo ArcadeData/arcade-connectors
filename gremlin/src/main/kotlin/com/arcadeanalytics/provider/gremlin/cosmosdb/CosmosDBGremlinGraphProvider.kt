@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
 
 class CosmosDBGremlinGraphProvider : DataSourceGraphProvider {
-
     private val log = LoggerFactory.getLogger(CosmosDBGremlinGraphProvider::class.java)
     private val allFields: Pattern
 
@@ -43,17 +42,20 @@ class CosmosDBGremlinGraphProvider : DataSourceGraphProvider {
         allFields = Pattern.compile(".*")
     }
 
-    override fun supportedDataSourceTypes(): Set<String> {
-        return Sets.newHashSet("GREMLIN_COSMOSDB")
-    }
+    override fun supportedDataSourceTypes(): Set<String> = Sets.newHashSet("GREMLIN_COSMOSDB")
 
-    override fun provideTo(dataSource: DataSourceInfo, player: SpritePlayer) {
-        val cluster = Cluster.build(dataSource.server)
-            .port(dataSource.port)
-            .serializer(createSerializer(dataSource))
-            .enableSsl(dataSource.type == "GREMLIN_COSMOSDB")
-            .credentials(dataSource.username, dataSource.password)
-            .create()
+    override fun provideTo(
+        dataSource: DataSourceInfo,
+        player: SpritePlayer,
+    ) {
+        val cluster =
+            Cluster
+                .build(dataSource.server)
+                .port(dataSource.port)
+                .serializer(createSerializer(dataSource))
+                .enableSsl(dataSource.type == "GREMLIN_COSMOSDB")
+                .credentials(dataSource.username, dataSource.password)
+                .create()
 
         val client = cluster.connect<Client>().init()
 
@@ -67,7 +69,11 @@ class CosmosDBGremlinGraphProvider : DataSourceGraphProvider {
         player.end()
     }
 
-    private fun provideNodes(dataSource: DataSourceInfo, processor: SpritePlayer, client: Client) {
+    private fun provideNodes(
+        dataSource: DataSourceInfo,
+        processor: SpritePlayer,
+        client: Client,
+    ) {
         val nodes = client.submit("g.V().count()").one().long
         var fetched: Long = 0
         var skip: Long = 0
@@ -93,7 +99,8 @@ class CosmosDBGremlinGraphProvider : DataSourceGraphProvider {
                 res.keys
                     .forEach { k -> sprite.add(k, res[k].toString()) }
 
-                sprite.add(ARCADE_ID, dataSource.id.toString() + "_" + res["id"])
+                sprite
+                    .add(ARCADE_ID, dataSource.id.toString() + "_" + res["id"])
                     .add(ARCADE_TYPE, ARCADE_NODE_TYPE)
                     .add("@class", res["label"])
                     .apply<Any, String>(allFields) { v -> v.toString() }
@@ -107,7 +114,11 @@ class CosmosDBGremlinGraphProvider : DataSourceGraphProvider {
         }
     }
 
-    private fun provideEdges(dataSource: DataSourceInfo, processor: SpritePlayer, client: Client) {
+    private fun provideEdges(
+        dataSource: DataSourceInfo,
+        processor: SpritePlayer,
+        client: Client,
+    ) {
         val edges = client.submit("g.E().count()").one().long
         var fetched: Long = 0
         var skip: Long = 0
@@ -133,7 +144,8 @@ class CosmosDBGremlinGraphProvider : DataSourceGraphProvider {
                 res.keys
                     .forEach { k -> sprite.add(k, res[k].toString()) }
 
-                sprite.add(ARCADE_ID, dataSource.id.toString() + "_" + res["id"])
+                sprite
+                    .add(ARCADE_ID, dataSource.id.toString() + "_" + res["id"])
                     .add(ARCADE_TYPE, ARCADE_EDGE_TYPE)
                     .add("@class", res["label"])
                     .apply<Any, String>(allFields) { v -> v.toString() }

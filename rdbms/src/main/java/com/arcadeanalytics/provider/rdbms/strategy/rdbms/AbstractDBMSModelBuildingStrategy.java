@@ -39,72 +39,71 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Gabriele Ponzi
  */
-
 public abstract class AbstractDBMSModelBuildingStrategy implements WorkflowStrategy {
 
-    private final Logger log = LoggerFactory.getLogger(AbstractDBMSModelBuildingStrategy.class);
+  private final Logger log = LoggerFactory.getLogger(AbstractDBMSModelBuildingStrategy.class);
 
-    protected ER2GraphMapper mapper;
+  protected ER2GraphMapper mapper;
 
-    public AbstractDBMSModelBuildingStrategy() {}
+  public AbstractDBMSModelBuildingStrategy() {}
 
-    @Override
-    public void executeStrategy(
-        DataSourceInfo dataSource,
-        String outOrientGraphUri,
-        String chosenMapper,
-        String xmlPath,
-        String nameResolverConvention,
-        List<String> includedTables,
-        List<String> excludedTables,
-        ODocument migrationConfigDoc,
-        String executionStrategy,
-        DBQueryEngine queryEngine,
-        Statistics statistics
-    ) {
-        Date globalStart = new Date();
+  @Override
+  public void executeStrategy(
+      DataSourceInfo dataSource,
+      String outOrientGraphUri,
+      String chosenMapper,
+      String xmlPath,
+      String nameResolverConvention,
+      List<String> includedTables,
+      List<String> excludedTables,
+      ODocument migrationConfigDoc,
+      String executionStrategy,
+      DBQueryEngine queryEngine,
+      Statistics statistics) {
+    Date globalStart = new Date();
 
-        DataTypeHandlerFactory dataTypeHandlerFactory = new DataTypeHandlerFactory();
-        DBMSDataTypeHandler handler = (DBMSDataTypeHandler) dataTypeHandlerFactory.buildDataTypeHandler(dataSource.getType());
+    DataTypeHandlerFactory dataTypeHandlerFactory = new DataTypeHandlerFactory();
+    DBMSDataTypeHandler handler =
+        (DBMSDataTypeHandler) dataTypeHandlerFactory.buildDataTypeHandler(dataSource.getType());
 
-        /*
-         * Step 1,2
-         */
+    /*
+     * Step 1,2
+     */
 
-        NameResolverFactory nameResolverFactory = new NameResolverFactory();
-        NameResolver nameResolver = nameResolverFactory.buildNameResolver(nameResolverConvention);
+    NameResolverFactory nameResolverFactory = new NameResolverFactory();
+    NameResolver nameResolver = nameResolverFactory.buildNameResolver(nameResolverConvention);
 
-        this.mapper =
-            this.createSchemaMapper(
-                    dataSource,
-                    outOrientGraphUri,
-                    chosenMapper,
-                    xmlPath,
-                    nameResolver,
-                    handler,
-                    includedTables,
-                    excludedTables,
-                    executionStrategy,
-                    queryEngine,
-                    statistics
-                );
+    this.mapper =
+        this.createSchemaMapper(
+            dataSource,
+            outOrientGraphUri,
+            chosenMapper,
+            xmlPath,
+            nameResolver,
+            handler,
+            includedTables,
+            excludedTables,
+            executionStrategy,
+            queryEngine,
+            statistics);
 
-        Date globalEnd = new Date();
+    Date globalEnd = new Date();
 
-        log.info("Graph model building complete in {}", FunctionsHandler.getHMSFormat(globalStart, globalEnd));
-    }
+    log.info(
+        "Graph model building complete in {}",
+        FunctionsHandler.getHMSFormat(globalStart, globalEnd));
+  }
 
-    public abstract ER2GraphMapper createSchemaMapper(
-        DataSourceInfo dataSource,
-        String outOrientGraphUri,
-        String chosenMapper,
-        String xmlPath,
-        NameResolver nameResolver,
-        DBMSDataTypeHandler handler,
-        List<String> includedTables,
-        List<String> excludedTables,
-        String executionStrategy,
-        DBQueryEngine queryEngine,
-        Statistics statistics
-    );
+  public abstract ER2GraphMapper createSchemaMapper(
+      DataSourceInfo dataSource,
+      String outOrientGraphUri,
+      String chosenMapper,
+      String xmlPath,
+      NameResolver nameResolver,
+      DBMSDataTypeHandler handler,
+      List<String> includedTables,
+      List<String> excludedTables,
+      String executionStrategy,
+      DBQueryEngine queryEngine,
+      Statistics statistics);
 }

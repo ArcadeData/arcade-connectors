@@ -27,7 +27,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class OrientDB3DataSourceGraphDataProviderIntTest {
-
     private val provider: OrientDB3DataSourceGraphDataProvider = OrientDB3DataSourceGraphDataProvider()
 
     @Test
@@ -53,7 +52,8 @@ class OrientDB3DataSourceGraphDataProviderIntTest {
         assertThat(cytoData.data.source).isEmpty()
 
         val record = cytoData.data.record
-        assertThat(record).isNotNull
+        assertThat(record)
+            .isNotNull
             .containsKeys("name", "@out", "@in", "@edgeCount")
     }
 
@@ -80,7 +80,8 @@ class OrientDB3DataSourceGraphDataProviderIntTest {
         assertThat(cytoData.data.source).isEmpty()
 
         val record = cytoData.data.record
-        assertThat(record).isNotNull
+        assertThat(record)
+            .isNotNull
             .containsKeys("name", "@out", "@in", "@edgeCount")
     }
 
@@ -102,7 +103,11 @@ class OrientDB3DataSourceGraphDataProviderIntTest {
         assertThat(data.nodesClasses).containsKeys("Person")
         assertThat(data.edgesClasses).containsKeys("FriendOf")
 
-        val cytoData = data.nodes.stream().findFirst().get()
+        val cytoData =
+            data.nodes
+                .stream()
+                .findFirst()
+                .get()
         assertThat(cytoData.data.record).isNotNull
         assertThat(cytoData.data.source).isEmpty()
     }
@@ -127,7 +132,11 @@ class OrientDB3DataSourceGraphDataProviderIntTest {
         assertThat(data.edgesClasses).containsKeys("FriendOf")
         assertThat(data.edgesClasses).containsKeys("HaterOf")
 
-        val cytoData = data.nodes.stream().findFirst().get()
+        val cytoData =
+            data.nodes
+                .stream()
+                .findFirst()
+                .get()
         assertThat(cytoData.data.record).isNotNull
         assertThat(cytoData.data.source).isEmpty()
     }
@@ -145,7 +154,11 @@ class OrientDB3DataSourceGraphDataProviderIntTest {
         // then
         assertThat(data.nodes).hasSize(2)
 
-        val cytoData = data.nodes.stream().findFirst().get()
+        val cytoData =
+            data.nodes
+                .stream()
+                .findFirst()
+                .get()
         assertThat(cytoData.data.record).isNotNull
         assertThat(cytoData.data.source).isEmpty()
     }
@@ -175,10 +188,12 @@ class OrientDB3DataSourceGraphDataProviderIntTest {
         val firstNode = firstDataSet.nodes.first().data
         val secondNode = secondDataSet.nodes.first().data
 
-        val edgeClasses = (firstNode.record["@in"] as Map<String, Int>).keys
-            .union((firstNode.record["@out"] as Map<String, Int>).keys)
-            .union((secondNode.record["@in"] as Map<String, Int>).keys)
-            .union((secondNode.record["@out"] as Map<String, Int>).keys)
+        val edgeClasses =
+            (firstNode.record["@in"] as Map<String, Int>)
+                .keys
+                .union((firstNode.record["@out"] as Map<String, Int>).keys)
+                .union((secondNode.record["@in"] as Map<String, Int>).keys)
+                .union((secondNode.record["@out"] as Map<String, Int>).keys)
 
         val data = provider.edges(dataSource, arrayOf(firstNode.id), edgeClasses.toTypedArray(), arrayOf(secondNode.id))
 
@@ -193,9 +208,11 @@ class OrientDB3DataSourceGraphDataProviderIntTest {
 
     private fun getPersonsIdentity(count: Int): Array<String> {
         val orientDB = OrientDB(getServerUrl(OrientDB3Container.getContainer()), OrientDBConfig.defaultConfig())
-        orientDB.open(dataSource.database, "admin", "admin")
+        orientDB
+            .open(dataSource.database, "admin", "admin")
             .use {
-                return it.execute("sql", "SELECT from Person")
+                return it
+                    .execute("sql", "SELECT from Person")
                     .asSequence()
                     .take(count)
                     .map { doc -> doc.identity }

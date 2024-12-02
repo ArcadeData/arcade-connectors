@@ -27,14 +27,14 @@ import org.junit.jupiter.api.Test
 import org.testcontainers.containers.wait.strategy.Wait
 
 class OrientDBConnectionTest {
-
-    private val container: KGenericContainer = KGenericContainer(ORIENTDB_DOCKER_IMAGE)
-        .apply {
-            withExposedPorts(2424)
-            withEnv("ORIENTDB_ROOT_PASSWORD", ORIENTDB_ROOT_PASSWORD)
-            waitingFor(Wait.forListeningPort())
-            start()
-        }
+    private val container: KGenericContainer =
+        KGenericContainer(ORIENTDB_DOCKER_IMAGE)
+            .apply {
+                withExposedPorts(2424)
+                withEnv("ORIENTDB_ROOT_PASSWORD", ORIENTDB_ROOT_PASSWORD)
+                waitingFor(Wait.forListeningPort())
+                start()
+            }
 
     private val provider: OrientDBDataSourceGraphDataProvider
 
@@ -42,16 +42,17 @@ class OrientDBConnectionTest {
 
     init {
 
-        dataSource = DataSourceInfo(
-            id = 1L,
-            type = "ORIENTDB",
-            name = "testDataSource",
-            server = container.containerIpAddress,
-            port = container.firstMappedPort,
-            username = "admin",
-            password = "admin",
-            database = OrientDBDataSourceGraphDataProviderIntTest::class.java.simpleName,
-        )
+        dataSource =
+            DataSourceInfo(
+                id = 1L,
+                type = "ORIENTDB",
+                name = "testDataSource",
+                server = container.containerIpAddress,
+                port = container.firstMappedPort,
+                username = "admin",
+                password = "admin",
+                database = OrientDBDataSourceGraphDataProviderIntTest::class.java.simpleName,
+            )
 
         val serverUrl = getServerUrl(container)
 
@@ -68,7 +69,8 @@ class OrientDBConnectionTest {
 
         container.stop()
 
-        Assertions.assertThatExceptionOfType(RuntimeException::class.java)
+        Assertions
+            .assertThatExceptionOfType(RuntimeException::class.java)
             .isThrownBy { provider.testConnection(dataSource) }
     }
 }

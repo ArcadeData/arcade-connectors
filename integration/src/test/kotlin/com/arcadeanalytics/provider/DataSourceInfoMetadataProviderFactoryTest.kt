@@ -28,24 +28,24 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 
 internal class DataSourceInfoMetadataProviderFactoryTest {
-
     companion object {
         @JvmStatic
-        fun types2implementation() = listOf(
-            Arguments.of("ORIENTDB", "OrientDBDataSourceMetadataProvider"),
-            Arguments.of("ORIENTDB3", "OrientDB3DataSourceMetadataProvider"),
-            Arguments.of("GREMLIN_ORIENTDB", "GremlinMetadataProvider"),
-            Arguments.of("GREMLIN_NEPTUNE", "GremlinMetadataProvider"),
-            Arguments.of("GREMLIN_JANUSGRAPH", "GremlinMetadataProvider"),
-            Arguments.of("GREMLIN_COSMOSDB", "CosmosDBGremlinMetadataProvider"),
-            Arguments.of("NEO4J", "Neo4jMetadataProvider"),
-            Arguments.of("NEO4J_MEMGRAPH", "Neo4jMetadataProvider"),
-            Arguments.of("RDBMS_MYSQL", "RDBMSMetadataProvider"),
-            Arguments.of("RDBMS_MSSQLSERVER", "RDBMSMetadataProvider"),
-            Arguments.of("RDBMS_ORACLE", "RDBMSMetadataProvider"),
-            Arguments.of("RDBMS_HSQL", "RDBMSMetadataProvider"),
-            Arguments.of("RDBMS_DATA_WORLD", "RDBMSMetadataProvider"),
-        )
+        fun types2implementation() =
+            listOf(
+                Arguments.of("ORIENTDB", "OrientDBDataSourceMetadataProvider"),
+                Arguments.of("ORIENTDB3", "OrientDB3DataSourceMetadataProvider"),
+                Arguments.of("GREMLIN_ORIENTDB", "GremlinMetadataProvider"),
+                Arguments.of("GREMLIN_NEPTUNE", "GremlinMetadataProvider"),
+                Arguments.of("GREMLIN_JANUSGRAPH", "GremlinMetadataProvider"),
+                Arguments.of("GREMLIN_COSMOSDB", "CosmosDBGremlinMetadataProvider"),
+                Arguments.of("NEO4J", "Neo4jMetadataProvider"),
+                Arguments.of("NEO4J_MEMGRAPH", "Neo4jMetadataProvider"),
+                Arguments.of("RDBMS_MYSQL", "RDBMSMetadataProvider"),
+                Arguments.of("RDBMS_MSSQLSERVER", "RDBMSMetadataProvider"),
+                Arguments.of("RDBMS_ORACLE", "RDBMSMetadataProvider"),
+                Arguments.of("RDBMS_HSQL", "RDBMSMetadataProvider"),
+                Arguments.of("RDBMS_DATA_WORLD", "RDBMSMetadataProvider"),
+            )
     }
 
     private lateinit var factory: DataSourceProviderFactory<DataSourceMetadataProvider>
@@ -83,16 +83,17 @@ internal class DataSourceInfoMetadataProviderFactoryTest {
         type: String,
         impl: String,
     ) {
-        val dataSource = DataSourceInfo(
-            id = 1L,
-            type = type,
-            name = "testDataSource",
-            server = "1.2.3.4",
-            port = 1234,
-            username = "admin",
-            password = "admin",
-            database = "testDb",
-        )
+        val dataSource =
+            DataSourceInfo(
+                id = 1L,
+                type = type,
+                name = "testDataSource",
+                server = "1.2.3.4",
+                port = 1234,
+                username = "admin",
+                password = "admin",
+                database = "testDb",
+            )
 
         val provider = factory.create(dataSource)
         Assertions.assertThat(provider).isNotNull

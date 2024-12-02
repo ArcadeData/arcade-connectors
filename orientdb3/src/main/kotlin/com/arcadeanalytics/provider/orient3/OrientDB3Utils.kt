@@ -37,10 +37,10 @@ const val ORIENTDB3 = "ORIENTDB3"
 
 private val orientdbConnectionUrl = "remote:{server}:{port}"
 
-fun createOrientdbConnectionUrl(dataSource: DataSourceInfo): String {
-    return orientdbConnectionUrl.replace("{server}", dataSource.server)
+fun createOrientdbConnectionUrl(dataSource: DataSourceInfo): String =
+    orientdbConnectionUrl
+        .replace("{server}", dataSource.server)
         .replace("{port}", dataSource.port.toString())
-}
 
 fun open(dataSource: DataSourceInfo): ODatabaseSession {
     val orientdbConnectionUrl = createOrientdbConnectionUrl(dataSource)
@@ -72,16 +72,13 @@ fun ODatabaseDocument.getEdge(document: ODocument): Optional<OEdge>? {
     return result.asSequence().first().edge
 }
 
-fun ODocument.isEdgeType(): Boolean {
-    return this.schemaClass.isEdgeType
-}
+fun ODocument.isEdgeType(): Boolean = this.schemaClass.isEdgeType
 
-fun ODocument.isVertexType(): Boolean {
-    return this.schemaClass.isVertexType
-}
+fun ODocument.isVertexType(): Boolean = this.schemaClass.isVertexType
 
-fun ODocument.type(): String = when {
-    isEdgeType() -> "edge"
-    isVertexType() -> "node"
-    else -> "document"
-}
+fun ODocument.type(): String =
+    when {
+        isEdgeType() -> "edge"
+        isVertexType() -> "node"
+        else -> "document"
+    }

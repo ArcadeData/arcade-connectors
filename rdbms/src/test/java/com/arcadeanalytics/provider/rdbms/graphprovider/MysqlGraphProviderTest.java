@@ -23,9 +23,7 @@ package com.arcadeanalytics.provider.rdbms.graphprovider;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.arcadeanalytics.provider.DataSourceInfo;
-import com.arcadeanalytics.provider.rdbms.dataprovider.PostgreSQLDataProviderTest;
 import com.arcadeanalytics.provider.rdbms.dataprovider.RDBMSGraphProvider;
-import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -35,26 +33,30 @@ import org.testcontainers.utility.DockerImageName;
 
 public class MysqlGraphProviderTest extends AbstractRDBMSGraphProvider {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PostgreSQLDataProviderTest.class);
-    private static final String driver = "com.mysql.cj.jdbc.Driver";
-    private static final String username = "test";
-    private static final String password = "test";
-    public static MySQLContainer container = new MySQLContainer(DockerImageName.parse("arcadeanalytics/mysql-sakila").asCompatibleSubstituteFor("mysql"))
-        .withUsername(username)
-        .withPassword(password)
-        .withDatabaseName("sakila");
+  private static final Logger LOGGER = LoggerFactory.getLogger(MysqlGraphProviderTest.class);
+  private static final String driver = "com.mysql.cj.jdbc.Driver";
+  private static final String username = "test";
+  private static final String password = "test";
+  public static MySQLContainer container =
+      new MySQLContainer(
+              DockerImageName.parse("arcadeanalytics/mysql-sakila")
+                  .asCompatibleSubstituteFor("mysql"))
+          .withUsername(username)
+          .withPassword(password)
+          .withDatabaseName("sakila");
 
-    @BeforeAll
-    public static void beforeClass() throws Exception {
-        container.start();
-        container.withDatabaseName("sakila");
-    }
+  @BeforeAll
+  static void beforeClass() throws Exception {
+    container.start();
+    container.withDatabaseName("sakila");
+  }
 
-    @Test
-    public void shouldFetchAllVertexes() {
-        // setting the aggregationEnabled flag in the dataSource
+  @Test
+  public void shouldFetchAllVertexes() {
+    // setting the aggregationEnabled flag in the dataSource
 
-        DataSourceInfo dataSource = new DataSourceInfo(
+    DataSourceInfo dataSource =
+        new DataSourceInfo(
             1L,
             "RDBMS_MYSQL",
             "testDataSource",
@@ -71,22 +73,22 @@ public class MysqlGraphProviderTest extends AbstractRDBMSGraphProvider {
             "",
             22,
             "",
-            false
-        );
-        provider = new RDBMSGraphProvider();
+            false);
+    provider = new RDBMSGraphProvider();
 
-        provider.provideTo(dataSource, player);
+    provider.provideTo(dataSource, player);
 
-        assertThat(player.processed()).isEqualTo(47273);
+    assertThat(player.processed()).isEqualTo(47273);
 
-        Assert.assertEquals(47273, nodes);
-        Assert.assertEquals(0, edges);
-    }
+    assertThat(nodes).isEqualTo(47273);
+    assertThat(edges).isEqualTo(0);
+  }
 
-    @Test
-    public void shouldFetchAllVertexesExceptJoinTables() {
-        // setting the aggregationEnabled flag in the dataSource
-        DataSourceInfo dataSource = new DataSourceInfo(
+  @Test
+  public void shouldFetchAllVertexesExceptJoinTables() {
+    // setting the aggregationEnabled flag in the dataSource
+    DataSourceInfo dataSource =
+        new DataSourceInfo(
             1L,
             "RDBMS_MYSQL",
             "testDataSource",
@@ -103,16 +105,15 @@ public class MysqlGraphProviderTest extends AbstractRDBMSGraphProvider {
             "",
             22,
             "",
-            false
-        );
+            false);
 
-        provider = new RDBMSGraphProvider();
+    provider = new RDBMSGraphProvider();
 
-        provider.provideTo(dataSource, player);
+    provider.provideTo(dataSource, player);
 
-        assertThat(player.processed()).isEqualTo(47273);
+    assertThat(player.processed()).isEqualTo(47273);
 
-        Assert.assertEquals(40811, nodes);
-        Assert.assertEquals(6462, edges);
-    }
+    assertThat(nodes).isEqualTo(40811);
+    assertThat(edges).isEqualTo(6462);
+  }
 }

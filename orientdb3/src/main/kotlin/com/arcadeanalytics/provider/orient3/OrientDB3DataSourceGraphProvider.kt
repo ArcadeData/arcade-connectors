@@ -33,20 +33,20 @@ import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
 
 class OrientDB3DataSourceGraphProvider : DataSourceGraphProvider {
-
     private val log = LoggerFactory.getLogger(OrientDB3DataSourceGraphProvider::class.java)
 
-    private val V_COUNT = "select count(*) as count from V"
+    private val vertexCount = "select count(*) as count from V"
 
-    private val E_COUNT = "select count(*) as count from E"
+    private val edgeCount = "select count(*) as count from E"
 
     private val allFields: Pattern = Pattern.compile(".*")
 
-    override fun supportedDataSourceTypes(): Set<String> {
-        return setOf("ORIENTDB3")
-    }
+    override fun supportedDataSourceTypes(): Set<String> = setOf("ORIENTDB3")
 
-    override fun provideTo(dataSource: DataSourceInfo, player: SpritePlayer) {
+    override fun provideTo(
+        dataSource: DataSourceInfo,
+        player: SpritePlayer,
+    ) {
         try {
             provide(dataSource, player, "V")
             provide(dataSource, player, "E")
@@ -55,12 +55,17 @@ class OrientDB3DataSourceGraphProvider : DataSourceGraphProvider {
         }
     }
 
-    private fun provide(dataSource: DataSourceInfo, player: SpritePlayer, what: String) {
-        val count: Long = open(dataSource).use { db ->
-            db.query("select count(*) as count from $what").use { result ->
-                result.asSequence().first().getProperty("count")
+    private fun provide(
+        dataSource: DataSourceInfo,
+        player: SpritePlayer,
+        what: String,
+    ) {
+        val count: Long =
+            open(dataSource).use { db ->
+                db.query("select count(*) as count from $what").use { result ->
+                    result.asSequence().first().getProperty("count")
+                }
             }
-        }
 
         var fetched: Long = 0
         var skip: ORID = ORecordId("#-1:-1")
@@ -71,7 +76,8 @@ class OrientDB3DataSourceGraphProvider : DataSourceGraphProvider {
         while (fetched < count) {
             open(dataSource).use { db ->
                 db.query("SELECT * FROM $what WHERE @rid > $skip LIMIT 1000").use { resultSet ->
-                    resultSet.asSequence()
+                    resultSet
+                        .asSequence()
                         .map { res -> res.element.get() }
                         .filter { elem -> elem.propertyNames.size > 0 }
                         .onEach { elem: OElement -> lastORID = elem.identity }
@@ -101,8 +107,7 @@ class OrientDB3DataSourceGraphProvider : DataSourceGraphProvider {
                     .asSequence()
                     .map { c -> c.name }
                     .toList(),
-            )
-            .apply<Any, String>(allFields) { v -> v.toString() }
+            ).apply<Any, String>(allFields) { v -> v.toString() }
             .remove("@class", "V")
             .remove("@class", "E")
             .remove("@rid")
