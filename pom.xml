@@ -55,7 +55,7 @@
         <junit.platform.version>1.2.0</junit.platform.version>
         <slf4j-api.version>2.0.16</slf4j-api.version>
         <logback-classic.version>1.5.11</logback-classic.version>
-        <guava.version>33.3.1-jre</guava.version>
+        <guava.version>33.4.0-jre</guava.version>
         <assertj-core.version>3.19.0</assertj-core.version>
         <assertj-guava.version>3.4.0</assertj-guava.version>
         <testcontainers.version>1.20.2</testcontainers.version>
