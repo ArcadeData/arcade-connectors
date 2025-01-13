@@ -57,7 +57,7 @@
         <logback-classic.version>1.5.11</logback-classic.version>
         <guava.version>33.4.0-jre</guava.version>
         <assertj-core.version>3.19.0</assertj-core.version>
-        <assertj-guava.version>3.4.0</assertj-guava.version>
+        <assertj-guava.version>3.27.2</assertj-guava.version>
         <testcontainers.version>1.20.4</testcontainers.version>
         <jackson.version>2.18.1</jackson.version>
     </properties>
