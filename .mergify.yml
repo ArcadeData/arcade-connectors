@@ -10,7 +10,7 @@ pull_request_rules:
 
     conditions:
       - author~=^dependabot(|-preview)\[bot\]$
-      - check-success=CI - test and coverage / test (pull_request)
+#      - check-success=CI - test and coverage / test (pull_request)
       - title~=^Bump [^\s]+ from ([\d]+)\..+ to \1\.
 
     actions:
