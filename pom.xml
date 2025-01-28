@@ -59,7 +59,7 @@
         <assertj-core.version>3.19.0</assertj-core.version>
         <assertj-guava.version>3.4.0</assertj-guava.version>
         <testcontainers.version>1.20.4</testcontainers.version>
-        <jackson.version>2.18.1</jackson.version>
+        <jackson.version>2.18.2</jackson.version>
     </properties>
 
     <developers>
