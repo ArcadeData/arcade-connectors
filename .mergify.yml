@@ -1,18 +1,12 @@
 ---
 pull_request_rules:
-  - name: Automatic merge on approval
+  - name: Merge Dependabot PRs on approval with [skip ci]
     conditions:
       - "#approved-reviews-by>=1"
+      - "author=dependabot[bot]"
     actions:
       merge:
         method: merge
-  - name: automatic merge for Dependabot pull requests
-
-    conditions:
-      - author~=^dependabot(|-preview)\[bot\]$
-#      - check-success=CI - test and coverage / test (pull_request)
-      - title~=^Bump [^\s]+ from ([\d]+)\..+ to \1\.
-
-    actions:
-      merge:
-        method: merge
+        commit_message_template: |
+          {{ title | markdownify }} [skip ci]
+          {{ body | markdownify }}
